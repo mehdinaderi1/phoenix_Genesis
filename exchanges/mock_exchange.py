@@ -31,22 +31,57 @@ class MockExchange(BaseExchange):
         candles = {
 
             "BTCUSDT": {
-                "timestamp": 1752364800,
-                "open": 64950,
-                "high": 65100,
-                "low": 64800,
-                "close": 65000,
-                "volume": 125.5
+
+                "1m": {
+                    "timestamp": 1752364800,
+                    "open": 64950,
+                    "high": 65100,
+                    "low": 64800,
+                    "close": 65000,
+                    "volume": 125.5
+                },
+
+                "30m": {
+                    "timestamp": 1752366600,
+                    "open": 64800,
+                    "high": 65200,
+                    "low": 64750,
+                    "close": 65100,
+                    "volume": 850
+                },
+
+                "4H": {
+                    "timestamp": 1752372000,
+                    "open": 64000,
+                    "high": 65500,
+                    "low": 63800,
+                    "close": 65000,
+                    "volume": 5200
+                },
+
+                "1D": {
+                    "timestamp": 1752360000,
+                    "open": 63000,
+                    "high": 66000,
+                    "low": 62500,
+                    "close": 65000,
+                    "volume": 15000
+                }
             },
 
+
             "ETHUSDT": {
-                "timestamp": 1752364800,
-                "open": 3480,
-                "high": 3520,
-                "low": 3460,
-                "close": 3500,
-                "volume": 850
+
+                "1m": {
+                    "timestamp": 1752364800,
+                    "open": 3480,
+                    "high": 3520,
+                    "low": 3460,
+                    "close": 3500,
+                    "volume": 850
+                }
             }
         }
 
-        return candles.get(symbol)
+
+        return candles.get(symbol, {}).get(timeframe)
