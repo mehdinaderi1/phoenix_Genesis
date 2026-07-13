@@ -4,6 +4,29 @@ class MarketDataRepository:
         self.db = db
 
 
+    def candle_exists(self, symbol, timeframe, timestamp):
+
+        cursor = self.db.connection.cursor()
+
+        cursor.execute("""
+        SELECT COUNT(*)
+        FROM market_candles
+        WHERE symbol=?
+        AND timeframe=?
+        AND timestamp=?
+        """,
+        (
+            symbol,
+            timeframe,
+            timestamp
+        ))
+
+        result = cursor.fetchone()
+
+        return result[0] > 0
+
+
+
     def save_candle(
         self,
         symbol,
@@ -15,6 +38,11 @@ class MarketDataRepository:
         volume,
         timestamp
     ):
+
+        # Duplicate protection
+        if self.candle_exists(symbol, timeframe, timestamp):
+            return False
+
 
         cursor = self.db.connection.cursor()
 
@@ -44,6 +72,9 @@ class MarketDataRepository:
         ))
 
         self.db.connection.commit()
+
+        return True
+
 
 
     def get_latest_candles(self, symbol, limit=10):
