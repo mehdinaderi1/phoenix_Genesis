@@ -80,6 +80,36 @@ def main():
     )
 
 
+    print("==============================")
+    print("🦅 Phoenix Timeframe Test")
+    print("==============================")
+
+
+    prices_1m = reader.get_close_prices(
+        "BTCUSDT",
+        "1m"
+    )
+
+
+    prices_4h = reader.get_close_prices(
+        "BTCUSDT",
+        "4H"
+    )
+
+
+    prices_1d = reader.get_close_prices(
+        "BTCUSDT",
+        "1D"
+    )
+
+
+    print("1m prices:", prices_1m)
+
+    print("4H prices:", prices_4h)
+
+    print("1D prices:", prices_1d)
+    
+
     latest = reader.get_latest_candle(
         "BTCUSDT"
     )
