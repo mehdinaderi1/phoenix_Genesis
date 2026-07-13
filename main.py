@@ -3,6 +3,7 @@ from exchanges.exchange_manager import ExchangeManager
 from exchanges.mock_exchange import MockExchange
 from market.market_data_engine import MarketDataEngine
 from market.market_data_reader import MarketDataReader
+from core.market_data.pipeline import MarketDataPipeline
 
 
 def main():
@@ -28,6 +29,31 @@ def main():
 
     balance = exchange_manager.get_balance()
     print(f"Balance: {balance}")
+
+
+    pipeline = MarketDataPipeline(
+    exchange_manager,
+    engine.database
+    )
+
+
+    multi_data = pipeline.fetch_multi_timeframes(
+        "BTCUSDT"
+    )
+
+
+    print("==============================")
+    print("🦅 Phoenix Multi Timeframe Data")
+    print("==============================")
+
+
+    for timeframe, candle in multi_data.items():
+
+        print(f"\nTimeframe: {timeframe}")
+
+        if candle:
+            print("Close:", candle["close"])
+            print("Volume:", candle["volume"])
 
 
     market_engine = MarketDataEngine(

@@ -25,5 +25,8 @@ class ExchangeManager:
 
         return self.exchange.get_balance()
 
-    def get_candle(self, symbol):
-        return self.exchange.get_candle(symbol)
+    def get_candle(self, symbol, timeframe="1m"):
+        if self.exchange is None:
+            raise ValueError("No exchange selected.")
+
+        return self.exchange.get_candle(symbol, timeframe)
