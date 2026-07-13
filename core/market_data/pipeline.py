@@ -19,6 +19,10 @@ class MarketDataPipeline:
             timeframe
         )
 
+        if candle is None:
+            return None
+
+
         self.repository.save_candle(
             symbol,
             timeframe,
@@ -32,3 +36,35 @@ class MarketDataPipeline:
 
 
         return candle
+
+
+
+    def fetch_multi_timeframes(
+        self,
+        symbol="BTCUSDT",
+        timeframes=None
+    ):
+
+        if timeframes is None:
+            timeframes = [
+                "1m",
+                "30m",
+                "4H",
+                "1D"
+            ]
+
+
+        results = {}
+
+
+        for timeframe in timeframes:
+
+            candle = self.fetch_and_store(
+                symbol,
+                timeframe
+            )
+
+            results[timeframe] = candle
+
+
+        return results
