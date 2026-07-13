@@ -1,9 +1,27 @@
+from market.candle import Candle
+
+
 class MarketDataReader:
 
 
     def __init__(self, database):
 
         self.database = database
+
+
+
+    def _row_to_candle(self, row):
+
+        return Candle(
+            symbol=row[1],
+            timeframe=row[2],
+            timestamp=row[3],
+            open=row[4],
+            high=row[5],
+            low=row[6],
+            close=row[7],
+            volume=row[8]
+        )
 
 
 
@@ -31,7 +49,18 @@ class MarketDataReader:
             """)
 
 
-        return cursor.fetchall()
+        rows = cursor.fetchall()
+
+
+        candles = []
+
+        for row in rows:
+            candles.append(
+                self._row_to_candle(row)
+            )
+
+
+        return candles
 
 
 
@@ -50,7 +79,15 @@ class MarketDataReader:
         (symbol,))
 
 
-        return cursor.fetchone()
+        row = cursor.fetchone()
+
+
+        if row:
+
+            return self._row_to_candle(row)
+
+
+        return None
 
 
 
