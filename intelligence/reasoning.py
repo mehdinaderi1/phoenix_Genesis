@@ -1,6 +1,6 @@
 class ReasoningEngine:
 
-    def generate(self, consensus):
+    def generate(self, consensus, risk_assessment=None):
 
         reasons = []
 
@@ -39,18 +39,28 @@ class ReasoningEngine:
                 "Timeframe conflict detected"
             )
 
+
         if consensus.confidence >= 75:
-            risk = "LOW"
+            risk_level = "LOW"
 
         elif consensus.confidence >= 50:
-            risk = "MEDIUM"
+            risk_level = "MEDIUM"
 
         else:
-            risk = "HIGH"
+            risk_level = "HIGH"
+
+
+        if risk_assessment:
+
+            risk_level = risk_assessment.level
+
+            for reason in risk_assessment.reasons:
+                reasons.append(reason)
+
 
         return {
             "signal": consensus.signal,
             "confidence": consensus.confidence,
-            "risk": risk,
+            "risk": risk_level,
             "reasons": reasons
         }
