@@ -9,6 +9,21 @@ class ReasoningEngine:
                 "Positive market consensus"
             )
 
+        elif consensus.signal == "SELL":
+            reasons.append(
+                "Negative market consensus"
+            )
+
+        if consensus.trend == "BULLISH":
+            reasons.append(
+                "Bullish trend confirmed"
+            )
+
+        elif consensus.trend == "BEARISH":
+            reasons.append(
+                "Bearish trend detected"
+            )
+
         if consensus.confidence >= 80:
             reasons.append(
                 "High confidence score"
