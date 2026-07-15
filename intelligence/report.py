@@ -12,6 +12,7 @@ class MarketReport:
     confidence: float
     risk: str
     reasons: List[str]
+    decision: object = None
 
     def summary(self):
         return {
