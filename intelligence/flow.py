@@ -19,7 +19,10 @@ class IntelligenceFlow:
 
         risk = self.risk_analyzer.analyze(consensus)
 
-        analysis = self.reasoning.generate(consensus)
+        analysis = self.reasoning.generate(
+            consensus,
+            risk
+    )
 
         return MarketReport(
             symbol="BTCUSDT",
