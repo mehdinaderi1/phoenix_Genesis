@@ -3,6 +3,16 @@ from intelligence.consensus import ConsensusResult
 
 class MultiTimeframeAnalyzer:
 
+    def get_weight(self, timeframe):
+
+        weights = {
+            "30m": 1,
+            "4H": 2,
+            "Daily": 3
+        }
+
+        return weights.get(timeframe, 1)
+
     def analyze(self, analyses):
 
         if not analyses:
@@ -17,12 +27,16 @@ class MultiTimeframeAnalyzer:
             for item in analyses
         ]
 
-        confidences = [
-            item.confidence
-            for item in analyses
-        ]
+        weighted_sum = 0
+        total_weight = 0
 
-        average_confidence = sum(confidences) / len(confidences)
+        for item in analyses:
+            weight = self.get_weight(item.timeframe)
+
+            weighted_sum += item.confidence * weight
+            total_weight += weight
+
+        average_confidence = weighted_sum / total_weight
 
         if len(set(signals)) == 1:
             final_signal = signals[0]

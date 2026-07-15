@@ -45,4 +45,4 @@ def test_phoenix_intelligence_flow_v2():
 
     assert report.symbol == "BTCUSDT"
     assert report.signal == "BUY"
-    assert report.confidence == 81.66666666666667
+    assert report.confidence == 85

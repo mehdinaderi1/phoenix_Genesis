@@ -30,4 +30,4 @@ def test_multitimeframe_conflict():
     result = analyzer.analyze(analyses)
 
     assert result.signal == "WAIT"
-    assert result.confidence == 40
+    assert result.confidence == 41.666666666666664

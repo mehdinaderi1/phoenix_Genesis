@@ -31,4 +31,4 @@ def test_multitimeframe_analyzer_bullish():
 
     assert result.trend == "BULLISH"
     assert result.signal == "BUY"
-    assert result.confidence == 81.66666666666667
+    assert result.confidence == 85
