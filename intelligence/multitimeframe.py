@@ -22,12 +22,15 @@ class MultiTimeframeAnalyzer:
             for item in analyses
         ]
 
+        average_confidence = sum(confidences) / len(confidences)
+
         if len(set(signals)) == 1:
             final_signal = signals[0]
+            final_confidence = average_confidence
+
         else:
             final_signal = "WAIT"
-
-        average_confidence = sum(confidences) / len(confidences)
+            final_confidence = average_confidence * 0.5
 
         trends = [
             item.trend
@@ -42,5 +45,5 @@ class MultiTimeframeAnalyzer:
         return ConsensusResult(
             trend=final_trend,
             signal=final_signal,
-            confidence=average_confidence
+            confidence=final_confidence
         )
