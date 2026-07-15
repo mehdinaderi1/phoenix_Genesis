@@ -1,7 +1,7 @@
 from analysis.confidence_engine import ConfidenceEngine
 
 
-def test():
+def test_confidence_engine():
 
     engine = ConfidenceEngine()
 
@@ -11,14 +11,13 @@ def test():
         "Overbought"
     ]
 
-    score = engine.calculate(signals)
+    result = engine.calculate(signals)
 
-    print("Confidence Score:", score)
+    print("Confidence Score:", result["confidence"])
+    print("Factors:", result["factors"])
 
-    assert score > 0
+    assert result["confidence"] == 70
 
-    print("✅ Confidence Engine Passed")
-
-
-if __name__ == "__main__":
-    test()
+    assert result["factors"]["Bullish Trend"] == 15
+    assert result["factors"]["Positive Momentum"] == 15
+    assert result["factors"]["Overbought"] == -10
