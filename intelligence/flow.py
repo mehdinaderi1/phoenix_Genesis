@@ -1,3 +1,5 @@
+from intelligence.decision_validator import DecisionValidator
+from intelligence.action_proposal import ActionProposal
 from intelligence.reasoning import ReasoningEngine
 from intelligence.regime_analyzer import RegimeAnalyzer
 from intelligence.risk_analyzer import RiskAnalyzer
@@ -13,7 +15,7 @@ class IntelligenceFlow:
         self.regime_analyzer = RegimeAnalyzer()
         self.risk_analyzer = RiskAnalyzer()
         self.decision_engine = DecisionEngine()
-
+        self.decision_validator = DecisionValidator()
 
     def create_report(self, consensus):
 
@@ -48,5 +50,27 @@ class IntelligenceFlow:
         )
 
         report.decision = decision
+
+        is_valid = self.decision_validator.validate(
+            decision
+        )
+
+        if is_valid:
+
+            report.action_proposal = ActionProposal(
+                action=decision.action,
+                status="APPROVED",
+                reason=decision.reason,
+                confidence=decision.confidence
+            )
+
+        else:
+
+            report.action_proposal = ActionProposal(
+                action=decision.action,
+                status="REJECTED",
+                reason=decision.reason,
+                confidence=decision.confidence
+            )
 
         return report
