@@ -17,7 +17,7 @@ class DecisionRecord:
     action: str
     validation_status: str
 
-    timestamp: str = None
+    timestamp: str | None = None
 
 
     def __post_init__(self):
