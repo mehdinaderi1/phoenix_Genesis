@@ -1,16 +1,19 @@
 from intelligence.decision import DecisionResult
+from intelligence.decision_rules import DecisionRules
 
 
 class DecisionEngine:
 
 
+    def __init__(self):
+
+        self.rules = DecisionRules()
+
+
     def decide(self, report):
 
-        if (
-            report.signal == "BUY"
-            and report.risk == "LOW"
-            and report.confidence >= 80
-        ):
+
+        if self.rules.can_long(report):
 
             return DecisionResult(
                 action="PREPARE_LONG",
@@ -19,7 +22,7 @@ class DecisionEngine:
             )
 
 
-        elif report.signal == "SELL":
+        elif self.rules.can_short(report):
 
             return DecisionResult(
                 action="PREPARE_SHORT",
