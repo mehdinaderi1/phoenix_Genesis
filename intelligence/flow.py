@@ -1,3 +1,5 @@
+from intelligence.decision_memory import DecisionMemory
+from intelligence.decision_record import DecisionRecord
 from intelligence.decision_validator import DecisionValidator
 from intelligence.action_proposal import ActionProposal
 from intelligence.reasoning import ReasoningEngine
@@ -16,6 +18,7 @@ class IntelligenceFlow:
         self.risk_analyzer = RiskAnalyzer()
         self.decision_engine = DecisionEngine()
         self.decision_validator = DecisionValidator()
+        self.decision_memory = DecisionMemory()
 
     def create_report(self, consensus):
 
@@ -73,4 +76,18 @@ class IntelligenceFlow:
                 confidence=decision.confidence
             )
 
+        record = DecisionRecord(
+            symbol=report.symbol,
+            timeframe=report.timeframe,
+            regime=report.regime,
+            signal=report.signal,
+            confidence=report.confidence,
+            risk=report.risk,
+            action=decision.action,
+            validation_status=report.action_proposal.status  
+        )
+
+
+        self.decision_memory.store(record)
+             
         return report
