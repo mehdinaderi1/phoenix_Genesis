@@ -7,6 +7,7 @@ class MarketReport:
     symbol: str
     timeframe: str
     trend: str
+    regime: str
     signal: str
     confidence: float
     risk: str
@@ -17,6 +18,7 @@ class MarketReport:
             "symbol": self.symbol,
             "timeframe": self.timeframe,
             "trend": self.trend,
+            "regime": self.regime,
             "signal": self.signal,
             "confidence": self.confidence,
             "risk": self.risk,

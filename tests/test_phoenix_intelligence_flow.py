@@ -21,6 +21,7 @@ def test_phoenix_intelligence_flow():
         symbol=signal.symbol,
         timeframe="4H",
         trend="BULLISH",
+        regime="TRENDING_BULLISH",
         signal=signal.action,
         confidence=signal.confidence,
         risk="MEDIUM",

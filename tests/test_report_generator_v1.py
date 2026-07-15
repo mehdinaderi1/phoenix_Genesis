@@ -8,6 +8,7 @@ def test_report_generator():
         symbol="BTCUSDT",
         timeframe="4H",
         trend="BULLISH",
+        regime="TRENDING_BULLISH",
         signal="BUY",
         confidence=78,
         risk="MEDIUM",

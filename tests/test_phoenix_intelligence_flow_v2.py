@@ -34,6 +34,7 @@ def test_phoenix_intelligence_flow_v2():
     symbol="BTCUSDT",
     timeframe="Multi",
     trend=consensus.trend,
+    regime="TRENDING_BULLISH",
     signal=consensus.signal,
     confidence=consensus.confidence,
     risk="LOW",

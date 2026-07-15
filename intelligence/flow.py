@@ -21,6 +21,7 @@ class IntelligenceFlow:
             symbol="BTCUSDT",
             timeframe="Multi",
             trend=consensus.trend,
+            regime=regime.regime,
             signal=analysis["signal"],
             confidence=analysis["confidence"],
             risk=analysis["risk"],
