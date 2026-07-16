@@ -17,6 +17,8 @@ class DecisionRecord:
     action: str
     validation_status: str
 
+    quality_score: float = 0
+
     timestamp: str | None = None
 
 
