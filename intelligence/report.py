@@ -13,6 +13,7 @@ class MarketReport:
     risk: str
     reasons: List[str]
     decision: object = None
+    action_proposal: object = None
 
     def summary(self):
         return {
