@@ -17,10 +17,11 @@ from intelligence.scenario_engine import ScenarioEngine
 from intelligence.strategy_analyzer import StrategyAnalyzer
 from intelligence.strategy_memory import StrategyMemory
 from intelligence.performance_feedback import PerformanceFeedback
+from intelligence.experience_record import ExperienceRecord
 from intelligence.experience_context import ExperienceContext
 from intelligence.memory.experience_memory import ExperienceMemory
 from intelligence.experience_confidence import ExperienceConfidence
-from intelligence.experience_confidence import ExperienceConfidence
+
 
 
 class IntelligenceFlow:
@@ -174,6 +175,27 @@ class IntelligenceFlow:
            65000,
            67000 
         )   
+        
+        experience = ExperienceRecord(
+
+            regime=report.regime,
+
+            signal=report.signal,
+
+            risk=report.risk,
+
+            success=(
+                report.performance_feedback["result"] == "SUCCESS"
+            ),
+
+            score=report.performance_feedback["score"]
+
+        )
+
+
+        self.experience_memory.save_experience(
+            experience
+        )
 
         historical_context = HistoricalContext(
 

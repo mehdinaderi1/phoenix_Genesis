@@ -1,4 +1,5 @@
 from intelligence.performance_record import PerformanceRecord
+from intelligence.experience_record import ExperienceRecord
 
 
 class ExperienceMemory:

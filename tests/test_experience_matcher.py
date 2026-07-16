@@ -1,7 +1,7 @@
 from intelligence.memory.experience_matcher import (
     ExperienceMatcher
 )
-
+from intelligence.memory.experience_matcher import ExperienceMatcher
 
 class MockExperience:
 
@@ -19,6 +19,7 @@ class MockExperience:
         self.risk = risk
         self.success = success
         self.score = score
+        self.experience_matcher = ExperienceMatcher()
 
 
 
