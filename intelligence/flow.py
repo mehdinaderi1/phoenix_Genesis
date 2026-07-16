@@ -10,6 +10,7 @@ from intelligence.decision_engine import DecisionEngine
 from intelligence.pattern_service import PatternService
 from intelligence.historical_context import HistoricalContext
 from intelligence.decision_quality import DecisionQualityAnalyzer
+from intelligence.learning_analyzer import LearningAnalyzer
 
 
 class IntelligenceFlow:
@@ -32,8 +33,15 @@ class IntelligenceFlow:
 
         self.decision_quality = DecisionQualityAnalyzer()
 
+        self.learning_analyzer = LearningAnalyzer()
+
 
     def create_report(self, consensus):
+
+        learning_insight = self.learning_analyzer.analyze(
+            self.decision_memory.records
+        )
+
 
         regime = self.regime_analyzer.analyze(consensus)
 
@@ -69,6 +77,8 @@ class IntelligenceFlow:
 
                 f"Risk Level: {risk.level}",
 
+                f"Historical Reliability: {learning_insight.reliability}",
+
                 *regime.reasons,
 
                 *risk.reasons,
@@ -78,6 +88,9 @@ class IntelligenceFlow:
             ]
 
         )
+
+
+        report.learning_insight = learning_insight
 
 
         decision = self.decision_engine.decide(
@@ -92,17 +105,16 @@ class IntelligenceFlow:
 
             pattern=f"{report.regime} + {decision.action}",
 
-            confidence=0,
+            confidence=learning_insight.average_confidence,
 
-            samples=0,
+            samples=learning_insight.samples,
 
-            reliability="UNKNOWN"
+            reliability=learning_insight.reliability
 
         )
 
 
         report.historical_context = historical_context
-
 
 
         is_valid = self.decision_validator.validate(
@@ -124,7 +136,6 @@ class IntelligenceFlow:
 
             )
 
-
         else:
 
             report.action_proposal = ActionProposal(
@@ -138,9 +149,6 @@ class IntelligenceFlow:
                 confidence=decision.confidence
 
             )
-
-
-        
 
 
         record = DecisionRecord(
@@ -159,16 +167,18 @@ class IntelligenceFlow:
 
             action=decision.action,
 
-            validation_status=report.action_proposal.status,
-            
+            validation_status=report.action_proposal.status
+
         )
+
 
         quality_result = self.decision_quality.calculate(
             record
-            
         )
 
+
         record.quality_score = quality_result["quality_score"]
+
 
         self.decision_memory.store(record)
 
