@@ -12,6 +12,7 @@ from intelligence.historical_context import HistoricalContext
 from intelligence.decision_quality import DecisionQualityAnalyzer
 from intelligence.learning_analyzer import LearningAnalyzer
 from intelligence.adaptive_confidence import AdaptiveConfidence
+from intelligence.intelligence_context import IntelligenceContext
 
 
 class IntelligenceFlow:
@@ -123,6 +124,31 @@ class IntelligenceFlow:
         )
 
 
+        intelligence_context = IntelligenceContext(
+
+            learning_insight=getattr(
+                 report,
+                 "learning_insight",
+                 None
+
+                      
+        ),
+
+        historical_context=historical_context,
+
+        pattern_insight=getattr(
+            report,
+            "pattern_insight",
+            None
+        ),
+
+        quality_score=0,
+
+        adaptive_confidence=report.confidence
+
+        )
+
+
         report.historical_context = historical_context
 
 
@@ -190,6 +216,34 @@ class IntelligenceFlow:
 
 
         self.decision_memory.store(record)
+       
+       
+        
+        report.intelligence_context = IntelligenceContext(
+
+            historical_context=historical_context,
+
+            learning_insight=getattr(
+                report,
+                "learning_insight",
+                None
+            ),
+
+            pattern_insight=getattr(
+                report,
+                "pattern_insight",
+                None
+            ),
+
+            quality_score=getattr(
+                record,
+                "quality_score",
+                0
+            ),
+
+            adaptive_confidence=report.confidence
+
+        )
 
 
         return report

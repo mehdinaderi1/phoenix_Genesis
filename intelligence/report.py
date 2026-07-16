@@ -15,6 +15,7 @@ class MarketReport:
     decision: object = None
     action_proposal: object = None
     historical_context: object | None = None
+    intelligence_context: object | None = None
 
     def summary(self):
         return {
