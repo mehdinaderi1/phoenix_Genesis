@@ -8,7 +8,7 @@ from intelligence.risk_analyzer import RiskAnalyzer
 from intelligence.report import MarketReport
 from intelligence.decision_engine import DecisionEngine
 from intelligence.decision_quality import DecisionQualityAnalyzer
-
+from intelligence.pattern_service import PatternService
 
 class IntelligenceFlow:
 
@@ -23,6 +23,7 @@ class IntelligenceFlow:
 
         self.decision_memory = DecisionMemory()
         self.quality_analyzer = DecisionQualityAnalyzer()
+        self.pattern_service = PatternService()
 
 
     def create_report(self, consensus):
