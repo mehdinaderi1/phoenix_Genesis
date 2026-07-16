@@ -1,26 +1,27 @@
-from intelligence.intelligence_context import IntelligenceContext
+from intelligence.flow import IntelligenceFlow
+
+
+class MockConsensus:
+
+    trend = "BULLISH"
+    signal = "BUY"
+    confidence = 85
 
 
 
-def test_intelligence_context_creation():
+def test_adaptive_confidence_in_flow():
 
+    flow = IntelligenceFlow()
 
-    context = IntelligenceContext()
+    report = flow.create_report(
+        MockConsensus()
+    )
 
+    assert report is not None
 
-    assert context is not None
+    assert hasattr(
+        report,
+        "confidence"
+    )
 
-
-    assert context.learning_insight is None
-
-
-    assert context.historical_context is None
-
-
-    assert context.pattern_insight is None
-
-
-    assert context.quality_score == 0
-
-
-    assert context.adaptive_confidence == 0
+    assert report.confidence > 0
