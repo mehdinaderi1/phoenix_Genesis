@@ -14,6 +14,7 @@ from intelligence.learning_analyzer import LearningAnalyzer
 from intelligence.adaptive_confidence import AdaptiveConfidence
 from intelligence.intelligence_context import IntelligenceContext
 from intelligence.scenario_engine import ScenarioEngine
+from intelligence.strategy_analyzer import StrategyAnalyzer
 
 
 class IntelligenceFlow:
@@ -41,6 +42,8 @@ class IntelligenceFlow:
         self.learning_analyzer = LearningAnalyzer()
 
         self.adaptive_confidence = AdaptiveConfidence()
+
+        self.strategy_analyzer = StrategyAnalyzer()
 
 
     def create_report(self, consensus):
@@ -123,7 +126,12 @@ class IntelligenceFlow:
 
         report.decision = decision
 
+        report.strategy_insight = self.strategy_analyzer.analyze(
+            decision,
+            report
 
+        )
+        
         historical_context = HistoricalContext(
 
             pattern=f"{report.regime} + {decision.action}",
