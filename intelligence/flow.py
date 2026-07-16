@@ -15,6 +15,8 @@ from intelligence.adaptive_confidence import AdaptiveConfidence
 from intelligence.intelligence_context import IntelligenceContext
 from intelligence.scenario_engine import ScenarioEngine
 from intelligence.strategy_analyzer import StrategyAnalyzer
+from intelligence.strategy_memory import StrategyMemory
+from intelligence.performance_feedback import PerformanceFeedback
 
 
 class IntelligenceFlow:
@@ -44,6 +46,10 @@ class IntelligenceFlow:
         self.adaptive_confidence = AdaptiveConfidence()
 
         self.strategy_analyzer = StrategyAnalyzer()
+
+        self.strategy_memory = StrategyMemory()
+
+        self.performance_feedback = PerformanceFeedback()
 
 
     def create_report(self, consensus):
@@ -132,6 +138,16 @@ class IntelligenceFlow:
 
         )
         
+        self.strategy_memory.store(
+            report.strategy_insight
+        )
+
+        report.performance_feedback = self.performance_feedback.evaluate(
+           decision,
+           65000,
+           67000 
+        )   
+
         historical_context = HistoricalContext(
 
             pattern=f"{report.regime} + {decision.action}",
