@@ -14,6 +14,7 @@ class MarketReport:
     reasons: List[str]
     decision: object = None
     action_proposal: object = None
+    historical_context: object | None = None
 
     def summary(self):
         return {
