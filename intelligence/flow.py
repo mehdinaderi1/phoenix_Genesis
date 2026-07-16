@@ -11,6 +11,7 @@ from intelligence.pattern_service import PatternService
 from intelligence.historical_context import HistoricalContext
 from intelligence.decision_quality import DecisionQualityAnalyzer
 from intelligence.learning_analyzer import LearningAnalyzer
+from intelligence.adaptive_confidence import AdaptiveConfidence
 
 
 class IntelligenceFlow:
@@ -35,6 +36,8 @@ class IntelligenceFlow:
 
         self.learning_analyzer = LearningAnalyzer()
 
+        self.adaptive_confidence = AdaptiveConfidence()
+
 
     def create_report(self, consensus):
 
@@ -55,6 +58,12 @@ class IntelligenceFlow:
         )
 
 
+        analysis["confidence"] = self.adaptive_confidence.adjust(
+            analysis["confidence"],
+            learning_insight
+        )
+        
+                
         report = MarketReport(
 
             symbol="BTCUSDT",
