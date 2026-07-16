@@ -13,6 +13,7 @@ from intelligence.decision_quality import DecisionQualityAnalyzer
 from intelligence.learning_analyzer import LearningAnalyzer
 from intelligence.adaptive_confidence import AdaptiveConfidence
 from intelligence.intelligence_context import IntelligenceContext
+from intelligence.scenario_engine import ScenarioEngine
 
 
 class IntelligenceFlow:
@@ -34,6 +35,8 @@ class IntelligenceFlow:
         self.pattern_service = PatternService()
 
         self.decision_quality = DecisionQualityAnalyzer()
+
+        self.scenario_engine = ScenarioEngine()
 
         self.learning_analyzer = LearningAnalyzer()
 
@@ -64,6 +67,15 @@ class IntelligenceFlow:
             learning_insight
         )
         
+
+        scenarios = self.scenario_engine.generate(
+            regime.regime,
+
+            analysis["confidence"],
+
+             risk.level
+
+        )
                 
         report = MarketReport(
 
@@ -99,6 +111,7 @@ class IntelligenceFlow:
 
         )
 
+        report.scenarios = scenarios
 
         report.learning_insight = learning_insight
 
