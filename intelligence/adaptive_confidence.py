@@ -4,7 +4,8 @@ class AdaptiveConfidence:
     def adjust(
         self,
         base_confidence,
-        learning_insight
+        learning_insight,
+        experience_bonus=0
     ):
 
         adjustment = 0
@@ -23,6 +24,10 @@ class AdaptiveConfidence:
         elif learning_insight.reliability == "MEDIUM":
 
             adjustment += 5
+
+
+
+        adjustment += experience_bonus
 
 
 

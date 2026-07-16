@@ -19,6 +19,8 @@ from intelligence.strategy_memory import StrategyMemory
 from intelligence.performance_feedback import PerformanceFeedback
 from intelligence.experience_context import ExperienceContext
 from intelligence.memory.experience_memory import ExperienceMemory
+from intelligence.experience_confidence import ExperienceConfidence
+from intelligence.experience_confidence import ExperienceConfidence
 
 
 class IntelligenceFlow:
@@ -47,6 +49,8 @@ class IntelligenceFlow:
 
         self.adaptive_confidence = AdaptiveConfidence()
 
+        self.experience_confidence = ExperienceConfidence()
+
         self.strategy_analyzer = StrategyAnalyzer()
 
         self.strategy_memory = StrategyMemory()
@@ -58,7 +62,9 @@ class IntelligenceFlow:
         self.experience_context = ExperienceContext(
             self.experience_memory
         )
+        self.experience_confidence = ExperienceConfidence()
 
+        
 
     def create_report(self, consensus):
 
@@ -68,6 +74,14 @@ class IntelligenceFlow:
 
         experience_context = self.experience_context.build_context( 
             strategy="Trend"
+        )
+        
+        experience_bonus = self.experience_confidence.calculate(
+            experience_context
+        )
+
+        experience_bonus = self.experience_confidence.calculate(
+            experience_context
         )
 
         regime = self.regime_analyzer.analyze(consensus)
@@ -84,7 +98,8 @@ class IntelligenceFlow:
 
         analysis["confidence"] = self.adaptive_confidence.adjust(
             analysis["confidence"],
-            learning_insight
+            learning_insight,
+            experience_bonus
         )
         
 
