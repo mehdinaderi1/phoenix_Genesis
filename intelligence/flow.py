@@ -17,6 +17,8 @@ from intelligence.scenario_engine import ScenarioEngine
 from intelligence.strategy_analyzer import StrategyAnalyzer
 from intelligence.strategy_memory import StrategyMemory
 from intelligence.performance_feedback import PerformanceFeedback
+from intelligence.experience_context import ExperienceContext
+from intelligence.memory.experience_memory import ExperienceMemory
 
 
 class IntelligenceFlow:
@@ -51,6 +53,12 @@ class IntelligenceFlow:
 
         self.performance_feedback = PerformanceFeedback()
 
+        self.experience_memory = ExperienceMemory()
+
+        self.experience_context = ExperienceContext(
+            self.experience_memory
+        )
+
 
     def create_report(self, consensus):
 
@@ -58,6 +66,9 @@ class IntelligenceFlow:
             self.decision_memory.records
         )
 
+        experience_context = self.experience_context.build_context( 
+            strategy="Trend"
+        )
 
         regime = self.regime_analyzer.analyze(consensus)
 
@@ -123,6 +134,7 @@ class IntelligenceFlow:
         report.scenarios = scenarios
 
         report.learning_insight = learning_insight
+        report.experience_context = experience_context
 
 
         decision = self.decision_engine.decide(
