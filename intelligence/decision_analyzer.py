@@ -1,5 +1,6 @@
 class DecisionAnalyzer:
 
+
     def analyze(self, records):
 
         total = len(records)
@@ -13,12 +14,20 @@ class DecisionAnalyzer:
 
         rejected = total - approved
 
+
         if total == 0:
+
             average_confidence = 0
+
         else:
-            average_confidence = sum(
-                r.confidence for r in records
-            ) / total
+
+            average_confidence = (
+                sum(
+                    r.confidence
+                    for r in records
+                )
+                / total
+            )
 
 
         return {
@@ -27,3 +36,11 @@ class DecisionAnalyzer:
             "rejected": rejected,
             "average_confidence": average_confidence
         }
+
+
+
+    def analyze_history(self, history):
+
+        records = history.get_all()
+
+        return self.analyze(records)
