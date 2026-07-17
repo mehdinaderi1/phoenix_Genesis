@@ -1,6 +1,7 @@
 from intelligence.experience_confidence import ExperienceConfidence
 
 
+
 def test_experience_confidence_positive():
 
     engine = ExperienceConfidence()
@@ -58,3 +59,26 @@ def test_experience_confidence_limit():
 
 
     assert result <= 10
+
+
+
+def test_experience_confidence_from_strategy():
+
+    engine = ExperienceConfidence()
+
+
+    strategy = {
+
+        "strategy": "bullish_buy_low",
+
+        "success_rate": 0.8
+
+    }
+
+
+    result = engine.calculate_from_strategy(
+        strategy
+    )
+
+
+    assert result == 6

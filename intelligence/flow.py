@@ -21,7 +21,8 @@ from intelligence.experience_record import ExperienceRecord
 from intelligence.experience_context import ExperienceContext
 from intelligence.memory.experience_memory import ExperienceMemory
 from intelligence.experience_confidence import ExperienceConfidence
-
+from intelligence.strategy_recall import StrategyRecall
+from intelligence.confidence_adjuster import ConfidenceAdjuster
 
 
 class IntelligenceFlow:
@@ -56,6 +57,13 @@ class IntelligenceFlow:
 
         self.strategy_memory = StrategyMemory()
 
+        self.strategy_recall = StrategyRecall(
+            self.strategy_memory
+
+        )
+
+        self.confidence_adjuster = ConfidenceAdjuster()
+
         self.performance_feedback = PerformanceFeedback()
 
         self.experience_memory = ExperienceMemory()
@@ -81,10 +89,7 @@ class IntelligenceFlow:
             experience_context
         )
 
-        experience_bonus = self.experience_confidence.calculate(
-            experience_context
-        )
-
+       
         regime = self.regime_analyzer.analyze(consensus)
 
 
@@ -152,6 +157,33 @@ class IntelligenceFlow:
         report.learning_insight = learning_insight
         report.experience_context = experience_context
 
+        best_strategy = None
+
+        strategy_matches = self.strategy_recall.recall(
+            report.regime,
+            report.signal,
+            report.risk
+        )
+
+
+        if strategy_matches:
+
+            best_strategy = strategy_matches[-1]
+
+            strategy_bonus = (
+                self.experience_confidence
+                .calculate_from_strategy(
+                    best_strategy    
+
+                )
+            )
+
+            report.confidence = (
+                self.confidence_adjuster.adjust(
+                    report.confidence,
+                    strategy_bonus    
+                )
+            )
 
         decision = self.decision_engine.decide(
             report
