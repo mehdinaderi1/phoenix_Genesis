@@ -32,4 +32,7 @@ def test_strategy_memory_flow():
     record = flow.strategy_memory.latest()
 
 
+    print(flow.strategy_memory.records)
+    print(report.learned_strategies)
+    
     assert record is not None

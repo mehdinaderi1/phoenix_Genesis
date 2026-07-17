@@ -206,6 +206,9 @@ class IntelligenceFlow:
 
         )
         
+        self.strategy_memory.store(
+            report.strategy_insight
+        )
         
         report.performance_feedback = self.performance_feedback.evaluate(
            decision,
