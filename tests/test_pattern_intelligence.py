@@ -54,3 +54,14 @@ def test_pattern_intelligence():
     assert "samples" in bullish
 
     assert "success_rate" in bullish
+
+
+    assert bullish["pattern"] == (
+        "bullish",
+        "buy",
+        "low"
+    )
+
+    assert bullish["samples"] == 2
+
+    assert bullish["success_rate"] == 1.0

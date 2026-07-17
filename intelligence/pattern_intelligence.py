@@ -35,7 +35,14 @@ class PatternIntelligence:
 
             if result:
 
-                result["pattern"] = pattern
+                parts = pattern.split("_")
+
+
+                result["pattern"] = (
+                    parts[0],
+                    parts[1],
+                    parts[2]
+                )
 
                 insights.append(
                     result

@@ -23,6 +23,8 @@ from intelligence.memory.experience_memory import ExperienceMemory
 from intelligence.experience_confidence import ExperienceConfidence
 from intelligence.strategy_recall import StrategyRecall
 from intelligence.confidence_adjuster import ConfidenceAdjuster
+from intelligence.pattern_intelligence import PatternIntelligence
+from intelligence.strategy_learner import StrategyLearner
 
 
 class IntelligenceFlow:
@@ -56,6 +58,12 @@ class IntelligenceFlow:
         self.strategy_analyzer = StrategyAnalyzer()
 
         self.strategy_memory = StrategyMemory()
+
+        self.pattern_intelligence = PatternIntelligence()
+
+        self.strategy_learner = StrategyLearner(
+            self.strategy_memory
+        )
 
         self.strategy_recall = StrategyRecall(
             self.strategy_memory
@@ -198,10 +206,7 @@ class IntelligenceFlow:
 
         )
         
-        self.strategy_memory.store(
-            report.strategy_insight
-        )
-
+        
         report.performance_feedback = self.performance_feedback.evaluate(
            decision,
            65000,
@@ -228,6 +233,20 @@ class IntelligenceFlow:
         self.experience_memory.save_experience(
             experience
         )
+
+        patterns = self.pattern_intelligence.analyze(
+            self.experience_memory.get_experiences()
+        )
+
+
+        if patterns:
+            learned_strategies = self.strategy_learner.learn(
+                patterns
+            )
+
+            report.learned_strategies = (
+                 learned_strategies
+            )    
 
         historical_context = HistoricalContext(
 

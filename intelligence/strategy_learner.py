@@ -15,9 +15,14 @@ class StrategyLearner:
 
         for pattern in patterns:
 
-            regime, signal, risk = (
-                pattern["pattern"]
-            )
+            parts = pattern["pattern"]
+
+
+            regime = parts[0]
+
+            signal = parts[1]
+
+            risk = parts[2]
 
             strategy_record = {
 
