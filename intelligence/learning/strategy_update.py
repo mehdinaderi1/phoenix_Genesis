@@ -21,6 +21,37 @@ class StrategyUpdate:
         }
 
 
+        existing = False
+
+
+        for item in self.strategy_memory.records:
+
+            if (
+                item.get("strategy")
+                == record["strategy"]
+            ):
+
+                existing = True
+
+                break
+
+
+
+        if existing:
+
+            updated = self.strategy_memory.update_strategy(
+                record
+            )
+
+            if updated:
+
+                return record
+
+
+            return None
+
+
+
         self.strategy_memory.store(
             record
         )
