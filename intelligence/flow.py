@@ -32,6 +32,7 @@ from intelligence.learning.strategy_update import StrategyUpdate
 from intelligence.strategy_selector import StrategySelector
 from intelligence.strategy_selector import StrategySelector
 from intelligence.learning.strategy_ranker import StrategyRanker
+from intelligence.learning.strategy_quality_gate import StrategyQualityGate
 
 class IntelligenceFlow:
 
@@ -89,6 +90,8 @@ class IntelligenceFlow:
         )
 
         self.confidence_adjuster = ConfidenceAdjuster()
+
+        self.strategy_quality_gate = StrategyQualityGate()
 
         self.performance_feedback = PerformanceFeedback()
 
