@@ -29,7 +29,9 @@ from intelligence.strategy_learner import StrategyLearner
 from intelligence.strategy_feedback import StrategyFeedback
 from intelligence.learning.strategy_improvement_engine import StrategyImprovementEngine
 from intelligence.learning.strategy_update import StrategyUpdate
-
+from intelligence.strategy_selector import StrategySelector
+from intelligence.strategy_selector import StrategySelector
+from intelligence.learning.strategy_ranker import StrategyRanker
 
 class IntelligenceFlow:
 
@@ -74,6 +76,14 @@ class IntelligenceFlow:
 
         )
 
+        self.strategy_ranker = StrategyRanker()
+     
+        self.strategy_selector = StrategySelector(
+            self.strategy_recall,
+            StrategyRanker()
+        )
+                    
+
         self.strategy_context = StrategyContext(
             self.strategy_recall
         )
@@ -95,6 +105,7 @@ class IntelligenceFlow:
         self.experience_context = ExperienceContext(
             self.experience_memory
         )
+       
         self.experience_confidence = ExperienceConfidence()
 
         
@@ -183,17 +194,36 @@ class IntelligenceFlow:
 
         best_strategy = None
 
-        strategy_matches = self.strategy_recall.recall(
+        best_strategy = self.strategy_selector.select(
             report.regime,
             report.signal,
-            report.risk
+             report.risk
         )
 
+        if best_strategy:
 
-        if strategy_matches:
+            strategy_bonus = (
+                self.experience_confidence
+                .calculate_from_strategy(
+                    best_strategy
+                )   
+            )
 
-            best_strategy = strategy_matches[-1]
+            report.strategy_context = (
+                self.strategy_context.analyze(
+                    report.regime,
+                    report.signal,
+                    report.risk
+                )
+            )
 
+            report.confidence = (
+                self.confidence_adjuster.adjust(
+                    report.confidence,
+                    strategy_bonus    
+                )
+            )   
+   
             strategy_bonus = (
                 self.experience_confidence
                 .calculate_from_strategy(
@@ -229,11 +259,7 @@ class IntelligenceFlow:
             report
 
         )
-        
-        self.strategy_memory.store(
-            report.strategy_insight
-        )
-        
+                       
         report.performance_feedback = self.performance_feedback.evaluate(
            decision,
            65000,
@@ -258,7 +284,7 @@ class IntelligenceFlow:
         self.strategy_update.update(
             improved_strategy
         )
-        
+
         experience = ExperienceRecord(
 
             regime=report.regime,
