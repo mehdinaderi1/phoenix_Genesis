@@ -1,38 +1,40 @@
 from intelligence.decision_memory import DecisionMemory
 from intelligence.decision_record import DecisionRecord
 from intelligence.decision_validator import DecisionValidator
+from intelligence.decision_engine import DecisionEngine
+from intelligence.decision_quality import DecisionQualityAnalyzer
 from intelligence.action_proposal import ActionProposal
 from intelligence.reasoning import ReasoningEngine
 from intelligence.regime_analyzer import RegimeAnalyzer
 from intelligence.risk_analyzer import RiskAnalyzer
 from intelligence.report import MarketReport
-from intelligence.decision_engine import DecisionEngine
 from intelligence.pattern_service import PatternService
 from intelligence.historical_context import HistoricalContext
-from intelligence.decision_quality import DecisionQualityAnalyzer
-from intelligence.learning_analyzer import LearningAnalyzer
 from intelligence.adaptive_confidence import AdaptiveConfidence
 from intelligence.intelligence_context import IntelligenceContext
 from intelligence.scenario_engine import ScenarioEngine
-from intelligence.strategy_analyzer import StrategyAnalyzer
 from intelligence.performance_feedback import PerformanceFeedback
 from intelligence.experience_record import ExperienceRecord
 from intelligence.experience_context import ExperienceContext
 from intelligence.memory.experience_memory import ExperienceMemory
 from intelligence.experience_confidence import ExperienceConfidence
-from intelligence.strategy_memory import StrategyMemory
-from intelligence.strategy_recall import StrategyRecall
-from intelligence.strategy_context import StrategyContext
 from intelligence.confidence_adjuster import ConfidenceAdjuster
 from intelligence.pattern_intelligence import PatternIntelligence
-from intelligence.strategy_learner import StrategyLearner
+from intelligence.strategy_memory import StrategyMemory
+from intelligence.strategy_analyzer import StrategyAnalyzer
+from intelligence.strategy_recall import StrategyRecall
+from intelligence.strategy_context import StrategyContext
 from intelligence.strategy_feedback import StrategyFeedback
-from intelligence.learning.strategy_improvement_engine import StrategyImprovementEngine
-from intelligence.learning.strategy_update import StrategyUpdate
 from intelligence.strategy_selector import StrategySelector
 from intelligence.strategy_selector import StrategySelector
+from intelligence.strategy_learner import StrategyLearner
+from intelligence.learning_analyzer import LearningAnalyzer
 from intelligence.learning.strategy_ranker import StrategyRanker
 from intelligence.learning.strategy_quality_gate import StrategyQualityGate
+from intelligence.learning.strategy_history import StrategyHistory
+from intelligence.learning.strategy_improvement_engine import StrategyImprovementEngine
+from intelligence.learning.strategy_update import StrategyUpdate
+
 
 class IntelligenceFlow:
 
@@ -99,8 +101,13 @@ class IntelligenceFlow:
 
         self.strategy_improvement = StrategyImprovementEngine()
 
+        self.strategy_history = StrategyHistory()
+
+
         self.strategy_update = StrategyUpdate(
-            self.strategy_memory
+            self.strategy_memory,
+            self.strategy_quality_gate,
+            self.strategy_history
         )    
 
         self.experience_memory = ExperienceMemory()
@@ -282,6 +289,8 @@ class IntelligenceFlow:
                 strategy_record
             ]
         )
+        
+        print("IMPROVED STRATEGY:", improved_strategy)
 
 
         self.strategy_update.update(

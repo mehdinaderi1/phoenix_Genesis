@@ -4,11 +4,13 @@ class StrategyUpdate:
     def __init__(
         self,
         strategy_memory,
-        quality_gate=None
+        quality_gate=None,
+        strategy_history=None
     ):
 
         self.strategy_memory = strategy_memory
         self.quality_gate = quality_gate
+        self.strategy_history = strategy_history
 
 
 
@@ -41,11 +43,17 @@ class StrategyUpdate:
                 0
             ),
 
-            "regime": context.get("regime"),
+            "regime": context.get(
+                "regime"
+            ),
 
-            "signal": context.get("signal"),
+            "signal": context.get(
+                "signal"
+            ),
 
-            "risk": context.get("risk")
+            "risk": context.get(
+                "risk"
+            )
 
         }
 
@@ -56,25 +64,54 @@ class StrategyUpdate:
 
             if not accepted:
 
+                self.strategy_memory.store(record)
+
                 return {
                     "updated": False,
                     "reason": "quality_gate_failed",
-                    "record": record
+                    "record": record,
+                    **record
                 }
 
 
 
         if context:
 
-            self.strategy_memory.store(record)
+            self.strategy_memory.store(
+                record
+            )
 
         else:
 
-            updated = self.strategy_memory.update_strategy(record)
+            updated = self.strategy_memory.update_strategy(
+                record
+            )
 
             if not updated:
 
-                self.strategy_memory.store(record)
+                self.strategy_memory.store(
+                    record
+                )
+
+
+
+        if self.strategy_history:
+
+            self.strategy_history.add_record(
+                strategy_score.strategy,
+                strategy_score.score,
+                getattr(
+                    strategy_score,
+                    "success_rate",
+                    0
+                ),
+                getattr(
+                    strategy_score,
+                    "samples",
+                    0
+                )
+            )
+
 
 
         return {
