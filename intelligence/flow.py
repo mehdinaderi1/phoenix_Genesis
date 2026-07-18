@@ -31,6 +31,9 @@ from intelligence.strategy_learner import StrategyLearner
 from intelligence.learning_analyzer import LearningAnalyzer
 from intelligence.learning.strategy_ranker import StrategyRanker
 from intelligence.learning.strategy_quality_gate import StrategyQualityGate
+from intelligence.learning.strategy_evolution_flow import (
+    StrategyEvolutionFlow
+)
 from intelligence.learning.strategy_history import StrategyHistory
 from intelligence.learning.strategy_improvement_engine import StrategyImprovementEngine
 from intelligence.learning.strategy_update import StrategyUpdate
@@ -70,6 +73,8 @@ class IntelligenceFlow:
         self.experience_confidence = ExperienceConfidence()
 
         self.strategy_analyzer = StrategyAnalyzer()
+
+        self.strategy_history = StrategyHistory()
 
         self.strategy_memory = StrategyMemory()
 
@@ -218,6 +223,35 @@ class IntelligenceFlow:
              report.risk
         )
 
+        strategy_history = (
+            self.strategy_history.get_history(
+                best_strategy
+            )
+        )
+
+
+        if strategy_history:
+
+            evolution_result = (
+                self.strategy_evolution_flow.evaluate(
+                    best_strategy,
+                    strategy_history
+                )
+          )
+
+        else:
+
+            evolution_result = {
+                "strategy": best_strategy,
+                "evolution": {
+                    "action": "NEW",
+                    "reason": "no history"
+                }
+            }
+
+
+        report.strategy_evolution = evolution_result
+        
         if best_strategy:
 
             strategy_bonus = (
