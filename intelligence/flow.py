@@ -26,6 +26,9 @@ from intelligence.strategy_context import StrategyContext
 from intelligence.confidence_adjuster import ConfidenceAdjuster
 from intelligence.pattern_intelligence import PatternIntelligence
 from intelligence.strategy_learner import StrategyLearner
+from intelligence.strategy_feedback import StrategyFeedback
+from intelligence.learning.strategy_improvement_engine import StrategyImprovementEngine
+from intelligence.learning.strategy_update import StrategyUpdate
 
 
 class IntelligenceFlow:
@@ -78,6 +81,14 @@ class IntelligenceFlow:
         self.confidence_adjuster = ConfidenceAdjuster()
 
         self.performance_feedback = PerformanceFeedback()
+
+        self.strategy_feedback = StrategyFeedback()
+
+        self.strategy_improvement = StrategyImprovementEngine()
+
+        self.strategy_update = StrategyUpdate(
+            self.strategy_memory
+        )    
 
         self.experience_memory = ExperienceMemory()
 
@@ -227,7 +238,26 @@ class IntelligenceFlow:
            decision,
            65000,
            67000 
-        )   
+        )
+
+        strategy_record = self.strategy_feedback.create_record(
+            report.strategy_insight["strategy"],
+            report.performance_feedback
+        )
+
+
+        improved_strategy = self.strategy_improvement.improve(
+            strategy_record.strategy,
+            report.strategy_insight["score"],
+            [
+                strategy_record
+            ]
+        )
+
+
+        self.strategy_update.update(
+            improved_strategy
+        )
         
         experience = ExperienceRecord(
 
