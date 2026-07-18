@@ -15,13 +15,14 @@ from intelligence.adaptive_confidence import AdaptiveConfidence
 from intelligence.intelligence_context import IntelligenceContext
 from intelligence.scenario_engine import ScenarioEngine
 from intelligence.strategy_analyzer import StrategyAnalyzer
-from intelligence.strategy_memory import StrategyMemory
 from intelligence.performance_feedback import PerformanceFeedback
 from intelligence.experience_record import ExperienceRecord
 from intelligence.experience_context import ExperienceContext
 from intelligence.memory.experience_memory import ExperienceMemory
 from intelligence.experience_confidence import ExperienceConfidence
+from intelligence.strategy_memory import StrategyMemory
 from intelligence.strategy_recall import StrategyRecall
+from intelligence.strategy_context import StrategyContext
 from intelligence.confidence_adjuster import ConfidenceAdjuster
 from intelligence.pattern_intelligence import PatternIntelligence
 from intelligence.strategy_learner import StrategyLearner
@@ -68,6 +69,10 @@ class IntelligenceFlow:
         self.strategy_recall = StrategyRecall(
             self.strategy_memory
 
+        )
+
+        self.strategy_context = StrategyContext(
+            self.strategy_recall
         )
 
         self.confidence_adjuster = ConfidenceAdjuster()
@@ -183,6 +188,14 @@ class IntelligenceFlow:
                 .calculate_from_strategy(
                     best_strategy    
 
+                )
+            )
+
+            report.strategy_context = (
+                self.strategy_context.analyze(
+                    report.regime,
+                    report.signal,
+                    report.risk
                 )
             )
 
@@ -383,6 +396,13 @@ class IntelligenceFlow:
 
             adaptive_confidence=report.confidence
 
+        )
+        report.strategy_context = (
+            self.strategy_context.analyze(
+                report.regime,
+                report.signal,
+                report.risk
+            )
         )
 
 
