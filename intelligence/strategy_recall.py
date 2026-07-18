@@ -5,7 +5,10 @@ class StrategyRecall:
     """
 
 
-    def __init__(self, strategy_memory):
+    def __init__(
+        self,
+        strategy_memory
+    ):
 
         self.strategy_memory = strategy_memory
 
@@ -24,5 +27,34 @@ class StrategyRecall:
                 regime,
                 signal,
                 risk
+            )
+        )
+
+
+
+    def best(
+        self,
+        regime,
+        signal,
+        risk
+    ):
+
+        strategies = self.recall(
+            regime,
+            signal,
+            risk
+        )
+
+
+        if not strategies:
+
+            return None
+
+
+        return max(
+            strategies,
+            key=lambda x: x.get(
+                "score",
+                0
             )
         )
