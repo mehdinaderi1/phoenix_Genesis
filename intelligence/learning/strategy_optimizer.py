@@ -20,12 +20,9 @@ class StrategyOptimizer:
 
         score = current_score
 
-        if report.win_rate >= 70:
+        if report.win_rate >= 60:
             score += 5
-
-        elif report.win_rate >= 55:
-            score += 1
-
+       
         else:
             score -= 5
 

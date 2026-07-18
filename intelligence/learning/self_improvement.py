@@ -14,7 +14,7 @@ class ImprovementReport:
 
 class SelfImprovement:
 
-    def analyze(self, feedbacks: list[Performancerecord]) -> ImprovementReport:
+    def analyze(self, feedbacks: list[PerformanceRecord]) -> ImprovementReport:
 
         if not feedbacks:
             return ImprovementReport(
