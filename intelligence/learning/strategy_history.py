@@ -43,6 +43,14 @@ class StrategyHistory:
 
 
 
+    def get_all(
+        self
+    ):
+
+        return self.history
+
+
+
     def latest(
         self,
         strategy

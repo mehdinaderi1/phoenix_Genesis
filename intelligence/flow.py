@@ -34,6 +34,9 @@ from intelligence.learning.strategy_quality_gate import StrategyQualityGate
 from intelligence.learning.strategy_history import StrategyHistory
 from intelligence.learning.strategy_improvement_engine import StrategyImprovementEngine
 from intelligence.learning.strategy_update import StrategyUpdate
+from intelligence.learning.strategy_performance import (
+    StrategyPerformanceAnalyzer
+)
 
 
 class IntelligenceFlow:
@@ -54,6 +57,8 @@ class IntelligenceFlow:
 
         self.pattern_service = PatternService()
 
+        self.pattern_intelligence = PatternIntelligence()
+
         self.decision_quality = DecisionQualityAnalyzer()
 
         self.scenario_engine = ScenarioEngine()
@@ -68,7 +73,9 @@ class IntelligenceFlow:
 
         self.strategy_memory = StrategyMemory()
 
-        self.pattern_intelligence = PatternIntelligence()
+        self.strategy_history = StrategyHistory()
+
+        self.strategy_performance = StrategyPerformanceAnalyzer()
 
         self.strategy_learner = StrategyLearner(
             self.strategy_memory
@@ -200,6 +207,7 @@ class IntelligenceFlow:
         report.scenarios = scenarios
 
         report.learning_insight = learning_insight
+        
         report.experience_context = experience_context
 
         best_strategy = None
@@ -281,6 +289,22 @@ class IntelligenceFlow:
             report.performance_feedback
         )
 
+        strategy_name = (
+            report.strategy_insight["strategy"]    
+        )
+
+        strategy_history = (
+            self.strategy_history.get_history(
+                strategy_name
+            )
+        )
+
+        strategy_performance = (
+            self.strategy_performance.analyze(
+                strategy_history
+            )
+        )
+
 
         improved_strategy = self.strategy_improvement.improve(
             strategy_record.strategy,
@@ -289,13 +313,17 @@ class IntelligenceFlow:
                 strategy_record
             ]
         )
-        
+
         print("IMPROVED STRATEGY:", improved_strategy)
 
 
         self.strategy_update.update(
             improved_strategy
         )
+
+        strategy_performance = self.strategy_performance.analyze(
+            self.strategy_history.get_all()
+      )
 
         experience = ExperienceRecord(
 
@@ -473,5 +501,8 @@ class IntelligenceFlow:
             )
         )
 
+        report.strategy_performance = (
+            strategy_performance
+        )
 
         return report
