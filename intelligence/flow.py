@@ -28,6 +28,16 @@ from intelligence.strategy_feedback import StrategyFeedback
 from intelligence.strategy_selector import StrategySelector
 from intelligence.strategy_selector import StrategySelector
 from intelligence.strategy_learner import StrategyLearner
+from intelligence.strategy_intelligence_service import (
+    StrategyIntelligenceService
+)
+from intelligence.strategy_intelligence_adapter import (
+    StrategyIntelligenceAdapter
+)
+
+from intelligence.strategy_intelligence_service import (
+    StrategyIntelligenceService
+)
 from intelligence.learning_analyzer import LearningAnalyzer
 from intelligence.learning.strategy_ranker import StrategyRanker
 from intelligence.learning.strategy_quality_gate import StrategyQualityGate
@@ -97,7 +107,15 @@ class IntelligenceFlow:
             self.strategy_recall,
             StrategyRanker()
         )
-                    
+        self.strategy_intelligence_adapter = (
+            StrategyIntelligenceAdapter()
+        )
+
+        self.strategy_intelligence = (
+            StrategyIntelligenceService()
+        )
+
+        self.strategy_intelligence = StrategyIntelligenceService()            
 
         self.strategy_context = StrategyContext(
             self.strategy_recall
@@ -223,11 +241,35 @@ class IntelligenceFlow:
              report.risk
         )
 
+        report.strategy_intelligence = None
+
+
         strategy_history = (
             self.strategy_history.get_history(
                 best_strategy
             )
         )
+
+        strategy_intelligence_context, strategy_knowledge = (
+            self.strategy_intelligence_adapter.build_context(
+                best_strategy,
+                strategy_history
+            )
+        )
+
+
+        if strategy_intelligence_context:
+
+            report.strategy_intelligence = (
+                self.strategy_intelligence.analyze(
+                    strategy_intelligence_context,
+                    strategy_knowledge
+                )
+            )
+
+        else:
+
+            report.strategy_intelligence = None
 
 
         if strategy_history:
