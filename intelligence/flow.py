@@ -143,12 +143,12 @@ class IntelligenceFlow:
         from intelligence.governance.governance_memory import (
             GovernanceMemory
         )
-        self.governance_confidence = GovernanceConfidence()
-                  
+        
 
         self.strategy_context = StrategyContext(
             self.strategy_recall
         )
+        
         self.governance_memory = GovernanceMemory()
         self.governance_feedback = GovernanceFeedback(
             self.governance_memory
@@ -670,6 +670,7 @@ class IntelligenceFlow:
             )
         )
 
+        print("GOVERNANCE FEEDBACK:", feedback)
 
         confidence = (
             self.governance_confidence.calculate(

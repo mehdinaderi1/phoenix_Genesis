@@ -27,6 +27,11 @@ class GovernanceConfidence:
             self.score -= 10
 
 
+        if self.score < 0:
+
+            self.score = 0
+
+
         return self.score
 
 
