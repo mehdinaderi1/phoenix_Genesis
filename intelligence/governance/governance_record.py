@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 
@@ -11,6 +11,8 @@ class GovernanceRecord:
 
     reason: str
 
-    timestamp: datetime = (
-        datetime.now(timezone.utc)
+    timestamp: datetime = field(
+        default_factory=lambda: datetime.now(
+            timezone.utc
+        )
     )

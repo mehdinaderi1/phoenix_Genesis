@@ -14,7 +14,7 @@ class GovernanceRecall:
         strategy
     ):
 
-        records = self.memory.records
+        records = self.memory.get_all()
 
 
         matches = []

@@ -58,6 +58,7 @@ from intelligence.governance.governance_confidence import (
 
 
 
+
 from intelligence.learning_analyzer import LearningAnalyzer
 from intelligence.learning.strategy_ranker import StrategyRanker
 from intelligence.learning.strategy_quality_gate import StrategyQualityGate
@@ -148,7 +149,7 @@ class IntelligenceFlow:
         self.strategy_context = StrategyContext(
             self.strategy_recall
         )
-        
+
         self.governance_memory = GovernanceMemory()
         self.governance_feedback = GovernanceFeedback(
             self.governance_memory
