@@ -20,6 +20,8 @@ from intelligence.memory.experience_memory import ExperienceMemory
 from intelligence.experience_confidence import ExperienceConfidence
 from intelligence.confidence_adjuster import ConfidenceAdjuster
 from intelligence.pattern_intelligence import PatternIntelligence
+
+
 from intelligence.strategy_memory import StrategyMemory
 from intelligence.strategy_analyzer import StrategyAnalyzer
 from intelligence.strategy_recall import StrategyRecall
@@ -34,12 +36,28 @@ from intelligence.strategy_intelligence_service import (
 from intelligence.strategy_intelligence_adapter import (
     StrategyIntelligenceAdapter
 )
-
 from intelligence.strategy_intelligence_service import (
     StrategyIntelligenceService
 )
 from intelligence.strategy_bridge import StrategyBridge
 from intelligence.strategy_governance import StrategyGovernance
+
+
+
+
+from intelligence.governance.governance_record import (
+    GovernanceRecord
+)
+from intelligence.governance.governance_feedback import (
+    GovernanceFeedback
+)
+
+from intelligence.governance.governance_confidence import (
+    GovernanceConfidence
+)
+
+
+
 from intelligence.learning_analyzer import LearningAnalyzer
 from intelligence.learning.strategy_ranker import StrategyRanker
 from intelligence.learning.strategy_quality_gate import StrategyQualityGate
@@ -117,13 +135,26 @@ class IntelligenceFlow:
             StrategyIntelligenceService()
         )
 
-        self.strategy_intelligence = StrategyIntelligenceService() 
+        self.strategy_intelligence = StrategyIntelligenceService()
+        
+        self.strategy_governance = StrategyGovernance()
 
-        self.strategy_governance = StrategyGovernance()           
+
+        from intelligence.governance.governance_memory import (
+            GovernanceMemory
+        )
+        self.governance_confidence = GovernanceConfidence()
+                  
 
         self.strategy_context = StrategyContext(
             self.strategy_recall
         )
+        self.governance_memory = GovernanceMemory()
+        self.governance_feedback = GovernanceFeedback(
+            self.governance_memory
+        )
+
+        self.governance_confidence = GovernanceConfidence()
 
         self.confidence_adjuster = ConfidenceAdjuster()
 
@@ -362,8 +393,22 @@ class IntelligenceFlow:
 
         if best_strategy:
            
-            governance_result = self.strategy_governance.evaluate(
-                best_strategy
+            governance_result = (
+                self.strategy_governance.evaluate(
+                    best_strategy
+                )
+            )
+
+
+            governance_record = GovernanceRecord(
+                strategy=best_strategy,
+                status=governance_result["status"],
+                reason=governance_result["reason"]
+            )
+
+
+            self.governance_memory.store(
+                governance_record
             )
 
             if governance_result["status"] != "APPROVED":
@@ -611,3 +656,29 @@ class IntelligenceFlow:
         )
 
         return report
+
+    def update_governance_feedback(
+        self,
+        strategy,
+        outcome
+    ):
+
+        feedback = (
+            self.governance_feedback.evaluate(
+                strategy,
+                outcome
+            )
+        )
+
+
+        confidence = (
+            self.governance_confidence.calculate(
+                feedback
+            )
+        )
+
+
+        return {
+            "feedback": feedback,
+            "confidence": confidence
+        }
