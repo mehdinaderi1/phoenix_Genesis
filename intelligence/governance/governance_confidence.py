@@ -1,7 +1,9 @@
 class GovernanceConfidence:
 
 
-    def __init__(self):
+    def __init__(
+        self
+    ):
 
         self.score = 0
 
@@ -32,10 +34,9 @@ class GovernanceConfidence:
             self.score = 0
 
 
-        return self.score
+        if self.score > 100:
 
+            self.score = 100
 
-
-    def value(self):
 
         return self.score

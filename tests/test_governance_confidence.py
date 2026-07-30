@@ -3,19 +3,15 @@ from intelligence.governance.governance_confidence import (
 )
 
 
-
 def test_governance_confidence_increase():
 
-
     confidence = GovernanceConfidence()
-
 
     result = confidence.calculate(
         {
             "status": "CONFIRMED"
         }
     )
-
 
     assert result == 10
 
@@ -23,9 +19,7 @@ def test_governance_confidence_increase():
 
 def test_governance_confidence_decrease():
 
-
     confidence = GovernanceConfidence()
-
 
     confidence.calculate(
         {
@@ -33,12 +27,10 @@ def test_governance_confidence_decrease():
         }
     )
 
-
     result = confidence.calculate(
         {
             "status": "INCORRECT"
         }
     )
-
 
     assert result == 0

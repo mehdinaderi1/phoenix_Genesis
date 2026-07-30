@@ -1,9 +1,7 @@
 class GovernanceHistory:
 
 
-    def __init__(
-        self
-    ):
+    def __init__(self):
 
         self.records = []
 
@@ -20,11 +18,28 @@ class GovernanceHistory:
 
 
 
+    def _to_dict(
+        self,
+        record
+    ):
+
+       
+        return {
+            "strategy": record.strategy,
+            "status": record.status,
+            "reason": record.reason
+        }
+
+
+
     def get_all(
         self
     ):
 
-        return self.records
+        return [
+            self._to_dict(record)
+            for record in self.records
+        ]
 
 
 
@@ -45,7 +60,10 @@ class GovernanceHistory:
         if not self.records:
             return None
 
-        return self.records[-1]
+
+        return self._to_dict(
+            self.records[-1]
+        )
 
 
 
@@ -77,7 +95,7 @@ class GovernanceHistory:
             if name == strategy_name:
 
                 result.append(
-                    record
+                    self._to_dict(record)
                 )
 
 
@@ -91,7 +109,7 @@ class GovernanceHistory:
     ):
 
         return [
-            record
+            self._to_dict(record)
             for record in self.records
             if record.status == status
         ]
