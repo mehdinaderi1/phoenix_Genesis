@@ -72,70 +72,11 @@ class StrategyEvolutionFlow:
     ):
 
 
-        performance = self.performance_analyzer.analyze(
-            history
-        )
-
-
-        governance_evolution = (
-            self.governance_evolution.evaluate(
-                {
-                    "status": "STABLE",
-                    "confidence": 10
-                }
+        performance = (
+            self.performance_analyzer.analyze(
+                history
             )
         )
-
-
-        governance_gate = (
-            self.governance_gate.evaluate(
-                {
-                    "status": "APPROVED",
-                    "confidence": 10
-                }
-            )
-        )
-
-
-        governance_result = {
-            "approved": governance_gate["approved"],
-            "gate": governance_gate,
-            "evolution": governance_evolution
-        }
-
-
-
-        if not governance_gate["approved"]:
-
-
-            return {
-                "strategy": strategy,
-                "performance": performance,
-                "governance": governance_result,
-                "evolution": {
-                    "action": "BLOCKED",
-                    "reason": governance_gate["reason"]
-                }
-            }
-
-
-
-        if (
-            governance_evolution["decision"]
-            != "ALLOW_EVOLUTION"
-        ):
-
-
-            return {
-                "strategy": strategy,
-                "performance": performance,
-                "governance": governance_result,
-                "evolution": {
-                    "action": governance_evolution["decision"],
-                    "reason": governance_evolution["reason"]
-                }
-            }
-
 
 
         score = performance.get(
@@ -147,6 +88,53 @@ class StrategyEvolutionFlow:
         )
 
 
+        governance_gate = (
+            self.governance_gate.evaluate(
+                {
+                    "status": "APPROVED",
+                    "confidence": score
+                }
+            )
+        )
+
+
+        governance_evolution = (
+            self.governance_evolution.evaluate(
+                {
+                    "status": "STABLE",
+                    "confidence": score
+                }
+            )
+        )
+
+
+        governance = {
+            "approved": governance_gate.get(
+                "approved",
+                True
+            ),
+            "gate": governance_gate,
+            "evolution": governance_evolution
+        }
+
+
+
+        if not governance["approved"]:
+
+            return {
+                "strategy": strategy,
+                "performance": performance,
+                "governance": governance,
+                "evolution": {
+                    "action": "BLOCKED",
+                    "reason": governance_gate.get(
+                        "reason",
+                        "Governance rejected"
+                    )
+                }
+            }
+
+
 
         decision = self.evolution_decision.evaluate(
             strategy,
@@ -155,10 +143,9 @@ class StrategyEvolutionFlow:
         )
 
 
-
         return {
             "strategy": strategy,
             "performance": performance,
-            "governance": governance_result,
+            "governance": governance,
             "evolution": decision
         }

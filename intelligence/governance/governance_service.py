@@ -2,6 +2,10 @@ from intelligence.governance.governance_analyzer import (
     GovernanceAnalyzer
 )
 
+from intelligence.governance.governance_learning import (
+    GovernanceLearning
+)
+
 
 class GovernanceService:
 
@@ -9,14 +13,22 @@ class GovernanceService:
     def __init__(
         self,
         history,
-        analyzer=None
+        analyzer=None,
+        learning=None
     ):
 
         self.history = history
 
+
         self.analyzer = (
             analyzer
             or GovernanceAnalyzer()
+        )
+
+
+        self.learning = (
+            learning
+            or GovernanceLearning()
         )
 
 
@@ -30,16 +42,18 @@ class GovernanceService:
         records = []
 
 
-        for item in self.history.get_all():
+        if self.history:
 
-            if (
-                item.get("strategy")
-                == strategy
-            ):
+            for item in self.history.get_all():
 
-                records.append(
-                    item
-                )
+                if (
+                    item.get("strategy")
+                    == strategy
+                ):
+
+                    records.append(
+                        item
+                    )
 
 
 
@@ -48,8 +62,14 @@ class GovernanceService:
         )
 
 
+        learning_result = (
+            self.learning.analyze_history()
+        )
+
+
         return {
             "strategy": strategy,
             "status": result["status"],
-            "confidence": result["score"]
+            "confidence": result["score"],
+            "learning": learning_result
         }

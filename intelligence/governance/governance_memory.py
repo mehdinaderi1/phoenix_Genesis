@@ -16,7 +16,9 @@ class GovernanceMemory:
         )
 
 
-    def count(self):
+    def count(
+        self
+    ):
 
         return len(
             self.records
@@ -27,10 +29,14 @@ class GovernanceMemory:
         self
     ):
 
-        return self.records
+        return list(
+            self.records
+        )
 
 
-    def latest(self):
+    def latest(
+        self
+    ):
 
         if not self.records:
             return None

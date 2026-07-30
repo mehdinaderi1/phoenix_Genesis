@@ -1,12 +1,53 @@
+from intelligence.governance.governance_memory import (
+    GovernanceMemory
+)
+
+
 class GovernanceFeedback:
 
 
     def __init__(
         self,
-        memory
+        memory=None
     ):
 
-        self.memory = memory
+        self.memory = (
+            memory
+            or GovernanceMemory()
+        )
+
+
+
+    def record(
+        self,
+        strategy,
+        result
+    ):
+
+
+        feedback = {
+
+            "strategy": strategy,
+
+            "result": result
+
+        }
+
+
+        self.memory.store(
+            {
+                "strategy": strategy,
+                "result": result,
+                "status": (
+                    "APPROVED"
+                    if result == "SUCCESS"
+                    else "REJECTED"
+                )
+            }
+        )
+
+
+        return feedback
 
 
 
@@ -16,48 +57,59 @@ class GovernanceFeedback:
         outcome
     ):
 
-        records = self.memory.records
+
+        self.record(
+            strategy,
+            outcome
+        )
 
 
-        matched = None
-
-
-        for record in records:
-
-            if record.strategy == strategy:
-
-                matched = record
-                break
-
-
-
-        if matched is None:
-
-            return {
-                "status": "UNKNOWN",
-                "reason": "no governance record"
-            }
-
-
-
-        if outcome == "SUCCESS":
-
-            feedback = "CONFIRMED"
-
-
-        elif outcome == "FAILURE":
-
-            feedback = "INCORRECT"
-
-
-        else:
-
-            feedback = "NEUTRAL"
-
+        approved = (
+            outcome == "SUCCESS"
+        )
 
 
         return {
-            "status": feedback,
-            "original_decision": matched.status,
-            "strategy": strategy
+
+            "strategy": strategy,
+
+            "outcome": outcome,
+
+            "approved": approved,
+
+            "status": (
+                "CONFIRMED"
+                if approved
+                else "INCORRECT"
+            )
+
         }
+
+
+
+    def success_rate(
+        self
+    ):
+
+
+        records = self.memory.get_all()
+
+
+        if not records:
+
+            return 0
+
+
+
+        success = sum(
+
+            1
+            for item in records
+            if item.get("result") == "SUCCESS"
+
+        )
+
+
+        return int(
+            success * 100 / len(records)
+        )
