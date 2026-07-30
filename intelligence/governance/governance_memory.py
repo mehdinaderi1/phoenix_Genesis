@@ -1,6 +1,3 @@
-from .governance_record import GovernanceRecord
-
-
 class GovernanceMemory:
 
 
@@ -24,6 +21,13 @@ class GovernanceMemory:
         return len(
             self.records
         )
+
+
+    def get_all(
+        self
+    ):
+
+        return self.records
 
 
     def latest(self):
