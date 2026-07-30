@@ -38,6 +38,8 @@ from intelligence.strategy_intelligence_adapter import (
 from intelligence.strategy_intelligence_service import (
     StrategyIntelligenceService
 )
+from intelligence.strategy_bridge import StrategyBridge
+from intelligence.strategy_governance import StrategyGovernance
 from intelligence.learning_analyzer import LearningAnalyzer
 from intelligence.learning.strategy_ranker import StrategyRanker
 from intelligence.learning.strategy_quality_gate import StrategyQualityGate
@@ -115,7 +117,9 @@ class IntelligenceFlow:
             StrategyIntelligenceService()
         )
 
-        self.strategy_intelligence = StrategyIntelligenceService()            
+        self.strategy_intelligence = StrategyIntelligenceService() 
+
+        self.strategy_governance = StrategyGovernance()           
 
         self.strategy_context = StrategyContext(
             self.strategy_recall
@@ -132,6 +136,8 @@ class IntelligenceFlow:
         self.strategy_improvement = StrategyImprovementEngine()
 
         self.strategy_history = StrategyHistory()
+
+        self.strategy_bridge = StrategyBridge()
 
 
         self.strategy_update = StrategyUpdate(
@@ -241,6 +247,18 @@ class IntelligenceFlow:
              report.risk
         )
 
+        champion_strategy = None
+
+        if best_strategy:
+
+            champion_strategy = (
+                self.strategy_bridge.get_best_strategy(
+                    [best_strategy]
+                )
+            )
+
+        report.champion_strategy = champion_strategy
+
         report.strategy_intelligence = None
 
 
@@ -341,6 +359,17 @@ class IntelligenceFlow:
                 )
             )
 
+
+        if best_strategy:
+           
+            governance_result = self.strategy_governance.evaluate(
+                best_strategy
+            )
+
+            if governance_result["status"] != "APPROVED":
+                return governance_result
+
+
         decision = self.decision_engine.decide(
             report
         )
@@ -399,7 +428,7 @@ class IntelligenceFlow:
 
         strategy_performance = self.strategy_performance.analyze(
             self.strategy_history.get_all()
-      )
+        )
 
         experience = ExperienceRecord(
 
