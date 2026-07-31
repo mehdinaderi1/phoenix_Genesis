@@ -45,6 +45,33 @@ from intelligence.strategy_governance import StrategyGovernance
 
 
 
+from intelligence.evolution.self_evolution_controller import (
+    SelfEvolutionController
+)
+
+from intelligence.learning.strategy_evolution_engine import (
+    StrategyEvolutionEngine
+)
+
+from intelligence.evolution.evolution_history import (
+    EvolutionHistory
+)
+
+from intelligence.evolution.evolution_analytics import (
+    EvolutionAnalytics
+)
+
+from intelligence.evolution.evolution_decision import (
+    EvolutionDecision
+)
+
+from intelligence.evolution.rollback_engine import (
+    RollbackEngine
+)
+
+
+
+
 from intelligence.governance.governance_record import (
     GovernanceRecord
 )
@@ -185,6 +212,21 @@ class IntelligenceFlow:
         )
        
         self.experience_confidence = ExperienceConfidence()
+
+        self.evolution_history = EvolutionHistory()
+
+        self.self_evolution_controller = SelfEvolutionController(
+            evolution_engine=StrategyEvolutionEngine(
+                history=self.evolution_history
+            ),
+            analytics=EvolutionAnalytics(
+                self.evolution_history
+            ),
+            decision=EvolutionDecision(),
+            rollback=RollbackEngine(
+                self.evolution_history
+            )
+        )
 
         
 
@@ -644,6 +686,7 @@ class IntelligenceFlow:
             adaptive_confidence=report.confidence
 
         )
+        
         report.strategy_context = (
             self.strategy_context.analyze(
                 report.regime,
@@ -655,6 +698,17 @@ class IntelligenceFlow:
         report.strategy_performance = (
             strategy_performance
         )
+
+        report.self_evolution = {
+
+            "status": "READY",
+
+            "controller": (
+                self.self_evolution_controller
+                    is not None
+            )
+
+        }
 
         return report
 
