@@ -24,6 +24,9 @@ class EvolutionHistory:
     def all(self):
         return list(self._records)
 
+    def get_all(self):
+        return list(self._records)
+
     def latest(self):
         if not self._records:
             return None

@@ -1,102 +1,124 @@
-class SelfEvolutionController:
+class StrategyLineage:
+
 
     def __init__(
         self,
-        evolution_engine,
-        analytics,
-        decision,
-        rollback,
-        history=None
+        tree
     ):
 
-        self.evolution_engine = evolution_engine
-        self.analytics = analytics
-        self.decision = decision
-        self.rollback = rollback
-        self.history = history
+        self.tree = tree
 
 
-    def run(
+
+    def root_of(
+        self,
+        strategy
+    ):
+
+        lineage = self.tree.lineage(
+            strategy
+        )
+
+        if not lineage:
+
+            return None
+
+
+        return lineage[0]
+
+
+
+    def depth_of(
+        self,
+        strategy
+    ):
+
+        lineage = self.tree.lineage(
+            strategy
+        )
+
+        if not lineage:
+
+            return 0
+
+
+        return len(lineage) - 1
+
+
+
+    def family(
+        self,
+        strategy
+    ):
+
+        root = self.root_of(
+            strategy
+        )
+
+        if not root:
+
+            return []
+
+
+        return self._collect_family(
+            root
+        )
+
+
+
+    def _collect_family(
         self,
         strategy,
-        score
+        visited=None
     ):
 
-        evolved = self.evolution_engine.evolve(
-            strategy,
-            score
+        if visited is None:
+
+            visited = set()
+
+
+
+        if strategy in visited:
+
+            return []
+
+
+
+        visited.add(
+            strategy
         )
 
 
-        if not evolved["evolved"]:
 
-            return {
-                "action": "NO_EVOLUTION",
-                "strategy": strategy,
-                "result": evolved,
-            }
+        result = [
+
+            strategy
+
+        ]
 
 
-        parent_score = (
-            evolved["score"] - 10
+
+        children = self.tree.children_of(
+            strategy
         )
 
 
-        decision = self.decision.decide(
-            evolved["score"],
-            parent_score
-        )
+
+        for child in children:
 
 
-        if decision["decision"] == "ROLLBACK":
+            result.extend(
 
-            rollback = self.rollback.rollback(
-                evolved["strategy"]
-            )
+                self._collect_family(
 
-            return {
-                "action": "ROLLBACK",
-                "decision": decision,
-                "rollback": rollback,
-            }
+                    child,
 
-        if self.history:
+                    visited
 
-
-            from datetime import datetime, timezone
-
-
-            from intelligence.evolution.evolution_history import (
-                EvolutionRecord
-            )
-
-
-            record = EvolutionRecord(
-
-                parent=strategy["name"],
-
-                child=evolved["strategy"],
-
-                generation=evolved["generation"],
-
-                reason="self evolution",
-
-                score_before=score,
-
-                score_after=evolved["score"],
-
-                timestamp=datetime.now(timezone.utc)
+                )
 
             )
 
 
-            self.history.add(
-                record
-            )
 
-
-        return {
-            "action": decision["decision"],
-            "decision": decision,
-            "strategy": evolved,
-        }
+        return result
