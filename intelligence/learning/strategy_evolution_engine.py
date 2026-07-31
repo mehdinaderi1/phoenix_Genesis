@@ -86,13 +86,16 @@ class StrategyEvolutionEngine:
 
         result = {
 
-            "strategy": strategy + "_v2",
+            "strategy": strategy["name"] + "_v2",
 
-            "parent": strategy,
+            "parent": strategy["name"],
 
             "score": score + 10,
 
-            "generation": 2,
+            "generation": strategy.get(
+                "generation",
+                1
+            ) + 1,
 
             "evolved": True
 

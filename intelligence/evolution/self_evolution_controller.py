@@ -6,12 +6,14 @@ class SelfEvolutionController:
         analytics,
         decision,
         rollback,
+        history=None
     ):
 
         self.evolution_engine = evolution_engine
         self.analytics = analytics
         self.decision = decision
         self.rollback = rollback
+        self.history = history
 
 
     def run(
@@ -57,6 +59,40 @@ class SelfEvolutionController:
                 "decision": decision,
                 "rollback": rollback,
             }
+
+        if self.history:
+
+
+            from datetime import datetime, timezone
+
+
+            from intelligence.evolution.evolution_history import (
+                EvolutionRecord
+            )
+
+
+            record = EvolutionRecord(
+
+                parent=strategy["name"],
+
+                child=evolved["strategy"],
+
+                generation=evolved["generation"],
+
+                reason="self evolution",
+
+                score_before=score,
+
+                score_after=evolved["score"],
+
+                timestamp=datetime.now(timezone.utc)
+
+            )
+
+
+            self.history.add(
+                record
+            )
 
 
         return {
