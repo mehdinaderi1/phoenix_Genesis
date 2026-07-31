@@ -1,6 +1,23 @@
+from datetime import datetime, timezone
+
+from intelligence.evolution.evolution_history import (
+    EvolutionHistory,
+    EvolutionRecord,
+)
+
+
+
+
+
 class StrategyEvolutionEngine:
 
-
+    def __init__(
+        self,
+        history=None
+    ):
+        self.history = history or EvolutionHistory()
+         
+    
     def evaluate(
         self,
         strategy
@@ -67,7 +84,7 @@ class StrategyEvolutionEngine:
             }
 
 
-        return {
+        result = {
 
             "strategy": strategy + "_v2",
 
@@ -80,3 +97,18 @@ class StrategyEvolutionEngine:
             "evolved": True
 
         }
+
+        self.history.add(
+            EvolutionRecord(
+                parent=strategy,
+                child=result["strategy"],
+                generation=result["generation"],
+                reason="performance",
+                score_before=score,
+                score_after=result["score"],
+                timestamp=datetime.now(timezone.utc),
+            )
+        )
+
+
+        return result
