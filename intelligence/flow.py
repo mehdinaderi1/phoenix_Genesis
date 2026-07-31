@@ -72,6 +72,18 @@ from intelligence.evolution.rollback_engine import (
     RollbackEngine
 )
 
+from intelligence.evolution.evolution_intelligence import (
+    EvolutionIntelligence
+)
+
+from intelligence.evolution.evolution_recall import (
+    EvolutionRecall
+)
+
+from intelligence.evolution.evolution_recall_analyzer import (
+    EvolutionRecallAnalyzer
+)
+
 
 
 
@@ -156,7 +168,7 @@ class IntelligenceFlow:
      
         self.strategy_selector = StrategySelector(
             self.strategy_recall,
-            StrategyRanker()
+            self.strategy_ranker
         )
         self.strategy_intelligence_adapter = (
             StrategyIntelligenceAdapter()
@@ -217,18 +229,43 @@ class IntelligenceFlow:
         self.experience_confidence = ExperienceConfidence()
 
         self.evolution_history = EvolutionHistory()
+
+        self.evolution_recall = EvolutionRecall(
+            self.evolution_history
+        )
+
+
+        self.evolution_recall_analyzer = EvolutionRecallAnalyzer(
+            self.evolution_recall
+        )
+
+
+        self.evolution_intelligence = EvolutionIntelligence(
+            self.evolution_recall_analyzer
+        )
         
         self.self_evolution_controller = SelfEvolutionController(
+
             evolution_engine=StrategyEvolutionEngine(
                 history=self.evolution_history
             ),
+
             analytics=EvolutionAnalytics(
                 self.evolution_history
             ),
+
             decision=EvolutionDecision(),
+
             rollback=RollbackEngine(
                 self.evolution_history
-            )
+            ),
+
+            history=self.evolution_history,
+
+            recall=self.evolution_recall,
+
+            intelligence=self.evolution_intelligence
+
         )
 
         self.evolution_execution = EvolutionExecution(
@@ -392,6 +429,51 @@ class IntelligenceFlow:
 
 
         report.strategy_evolution = evolution_result
+
+        self_evolution_result = None
+
+        if best_strategy:
+
+            score = best_strategy.get(
+                "score",
+                0
+            )
+
+            evolution_permission = (
+                self.evolution_intelligence.evaluate(
+                    best_strategy["name"]    
+                )
+            )
+
+
+            if evolution_permission["decision"] == "ALLOW":
+
+                self_evolution_result = (
+                    self.self_evolution_controller.run(
+                        best_strategy,
+                        score
+                    )
+                )
+
+
+            else:
+
+                self_evolution_result = {
+
+                    "action": "BLOCKED",
+
+                    "reason": (
+                        evolution_permission["decision"]
+                    ),
+
+                    "intelligence": evolution_permission
+
+                }
+
+
+        report.self_evolution_result = (
+            self_evolution_result
+        )
 
         report.evolution_execution = None
         

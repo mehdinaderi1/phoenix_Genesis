@@ -6,9 +6,6 @@ from intelligence.evolution.evolution_history import (
 )
 
 
-
-
-
 class StrategyEvolutionEngine:
 
     def __init__(
@@ -16,22 +13,28 @@ class StrategyEvolutionEngine:
         history=None
     ):
         self.history = history or EvolutionHistory()
-         
-    
+
+
     def evaluate(
         self,
         strategy
     ):
 
-        score = strategy.get(
-            "score",
-            0
-        )
+        if isinstance(strategy, dict):
 
-        success_rate = strategy.get(
-            "success_rate",
-            0
-        )
+            score = strategy.get(
+                "score",
+                0
+            )
+
+            success_rate = strategy.get(
+                "success_rate",
+                0
+            )
+
+        else:
+            score = 0
+            success_rate = 0
 
 
         if (
@@ -58,13 +61,10 @@ class StrategyEvolutionEngine:
         return {
 
             "decision": decision,
-
             "score": score,
-
             "success_rate": success_rate
 
         }
-
 
 
     def evolve(
@@ -73,44 +73,78 @@ class StrategyEvolutionEngine:
         score
     ):
 
+
+        if isinstance(strategy, dict):
+
+            name = strategy.get(
+                "name",
+                "strategy"
+            )
+
+            generation = strategy.get(
+                "generation",
+                1
+            )
+
+        else:
+
+            name = strategy
+            generation = 1
+
+
         if score < 70:
 
             return {
+
                 "strategy": strategy,
                 "parent": None,
                 "score": score,
-                "generation": 1,
+                "generation": generation,
                 "evolved": False
+
             }
+
+
+        child = name + "_v2"
 
 
         result = {
 
-            "strategy": strategy["name"] + "_v2",
+            "strategy": child,
 
-            "parent": strategy["name"],
+            "parent": name,
 
             "score": score + 10,
 
-            "generation": strategy.get(
-                "generation",
-                1
-            ) + 1,
+            "generation": generation + 1,
 
             "evolved": True
 
         }
 
+
         self.history.add(
+
             EvolutionRecord(
-                parent=strategy,
-                child=result["strategy"],
+
+                parent=name,
+
+                child=child,
+
                 generation=result["generation"],
+
                 reason="performance",
+
                 score_before=score,
+
                 score_after=result["score"],
-                timestamp=datetime.now(timezone.utc),
+
+                timestamp=datetime.now(
+                    timezone.utc
+                )
+
             )
+
         )
 
 
