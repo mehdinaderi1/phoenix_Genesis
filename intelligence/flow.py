@@ -44,6 +44,9 @@ from intelligence.strategy_governance import StrategyGovernance
 
 
 
+from intelligence.evolution.evolution_execution import (
+    EvolutionExecution
+)
 
 from intelligence.evolution.self_evolution_controller import (
     SelfEvolutionController
@@ -214,7 +217,7 @@ class IntelligenceFlow:
         self.experience_confidence = ExperienceConfidence()
 
         self.evolution_history = EvolutionHistory()
-
+        
         self.self_evolution_controller = SelfEvolutionController(
             evolution_engine=StrategyEvolutionEngine(
                 history=self.evolution_history
@@ -226,6 +229,10 @@ class IntelligenceFlow:
             rollback=RollbackEngine(
                 self.evolution_history
             )
+        )
+
+        self.evolution_execution = EvolutionExecution(
+            self.self_evolution_controller
         )
 
         
@@ -385,6 +392,8 @@ class IntelligenceFlow:
 
 
         report.strategy_evolution = evolution_result
+
+        report.evolution_execution = None
         
         if best_strategy:
 
@@ -686,7 +695,7 @@ class IntelligenceFlow:
             adaptive_confidence=report.confidence
 
         )
-        
+
         report.strategy_context = (
             self.strategy_context.analyze(
                 report.regime,
