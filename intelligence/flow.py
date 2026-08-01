@@ -21,6 +21,10 @@ from intelligence.experience_confidence import ExperienceConfidence
 from intelligence.confidence_adjuster import ConfidenceAdjuster
 from intelligence.pattern_intelligence import PatternIntelligence
 
+from intelligence.components.intelligence_components import (
+    IntelligenceComponents
+)
+
 
 from intelligence.strategy_memory import StrategyMemory
 from intelligence.strategy_analyzer import StrategyAnalyzer
@@ -28,16 +32,12 @@ from intelligence.strategy_recall import StrategyRecall
 from intelligence.strategy_context import StrategyContext
 from intelligence.strategy_feedback import StrategyFeedback
 from intelligence.strategy_selector import StrategySelector
-from intelligence.strategy_selector import StrategySelector
 from intelligence.strategy_learner import StrategyLearner
 from intelligence.strategy_intelligence_service import (
     StrategyIntelligenceService
 )
 from intelligence.strategy_intelligence_adapter import (
     StrategyIntelligenceAdapter
-)
-from intelligence.strategy_intelligence_service import (
-    StrategyIntelligenceService
 )
 from intelligence.strategy_bridge import StrategyBridge
 from intelligence.strategy_governance import StrategyGovernance
@@ -119,24 +119,13 @@ class IntelligenceFlow:
 
     def __init__(self):
 
-        self.reasoning = ReasoningEngine()
-
-        self.regime_analyzer = RegimeAnalyzer()
-
-        self.risk_analyzer = RiskAnalyzer()
-
-        self.decision_engine = DecisionEngine()
-
-        self.decision_validator = DecisionValidator()
-
-        self.decision_memory = DecisionMemory()
-
+       
         self.pattern_service = PatternService()
 
         self.pattern_intelligence = PatternIntelligence()
 
-        self.decision_quality = DecisionQualityAnalyzer()
-
+        self.components = IntelligenceComponents()
+       
         self.scenario_engine = ScenarioEngine()
 
         self.learning_analyzer = LearningAnalyzer()
@@ -150,8 +139,6 @@ class IntelligenceFlow:
         self.strategy_history = StrategyHistory()
 
         self.strategy_memory = StrategyMemory()
-
-        self.strategy_history = StrategyHistory()
 
         self.strategy_performance = StrategyPerformanceAnalyzer()
 
@@ -174,14 +161,9 @@ class IntelligenceFlow:
             StrategyIntelligenceAdapter()
         )
 
-        self.strategy_intelligence = (
-            StrategyIntelligenceService()
-        )
-
+        
         self.strategy_intelligence = StrategyIntelligenceService()
         
-        self.strategy_governance = StrategyGovernance()
-
 
         from intelligence.governance.governance_memory import (
             GovernanceMemory
@@ -191,13 +173,6 @@ class IntelligenceFlow:
         self.strategy_context = StrategyContext(
             self.strategy_recall
         )
-
-        self.governance_memory = GovernanceMemory()
-        self.governance_feedback = GovernanceFeedback(
-            self.governance_memory
-        )
-
-        self.governance_confidence = GovernanceConfidence()
 
         self.confidence_adjuster = ConfidenceAdjuster()
 
@@ -226,54 +201,63 @@ class IntelligenceFlow:
             self.experience_memory
         )
        
-        self.experience_confidence = ExperienceConfidence()
-
-        self.evolution_history = EvolutionHistory()
-
-        self.evolution_recall = EvolutionRecall(
-            self.evolution_history
-        )
-
-
-        self.evolution_recall_analyzer = EvolutionRecallAnalyzer(
-            self.evolution_recall
-        )
-
-
-        self.evolution_intelligence = EvolutionIntelligence(
-            self.evolution_recall_analyzer
-        )
-        
-        self.self_evolution_controller = SelfEvolutionController(
-
-            evolution_engine=StrategyEvolutionEngine(
-                history=self.evolution_history
-            ),
-
-            analytics=EvolutionAnalytics(
-                self.evolution_history
-            ),
-
-            decision=EvolutionDecision(),
-
-            rollback=RollbackEngine(
-                self.evolution_history
-            ),
-
-            history=self.evolution_history,
-
-            recall=self.evolution_recall,
-
-            intelligence=self.evolution_intelligence
-
-        )
-
-        self.evolution_execution = EvolutionExecution(
-            self.self_evolution_controller
-        )
-
         
 
+        self.components = IntelligenceComponents()
+
+        self.reasoning = self.components.reasoning
+        self.regime_analyzer = self.components.regime_analyzer
+        self.risk_analyzer = self.components.risk_analyzer
+        self.decision_engine = self.components.decision_engine
+        self.decision_validator = self.components.decision_validator
+        self.decision_memory = self.components.decision_memory
+        self.decision_quality = self.components.decision_quality
+
+        self.strategy_governance = (
+            self.components.strategy_governance
+        )
+
+        self.governance_memory = (
+            self.components.governance_memory
+        )
+
+        self.governance_feedback = (
+            self.components.governance_feedback
+        )
+
+        self.governance_confidence = (
+            self.components.governance_confidence
+        )
+
+        self.evolution_history = (
+            self.components.evolution_history
+        )
+
+        self.evolution_recall = (
+            self.components.evolution_recall
+        )
+
+        self.evolution_recall_analyzer = (
+            self.components.evolution_recall_analyzer
+        )
+
+        self.evolution_intelligence = (
+            self.components.evolution_intelligence
+        )
+
+        self.self_evolution_controller = (
+            self.components.self_evolution_controller
+        )
+
+        self.evolution_execution = (
+            self.components.evolution_execution
+        )
+
+        self.strategy_lifecycle = (
+            self.components.strategy_lifecycle
+        )
+        
+        
     def create_report(self, consensus):
 
         learning_insight = self.learning_analyzer.analyze(
@@ -477,29 +461,7 @@ class IntelligenceFlow:
 
         report.evolution_execution = None
         
-        if best_strategy:
-
-            strategy_bonus = (
-                self.experience_confidence
-                .calculate_from_strategy(
-                    best_strategy
-                )   
-            )
-
-            report.strategy_context = (
-                self.strategy_context.analyze(
-                    report.regime,
-                    report.signal,
-                    report.risk
-                )
-            )
-
-            report.confidence = (
-                self.confidence_adjuster.adjust(
-                    report.confidence,
-                    strategy_bonus    
-                )
-            )   
+        if best_strategy:  
    
             strategy_bonus = (
                 self.experience_confidence
