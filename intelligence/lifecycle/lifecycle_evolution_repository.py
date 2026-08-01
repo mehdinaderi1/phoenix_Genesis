@@ -11,8 +11,8 @@ class LifecycleEvolutionRepository:
 
     Responsible for:
     - saving evolution events
-    - retrieving history
-    - tracking strategy versions
+    - retrieving evolution history
+    - tracking strategy lineage
     """
 
     def __init__(self):
@@ -50,11 +50,16 @@ class LifecycleEvolutionRepository:
 
     def find_by_strategy(self, strategy_name):
         """
-        Find evolution records by strategy name.
+        Find evolution records by strategy
+        or parent strategy lineage.
         """
 
         return [
             record
             for record in self.records
-            if record.get("strategy") == strategy_name
+            if (
+                record.get("strategy") == strategy_name
+                or
+                record.get("parent_strategy") == strategy_name
+            )
         ]

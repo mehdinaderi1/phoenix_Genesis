@@ -1,11 +1,10 @@
 from intelligence.evolution.evolution_governance_bridge import (
-        EvolutionGovernanceBridge
+    EvolutionGovernanceBridge
 )
 
 
 class SelfEvolutionController:
 
-    
     def __init__(
         self,
         evolution_engine,
@@ -15,7 +14,8 @@ class SelfEvolutionController:
         history=None,
         recall=None,
         intelligence=None,
-        governance_bridge=None
+        governance_bridge=None,
+        memory=None
     ):
 
         self.evolution_engine = evolution_engine
@@ -25,8 +25,8 @@ class SelfEvolutionController:
         self.history = history
         self.recall = recall
         self.intelligence = intelligence
-
         self.governance_bridge = governance_bridge
+        self.memory = memory
 
 
     def run(
@@ -36,7 +36,6 @@ class SelfEvolutionController:
     ):
 
         recall_analysis = None
-
         intelligence_analysis = None
 
 
@@ -52,7 +51,11 @@ class SelfEvolutionController:
             )
 
 
-            if intelligence_analysis["decision"] != "ALLOW":
+            if (
+                intelligence_analysis["decision"]
+                not in
+                ["ALLOW", "NEW"]
+            ):
 
                 return {
 
@@ -129,6 +132,8 @@ class SelfEvolutionController:
 
             }
 
+
+
         governance_result = None
 
 
@@ -146,13 +151,12 @@ class SelfEvolutionController:
             and not governance_result["approved"]
         ):
 
-
             return {
 
                 "action": "BLOCKED",
 
                 "reason":
-                "Evolution rejected by governance",
+                    "Evolution rejected by governance",
 
                 "strategy": evolved,
 
@@ -165,9 +169,7 @@ class SelfEvolutionController:
                 "intelligence":
                     intelligence_analysis,
 
-        }
-
-
+            }
 
 
 
@@ -180,6 +182,7 @@ class SelfEvolutionController:
             evolved["score"],
             parent_score
         )
+
 
 
         if decision["decision"] == "ROLLBACK":
@@ -214,9 +217,16 @@ class SelfEvolutionController:
             )
 
 
+            parent_name = (
+                strategy["name"]
+                if isinstance(strategy, dict)
+                else strategy
+            )
+
+
             record = EvolutionRecord(
 
-                parent=strategy["name"],
+                parent=parent_name,
 
                 child=evolved["strategy"],
 
@@ -239,7 +249,11 @@ class SelfEvolutionController:
                 record
             )
 
+        if self.memory:
 
+            self.memory.store(
+                record
+            )   
 
         return {
 

@@ -122,7 +122,6 @@ class StrategyEvolutionEngine:
 
         }
 
-
         self.history.add(
 
             EvolutionRecord(
@@ -144,8 +143,6 @@ class StrategyEvolutionEngine:
                 )
 
             )
-
         )
-
-
+       
         return result

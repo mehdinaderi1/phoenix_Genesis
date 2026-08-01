@@ -1,56 +1,64 @@
+from datetime import datetime, timezone
+
+from intelligence.evolution.evolution_history import (
+    EvolutionRecord
+)
+
 from intelligence.evolution.evolution_governance import (
-    EvolutionGovernance,
+    EvolutionGovernance
 )
 
 
+class MockIntelligence:
 
-class DummyIntelligence:
+    def evaluate(self, record):
 
-
-    def evaluate(
-        self,
-        strategy
-    ):
+        if record.score_after > record.score_before:
+            return {
+                "decision": "ALLOW"
+            }
 
         return {
+            "decision": "BLOCK"
+        }
 
-            "decision": "ALLOW"
 
+class MockGovernance:
+
+    def evaluate(self, record):
+
+        if record.score_after > record.score_before:
+            return {
+                "status": "APPROVED"
+            }
+
+        return {
+            "status": "BLOCKED"
         }
 
 
 
+def test_governance_accepts_improved_evolution():
 
-class DummyGovernance:
-
-
-    def evaluate(
-        self,
-        strategy
-    ):
-
-        return {
-
-            "status": "APPROVED"
-
-        }
-
-
-
-def test_evolution_governance_allows():
-
-
-    bridge = EvolutionGovernance(
-
-        DummyIntelligence(),
-
-        DummyGovernance()
-
+    governance = EvolutionGovernance(
+        MockIntelligence(),
+        MockGovernance()
     )
 
 
-    result = bridge.evaluate(
-        "trend_v1"
+    record = EvolutionRecord(
+        parent="trend_v1",
+        child="trend_v2",
+        generation=2,
+        reason="performance",
+        score_before=72,
+        score_after=88,
+        timestamp=datetime.now(timezone.utc),
+    )
+
+
+    result = governance.evaluate(
+        record
     )
 
 
@@ -58,36 +66,27 @@ def test_evolution_governance_allows():
 
 
 
-class BlockIntelligence:
+def test_governance_rejects_regression():
 
-
-    def evaluate(
-        self,
-        strategy
-    ):
-
-        return {
-
-            "decision": "BLOCK"
-
-        }
-
-
-
-def test_evolution_governance_blocks_bad_evolution():
-
-
-    bridge = EvolutionGovernance(
-
-        BlockIntelligence(),
-
-        DummyGovernance()
-
+    governance = EvolutionGovernance(
+        MockIntelligence(),
+        MockGovernance()
     )
 
 
-    result = bridge.evaluate(
-        "bad_strategy"
+    record = EvolutionRecord(
+        parent="trend_v1",
+        child="trend_v2",
+        generation=2,
+        reason="regression",
+        score_before=90,
+        score_after=80,
+        timestamp=datetime.now(timezone.utc),
+    )
+
+
+    result = governance.evaluate(
+        record
     )
 
 
