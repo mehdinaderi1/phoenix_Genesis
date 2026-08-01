@@ -2,52 +2,139 @@ from intelligence.lifecycle.lifecycle_state import (
     LifecycleState
 )
 
+from intelligence.lifecycle.lifecycle_event import (
+    LifecycleEvent
+)
+
 
 class StrategyLifecycleManager:
 
 
-    def create(self, strategy):
+    def __init__(self, history=None):
 
-        strategy.status = LifecycleState.CREATED.value
+        self.history = history
+        self.lifecycle_history = history
+
+        @property
+        def history(self):
+
+            return self.lifecycle_history
+
+
+
+    def _transition(
+        self,
+        strategy,
+        new_state,
+        reason
+    ):
+
+        old_state = strategy.status
+
+        strategy.status = new_state
+
+
+        if self.history:
+
+            self.history.add(
+
+                LifecycleEvent(
+
+                    strategy_name=strategy.name,
+
+                    from_state=old_state,
+
+                    to_state=new_state,
+
+                    reason=reason
+
+                )
+
+            )
+
 
         return strategy
+
+
+
+    def create(self, strategy):
+
+        return self._transition(
+
+            strategy,
+
+            LifecycleState.CREATED.value,
+
+            "strategy created"
+
+        )
 
 
 
     def promote_candidate(self, strategy):
 
-        strategy.status = LifecycleState.CANDIDATE.value
+        return self._transition(
 
-        return strategy
+            strategy,
+
+            LifecycleState.CANDIDATE.value,
+
+            "strategy promoted to candidate"
+
+        )
 
 
 
     def activate(self, strategy):
 
-        strategy.status = LifecycleState.ACTIVE.value
+        return self._transition(
 
-        return strategy
+            strategy,
+
+            LifecycleState.ACTIVE.value,
+
+            "strategy activated"
+
+        )
 
 
 
     def promote_champion(self, strategy):
 
-        strategy.status = LifecycleState.CHAMPION.value
+        return self._transition(
 
-        return strategy
+            strategy,
+
+            LifecycleState.CHAMPION.value,
+
+            "strategy promoted to champion"
+
+        )
 
 
 
     def retire(self, strategy):
 
-        strategy.status = LifecycleState.RETIRED.value
+        return self._transition(
 
-        return strategy
+            strategy,
+
+            LifecycleState.RETIRED.value,
+
+            "strategy retired"
+
+        )
 
 
 
     def archive(self, strategy):
 
-        strategy.status = LifecycleState.ARCHIVED.value
+        return self._transition(
 
-        return strategy
+            strategy,
+
+            LifecycleState.ARCHIVED.value,
+
+            "strategy archived"
+
+        )

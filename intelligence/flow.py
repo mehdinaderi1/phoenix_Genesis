@@ -114,6 +114,10 @@ from intelligence.learning.strategy_performance import (
     StrategyPerformanceAnalyzer
 )
 
+from intelligence.lifecycle.lifecycle_analytics import (
+    LifecycleAnalytics
+)
+
 
 class IntelligenceFlow:
 
@@ -256,6 +260,8 @@ class IntelligenceFlow:
         self.strategy_lifecycle = (
             self.components.strategy_lifecycle
         )
+
+        self.lifecycle_analytics = LifecycleAnalytics()
         
         
     def create_report(self, consensus):
@@ -751,6 +757,21 @@ class IntelligenceFlow:
         report.strategy_performance = (
             strategy_performance
         )
+
+        report.strategy_lifecycle = None
+
+
+        if best_strategy:
+
+            lifecycle_analysis = (
+                self.lifecycle_analytics.analyze(
+                    best_strategy["name"],
+                    self.strategy_lifecycle.history
+                )
+            )
+
+
+            report.strategy_lifecycle = lifecycle_analysis
 
         report.self_evolution = {
 
