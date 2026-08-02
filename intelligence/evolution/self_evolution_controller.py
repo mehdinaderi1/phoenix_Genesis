@@ -15,7 +15,10 @@ class SelfEvolutionController:
         recall=None,
         intelligence=None,
         governance_bridge=None,
-        memory=None
+        memory=None,
+        learning_context=None,
+        learning_decision_adapter=None,
+        feedback=None
     ):
 
         self.evolution_engine = evolution_engine
@@ -27,6 +30,11 @@ class SelfEvolutionController:
         self.intelligence = intelligence
         self.governance_bridge = governance_bridge
         self.memory = memory
+        self.learning_context = learning_context
+        self.learning_decision_adapter = (
+            learning_decision_adapter
+        )
+        self.feedback = feedback
 
 
     def run(
@@ -37,6 +45,21 @@ class SelfEvolutionController:
 
         recall_analysis = None
         intelligence_analysis = None
+        learning_context = None
+        feedback_result = None
+
+
+        if (
+            self.learning_context
+            and isinstance(strategy, dict)
+        ):
+
+            learning_context = (
+                self.learning_context.build(
+                    strategy["name"]
+                )
+            )
+
 
 
         if (
@@ -117,6 +140,7 @@ class SelfEvolutionController:
 
 
         if not evolved["evolved"]:
+            feedback_result = None
 
             return {
 
@@ -129,6 +153,8 @@ class SelfEvolutionController:
                 "recall": recall_analysis,
 
                 "intelligence": intelligence_analysis,
+
+                "learning_context": learning_context
 
             }
 
@@ -183,6 +209,17 @@ class SelfEvolutionController:
             parent_score
         )
 
+        if (
+            self.learning_decision_adapter
+        ):
+
+            decision = (
+                self.learning_decision_adapter.decide(
+                    decision,
+                    learning_context
+                )
+            )
+
 
 
         if decision["decision"] == "ROLLBACK":
@@ -203,6 +240,8 @@ class SelfEvolutionController:
                 "recall": recall_analysis,
 
                 "intelligence": intelligence_analysis,
+
+                "learning_context": learning_context
 
             }
 
@@ -253,6 +292,18 @@ class SelfEvolutionController:
 
             self.memory.store(
                 record
+            )
+
+        if self.feedback:
+
+            feedback_result = (
+                self.feedback.process(
+                    strategy["name"]
+                    if isinstance(strategy, dict)
+                    else strategy,
+
+                    evolved
+                )
             )   
 
         return {
@@ -266,5 +317,9 @@ class SelfEvolutionController:
             "recall": recall_analysis,
 
             "intelligence": intelligence_analysis,
+
+            "learning_context": learning_context,
+
+            "feedback": feedback_result,
 
         }
