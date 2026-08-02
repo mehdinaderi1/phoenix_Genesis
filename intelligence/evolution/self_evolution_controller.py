@@ -1,6 +1,11 @@
 from intelligence.evolution.evolution_governance_bridge import (
     EvolutionGovernanceBridge
 )
+from intelligence.evolution.evolution_history import (
+    EvolutionRecord
+)
+
+from datetime import datetime, timezone
 
 
 class EvolutionEvaluationResult:
@@ -164,6 +169,12 @@ class SelfEvolutionController:
         strategy,
         score
     ):
+
+        parent_strategy_name = (
+            strategy["name"]
+            if isinstance(strategy, dict)
+            else strategy
+        )
 
         recall_analysis = None
         intelligence_analysis = None
@@ -334,6 +345,15 @@ class SelfEvolutionController:
 
             }
 
+        if self.feedback:
+
+            feedback_result = (
+                self.feedback.process(
+                    parent_strategy_name,
+                    evolved
+                )
+            )
+
 
         governance_result = None
 
@@ -383,6 +403,47 @@ class SelfEvolutionController:
             parent_score
         )
 
+        record = EvolutionRecord(
+
+            parent=parent_strategy_name,
+
+            child=evolved["strategy"],
+
+            generation=evolved.get(
+                "generation",
+                1
+            ),
+
+            reason="self evolution",
+
+            score_before=score,
+
+            score_after=evolved["score"],
+
+            timestamp=datetime.now(
+                timezone.utc
+            )
+
+        )
+
+
+        if self.history:
+
+            self.history.add(
+                record
+            )
+
+
+        if self.memory:
+
+            if hasattr(
+                self.memory,
+                "store"
+            ):
+
+                self.memory.store(
+                    record
+                )
 
         if self.confidence_adapter:
 
