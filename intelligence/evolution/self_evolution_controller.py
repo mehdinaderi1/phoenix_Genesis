@@ -3,14 +3,26 @@ from intelligence.evolution.evolution_governance_bridge import (
 )
 
 
+class EvolutionEvaluationResult:
+
+    def __init__(
+        self,
+        blocked,
+        reason
+    ):
+        self.blocked = blocked
+        self.reason = reason
+
+
+
 class SelfEvolutionController:
 
     def __init__(
         self,
-        evolution_engine,
-        analytics,
-        decision,
-        rollback,
+        evolution_engine=None,
+        analytics=None,
+        decision=None,
+        rollback=None,
         history=None,
         recall=None,
         intelligence=None,
@@ -18,23 +30,133 @@ class SelfEvolutionController:
         memory=None,
         learning_context=None,
         learning_decision_adapter=None,
-        feedback=None
+        feedback=None,
+        confidence=None,
+        confidence_adapter=None,
+        orchestrator=None,
+        rollback_manager=None
     ):
 
         self.evolution_engine = evolution_engine
         self.analytics = analytics
         self.decision = decision
-        self.rollback = rollback
+
+        self.rollback = (
+            rollback_manager
+            if rollback_manager is not None
+            else rollback
+        )
+
         self.history = history
         self.recall = recall
         self.intelligence = intelligence
         self.governance_bridge = governance_bridge
         self.memory = memory
+
         self.learning_context = learning_context
         self.learning_decision_adapter = (
             learning_decision_adapter
         )
+
         self.feedback = feedback
+        self.confidence = confidence
+        self.confidence_adapter = confidence_adapter
+        self.orchestrator = orchestrator
+
+        # resilience state
+        self.last_decision = None
+
+
+
+    def evaluate_evolution(
+        self,
+        evolution
+    ):
+        """
+        Detect harmful evolution.
+        Block -> Rollback -> Failure Memory -> HOLD
+        """
+
+        performance_score = evolution.get(
+            "performance_score",
+            0
+        )
+
+        success_rate = evolution.get(
+            "success_rate",
+            0
+        )
+
+        confidence = evolution.get(
+            "confidence",
+            0
+        )
+
+
+        bad_evolution = (
+            performance_score < 0.5
+            or success_rate < 0.5
+            or confidence < 60
+        )
+
+
+        if bad_evolution:
+
+            strategy = evolution.get(
+                "strategy"
+            )
+
+
+            if self.rollback:
+
+                self.rollback.rollback(
+                    strategy,
+                    reason="bad_evolution"
+                )
+
+
+            if self.memory:
+
+                if hasattr(
+                    self.memory,
+                    "save_failure"
+                ):
+
+                    self.memory.save_failure(
+                        strategy,
+                        reason="bad_evolution"
+                    )
+
+
+            self.last_decision = "HOLD"
+
+
+            return EvolutionEvaluationResult(
+                blocked=True,
+                reason="bad_evolution_detected"
+            )
+
+
+        self.last_decision = "CONTINUE"
+
+
+        return EvolutionEvaluationResult(
+            blocked=False,
+            reason="healthy_evolution"
+        )
+
+
+
+    def next_action(
+        self
+    ):
+
+        if self.last_decision:
+
+            return self.last_decision
+
+        return "CONTINUE"
+
 
 
     def run(
@@ -47,6 +169,7 @@ class SelfEvolutionController:
         intelligence_analysis = None
         learning_context = None
         feedback_result = None
+        orchestration_result = None
 
 
         if (
@@ -132,6 +255,30 @@ class SelfEvolutionController:
                 }
 
 
+        if self.orchestrator:
+
+            orchestration_result = (
+                self.orchestrator.evaluate(
+                    strategy["name"]
+                )
+            )
+
+
+            if not orchestration_result["allowed"]:
+
+                return {
+
+                    "action": "BLOCKED",
+
+                    "reason":
+                        "Evolution rejected by orchestrator",
+
+                    "orchestrator":
+                        orchestration_result
+
+                }
+
+
 
         evolved = self.evolution_engine.evolve(
             strategy,
@@ -139,8 +286,37 @@ class SelfEvolutionController:
         )
 
 
+        confidence_result = None
+
+
+        if (
+            self.confidence
+            and evolved.get("evolved")
+        ):
+
+            confidence_result = (
+                self.confidence.calculate(
+                    {
+                        "name":
+                            evolved["strategy"],
+
+                        "score":
+                            evolved["score"],
+
+                        "generation":
+                            evolved["generation"],
+
+                        "success_rate":
+                            strategy.get(
+                                "success_rate",
+                                0
+                            )
+                    }
+                )
+            )
+
+
         if not evolved["evolved"]:
-            feedback_result = None
 
             return {
 
@@ -157,7 +333,6 @@ class SelfEvolutionController:
                 "learning_context": learning_context
 
             }
-
 
 
         governance_result = None
@@ -198,7 +373,6 @@ class SelfEvolutionController:
             }
 
 
-
         parent_score = (
             evolved["score"] - 10
         )
@@ -209,9 +383,18 @@ class SelfEvolutionController:
             parent_score
         )
 
-        if (
-            self.learning_decision_adapter
-        ):
+
+        if self.confidence_adapter:
+
+            decision = (
+                self.confidence_adapter.decide(
+                    decision,
+                    confidence_result
+                )
+            )
+
+
+        if self.learning_decision_adapter:
 
             decision = (
                 self.learning_decision_adapter.decide(
@@ -219,7 +402,6 @@ class SelfEvolutionController:
                     learning_context
                 )
             )
-
 
 
         if decision["decision"] == "ROLLBACK":
@@ -246,80 +428,33 @@ class SelfEvolutionController:
             }
 
 
-
-        if self.history:
-
-            from datetime import datetime, timezone
-
-            from intelligence.evolution.evolution_history import (
-                EvolutionRecord
-            )
-
-
-            parent_name = (
-                strategy["name"]
-                if isinstance(strategy, dict)
-                else strategy
-            )
-
-
-            record = EvolutionRecord(
-
-                parent=parent_name,
-
-                child=evolved["strategy"],
-
-                generation=evolved["generation"],
-
-                reason="self evolution",
-
-                score_before=score,
-
-                score_after=evolved["score"],
-
-                timestamp=datetime.now(
-                    timezone.utc
-                )
-
-            )
-
-
-            self.history.add(
-                record
-            )
-
-        if self.memory:
-
-            self.memory.store(
-                record
-            )
-
-        if self.feedback:
-
-            feedback_result = (
-                self.feedback.process(
-                    strategy["name"]
-                    if isinstance(strategy, dict)
-                    else strategy,
-
-                    evolved
-                )
-            )   
-
         return {
 
-            "action": decision["decision"],
+            "action":
+                decision["decision"],
 
-            "decision": decision,
+            "decision":
+                decision,
 
-            "strategy": evolved,
+            "strategy":
+                evolved,
 
-            "recall": recall_analysis,
+            "confidence":
+                confidence_result,
 
-            "intelligence": intelligence_analysis,
+            "recall":
+                recall_analysis,
 
-            "learning_context": learning_context,
+            "intelligence":
+                intelligence_analysis,
 
-            "feedback": feedback_result,
+            "learning_context":
+                learning_context,
+
+            "feedback":
+                feedback_result,
+
+            "orchestrator":
+                orchestration_result,
 
         }
