@@ -18,6 +18,36 @@ class EvolutionLineage:
         return self.nodes
 
 
+    def _child(
+        self,
+        record
+    ):
+        return getattr(
+            record,
+            "child",
+            getattr(
+                record,
+                "child_strategy",
+                None
+            )
+        )
+
+
+    def _parent(
+        self,
+        record
+    ):
+        return getattr(
+            record,
+            "parent",
+            getattr(
+                record,
+                "parent_strategy",
+                None
+            )
+        )
+
+
     def find_lineage(
         self,
         strategy
@@ -32,9 +62,10 @@ class EvolutionLineage:
 
             found = None
 
+
             for record in self.nodes:
 
-                if record.child == current:
+                if self._child(record) == current:
 
                     found = record
                     break
@@ -49,10 +80,14 @@ class EvolutionLineage:
                 found
             )
 
-            current = found.parent
+
+            current = self._parent(
+                found
+            )
 
 
         return result
+
 
 
     def children(
@@ -66,9 +101,10 @@ class EvolutionLineage:
 
             for record in self.nodes
 
-            if record.parent == strategy
+            if self._parent(record) == strategy
 
         ]
+
 
 
     def latest(
