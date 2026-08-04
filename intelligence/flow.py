@@ -17,6 +17,7 @@ from intelligence.performance_feedback import PerformanceFeedback
 from intelligence.experience_record import ExperienceRecord
 from intelligence.experience_context import ExperienceContext
 from intelligence.memory.experience_memory import ExperienceMemory
+from intelligence.memory.strategy_performance_memory import StrategyPerformanceMemory
 from intelligence.experience_confidence import ExperienceConfidence
 from intelligence.confidence_adjuster import ConfidenceAdjuster
 from intelligence.pattern_intelligence import PatternIntelligence
@@ -220,7 +221,7 @@ class IntelligenceFlow:
         )    
 
         self.experience_memory = ExperienceMemory()
-
+        self.strategy_performance_memory = StrategyPerformanceMemory()
         self.experience_context = ExperienceContext(
             self.experience_memory
         )
