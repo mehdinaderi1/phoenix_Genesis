@@ -366,6 +366,10 @@ Consumers:
 
 * Regression suite reached 500 passing tests.
 
+- Connected StrategyFeedback PerformanceRecord flow to StrategyPerformanceMemory.
+- Performance records are now stored separately from ExperienceMemory.
+- Regression suite remains at 500 passing tests.
+
 
 
 
@@ -376,14 +380,9 @@ Consumers:
 
 
 
-1\. Trace remaining PerformanceRecord writes.
-
-2\. Define migration path for strategy feedback flow.
-
-3\. Integrate OutcomeRecord tracker carefully.
-
-4\. Run full regression suite.
-
+1. Review OutcomeRecord integration point.
+2. Connect market outcome tracking to PerformanceFeedback.
+3. Run full regression suite.
 
 
 
