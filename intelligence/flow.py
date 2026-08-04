@@ -15,12 +15,18 @@ from intelligence.intelligence_context import IntelligenceContext
 from intelligence.scenario_engine import ScenarioEngine
 from intelligence.performance_feedback import PerformanceFeedback
 from intelligence.outcome_record import OutcomeRecord
+from intelligence.confidence_adjuster import ConfidenceAdjuster
+
 from intelligence.experience_record import ExperienceRecord
 from intelligence.experience_context import ExperienceContext
+from intelligence.experience_confidence import ExperienceConfidence
+
+
 from intelligence.memory.experience_memory import ExperienceMemory
 from intelligence.memory.strategy_performance_memory import StrategyPerformanceMemory
-from intelligence.experience_confidence import ExperienceConfidence
-from intelligence.confidence_adjuster import ConfidenceAdjuster
+from intelligence.memory.outcome_memory import OutcomeMemory
+
+
 from intelligence.pattern_intelligence import PatternIntelligence
 
 from intelligence.components.intelligence_components import (
@@ -223,6 +229,8 @@ class IntelligenceFlow:
 
         self.experience_memory = ExperienceMemory()
         self.strategy_performance_memory = StrategyPerformanceMemory()
+        self.outcome_memory = OutcomeMemory()
+
         self.experience_context = ExperienceContext(
             self.experience_memory
         )
@@ -637,6 +645,10 @@ class IntelligenceFlow:
             decision=decision,
             entry_price=65000,
             exit_price=67000
+        )
+
+        self.outcome_memory.save_outcome(
+            outcome
         )
 
 
