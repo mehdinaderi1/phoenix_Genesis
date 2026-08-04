@@ -699,8 +699,10 @@ class IntelligenceFlow:
             improved_strategy
         )
 
-        strategy_performance = self.strategy_performance.analyze(
-            self.strategy_history.get_all()
+        strategy_performance = (
+            self.strategy_performance.analyze(
+                strategy_history
+            )
         )
 
         experience = ExperienceRecord(

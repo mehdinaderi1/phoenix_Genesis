@@ -20,7 +20,8 @@ class StrategyHistory:
             "version": len(self.history[strategy]) + 1,
             "score": score,
             "success_rate": success_rate,
-            "samples": samples
+            "samples": samples,
+            "success": success_rate >= 0.5
         }
 
 
