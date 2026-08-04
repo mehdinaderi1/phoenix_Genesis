@@ -14,6 +14,7 @@ from intelligence.adaptive_confidence import AdaptiveConfidence
 from intelligence.intelligence_context import IntelligenceContext
 from intelligence.scenario_engine import ScenarioEngine
 from intelligence.performance_feedback import PerformanceFeedback
+from intelligence.outcome_record import OutcomeRecord
 from intelligence.experience_record import ExperienceRecord
 from intelligence.experience_context import ExperienceContext
 from intelligence.memory.experience_memory import ExperienceMemory
@@ -632,10 +633,17 @@ class IntelligenceFlow:
 
         )
                        
-        report.performance_feedback = self.performance_feedback.evaluate(
-           decision,
-           65000,
-           67000 
+        outcome = OutcomeRecord(
+            decision=decision,
+            entry_price=65000,
+            exit_price=67000
+        )
+
+
+        report.performance_feedback = (
+            self.performance_feedback.evaluate(
+                outcome
+            )
         )
 
         strategy_record = self.strategy_feedback.create_record(
