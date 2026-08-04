@@ -7,6 +7,8 @@ from intelligence.learning.self_improvement import ImprovementReport
 class StrategyScore:
     strategy: str
     score: float
+    samples: int = 0
+    success_rate: float = 0
 
 
 class StrategyOptimizer:
@@ -31,4 +33,6 @@ class StrategyOptimizer:
         return StrategyScore(
             strategy=strategy,
             score=score,
+            samples=report.total_trades,
+            success_rate=report.win_rate,
         )
