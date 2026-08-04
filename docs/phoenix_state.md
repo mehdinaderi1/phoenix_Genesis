@@ -364,6 +364,8 @@ Consumers:
 
 \- Defined architecture memory workflow.
 
+- Regression suite reached 500 passing tests.
+
 
 
 
@@ -392,5 +394,5 @@ Consumers:
 
 
 
-491 passed
+500 passed
 
