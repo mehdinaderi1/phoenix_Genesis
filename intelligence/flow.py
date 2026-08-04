@@ -643,6 +643,10 @@ class IntelligenceFlow:
             report.performance_feedback
         )
 
+        self.strategy_performance_memory.save_performance(
+            strategy_record
+        )
+
         strategy_name = (
             report.strategy_insight["strategy"]    
         )
