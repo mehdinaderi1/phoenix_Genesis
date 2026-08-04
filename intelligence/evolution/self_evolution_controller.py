@@ -39,7 +39,8 @@ class SelfEvolutionController:
         confidence=None,
         confidence_adapter=None,
         orchestrator=None,
-        rollback_manager=None
+        rollback_manager=None,
+        experience_memory=None
     ):
 
         self.evolution_engine = evolution_engine
@@ -70,6 +71,7 @@ class SelfEvolutionController:
 
         # resilience state
         self.last_decision = None
+        self.experience_memory = experience_memory
 
 
 
@@ -412,6 +414,7 @@ class SelfEvolutionController:
             generation=evolved.get(
                 "generation",
                 1
+            
             ),
 
             reason="self evolution",

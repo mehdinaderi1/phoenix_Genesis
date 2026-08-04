@@ -5,9 +5,27 @@ class RegimeAnalyzer:
 
     def analyze(self, consensus):
 
+        signal = getattr(
+            consensus,
+            "signal",
+            None
+        )
+
+        if signal is None:
+
+            signals = getattr(
+                consensus,
+                "signals",
+                []
+            )
+
+            if signals:
+                signal = signals[0]
+
+
         if (
             consensus.trend == "BULLISH"
-            and consensus.signal == "BUY"
+            and signal == "BUY"
             and consensus.confidence >= 75
         ):
             return MarketRegime(
@@ -19,9 +37,10 @@ class RegimeAnalyzer:
                 ]
             )
 
+
         if (
             consensus.trend == "BEARISH"
-            and consensus.signal == "SELL"
+            and signal == "SELL"
             and consensus.confidence >= 75
         ):
             return MarketRegime(
@@ -32,6 +51,7 @@ class RegimeAnalyzer:
                     "High confidence signal"
                 ]
             )
+
 
         return MarketRegime(
             regime="RANGING",

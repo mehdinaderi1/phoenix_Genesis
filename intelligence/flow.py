@@ -84,6 +84,22 @@ from intelligence.evolution.evolution_recall_analyzer import (
     EvolutionRecallAnalyzer
 )
 
+from intelligence.evolution.evolution_report_builder import (
+    EvolutionReportBuilder
+)
+
+from intelligence.evolution.evolution_analytics import (
+    EvolutionAnalytics
+)
+
+from intelligence.evolution.evolution_ranker import (
+    EvolutionRanker
+)
+
+from intelligence.evolution.evolution_explainer import (
+    EvolutionExplainer
+)
+
 
 
 
@@ -188,6 +204,10 @@ class IntelligenceFlow:
 
         self.strategy_improvement = StrategyImprovementEngine()
 
+        self.strategy_evolution_flow = StrategyEvolutionFlow(
+            self.strategy_improvement
+        )
+
         self.strategy_history = StrategyHistory()
 
         self.strategy_bridge = StrategyBridge()
@@ -278,19 +298,46 @@ class IntelligenceFlow:
             experience_context
         )
 
-       
-        regime = self.regime_analyzer.analyze(consensus)
+        if consensus is None:
 
+            regime = type(
+            "RegimeResult",
+            (),
+            {
+                "regime": "UNKNOWN",
+                "reasons": [],
+            }
+        )()
 
-        risk = self.risk_analyzer.analyze(consensus)
+            risk = type(
+            "RiskResult",
+            (),
+            {
+                "level": "UNKNOWN",
+                "reason": "No market consensus available",
+                "reasons": []
+            }
+        )()
 
+            analysis = {
+                "summary": "No market analysis available",
+                "confidence": 0,
+                "signal": "WAIT",
+                "reasons": [],
+            }
 
-        analysis = self.reasoning.generate(
-            consensus,
-            risk
-        )
+        else:
 
+            regime = self.regime_analyzer.analyze(consensus)
 
+            risk = self.risk_analyzer.analyze(consensus)
+
+            analysis = self.reasoning.generate(
+                consensus,
+                risk
+            )
+
+        
         analysis["confidence"] = self.adaptive_confidence.adjust(
             analysis["confidence"],
             learning_insight,
@@ -306,6 +353,13 @@ class IntelligenceFlow:
              risk.level
 
         )
+        
+        if consensus is None:
+            trend = "UNKNOWN"
+            signal = "WAIT"
+        else:
+            trend = consensus.trend
+            signal = analysis["signal"]
                 
         report = MarketReport(
 
@@ -313,11 +367,11 @@ class IntelligenceFlow:
 
             timeframe="Multi",
 
-            trend=consensus.trend,
+            trend=trend,
 
             regime=regime.regime,
 
-            signal=analysis["signal"],
+            signal=signal,
 
             confidence=analysis["confidence"],
 
@@ -340,13 +394,60 @@ class IntelligenceFlow:
             ]
 
         )
-
+    
         report.scenarios = scenarios
 
         report.learning_insight = learning_insight
         
         report.experience_context = experience_context
 
+        if hasattr(self, "evolution_history"):
+
+            history = (
+                getattr(self.evolution_history, "records", None)
+                or getattr(self.evolution_history, "_records", None)
+                or getattr(self.evolution_history, "history", None)
+                or []
+            )
+
+            print("EVOLUTION HISTORY:", self.evolution_history.__dict__)
+
+            print("FINAL HISTORY:", history)
+
+            report.evolution = {
+                "summary": {
+                    "best_strategy": (
+                        history[-1].child
+                        if history
+                        else None
+                    )
+                },
+                "ranking": {
+                    "rank": (
+                        "EXCELLENT"
+                        if history
+                        and history[-1].score_after >= 90
+                        else "UNKNOWN"
+                    ),
+                    "score": (
+                        history[-1].score_after
+                        if history
+                        else 0
+                    )
+                },
+                "history": history
+            }
+
+        else:
+
+            report.evolution = {
+                "summary": {
+                    "best_strategy": None
+                },
+                "history": []
+            }
+
+                   
         best_strategy = None
 
         best_strategy = self.strategy_selector.select(
@@ -369,7 +470,7 @@ class IntelligenceFlow:
 
         report.strategy_intelligence = None
 
-
+        
         strategy_history = (
             self.strategy_history.get_history(
                 best_strategy
@@ -784,7 +885,104 @@ class IntelligenceFlow:
 
         }
 
+        if hasattr(self, "evolution_history"):
+
+            evolution_builder = EvolutionReportBuilder(
+
+                EvolutionAnalytics(
+                    self.evolution_history
+            ),
+
+            EvolutionRanker(),
+
+            EvolutionExplainer()
+
+        )
+
+        evolution_report = evolution_builder.build()
+
+        if (
+            "summary" in evolution_report
+            and evolution_report["summary"].get("best_strategy") is None
+        ):
+
+            history = (
+                getattr(
+                    self.evolution_history,
+                    "_records",
+                    []
+                )
+            )
+
+            if history:
+                evolution_report["summary"]["best_strategy"] = (
+                    history[-1].child
+                )
+
+
+        report.evolution = evolution_report
+
+
         return report
+
+        
+    def build_report(
+        self
+    ):
+
+        report = {}
+
+
+        if hasattr(
+            self,
+            "evolution_history"
+        ):
+
+            builder = EvolutionReportBuilder(
+
+                EvolutionAnalytics(
+                    self.evolution_history
+                ),
+
+                EvolutionRanker(),
+
+                EvolutionExplainer()
+
+            )
+
+
+            evolution_report = builder.build()
+
+            report["evolution"] = evolution_report
+
+
+        else:
+
+            report["evolution"] = {
+
+                "summary": {
+
+                    "total_evolutions": 0,
+
+                    "best_strategy": None
+
+                },
+
+                "ranking": {
+
+                    "rank": "UNKNOWN",
+
+                    "score": 0
+
+                },
+
+                "explanation": None
+
+            }
+
+
+        return report
+
 
     def update_governance_feedback(
         self,

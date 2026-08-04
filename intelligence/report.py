@@ -16,6 +16,22 @@ class MarketReport:
     action_proposal: object = None
     historical_context: object | None = None
     intelligence_context: object | None = None
+    evolution: dict | None = None
+
+    def __contains__(self, key):
+        return hasattr(self, key)
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+
+    def keys(self):
+        return self.__dict__.keys()
+
+
+    def get(self, key, default=None):
+        return getattr(self, key, default)
+
 
     def summary(self):
         return {

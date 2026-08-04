@@ -4,15 +4,39 @@ class ReasoningEngine:
 
         reasons = []
 
-        if consensus.signal == "BUY":
+        signal = getattr(
+            consensus,
+            "signal",
+            None
+        )
+
+        if signal is None:
+
+            signals = getattr(
+                consensus,
+                "signals",
+                []
+            )
+
+            if signals:
+                signal = signals[0]
+
+
+        if signal == "BUY":
             reasons.append(
                 "Positive market consensus"
             )
 
-        elif consensus.signal == "SELL":
+        elif signal == "SELL":
             reasons.append(
                 "Negative market consensus"
             )
+
+        elif signal == "WAIT":
+            reasons.append(
+                "Timeframe conflict detected"
+            )
+
 
         if consensus.trend == "BULLISH":
             reasons.append(
@@ -24,6 +48,7 @@ class ReasoningEngine:
                 "Bearish trend detected"
             )
 
+
         if consensus.confidence >= 80:
             reasons.append(
                 "High confidence score"
@@ -32,11 +57,6 @@ class ReasoningEngine:
         elif consensus.confidence < 50:
             reasons.append(
                 "Low confidence score"
-            )
-
-        if consensus.signal == "WAIT":
-            reasons.append(
-                "Timeframe conflict detected"
             )
 
 
@@ -59,7 +79,7 @@ class ReasoningEngine:
 
 
         return {
-            "signal": consensus.signal,
+            "signal": signal,
             "confidence": consensus.confidence,
             "risk": risk_level,
             "reasons": reasons
