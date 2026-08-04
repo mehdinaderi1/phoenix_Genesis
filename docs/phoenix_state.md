@@ -364,7 +364,7 @@ Consumers:
 
 \- Defined architecture memory workflow.
 
-- Regression suite reached 500 passing tests.
+* Regression suite reached 500 passing tests.
 
 
 
@@ -376,13 +376,13 @@ Consumers:
 
 
 
-1\. Create StrategyPerformanceMemory.
+1\. Trace remaining PerformanceRecord writes.
 
-2\. Move ExperienceContext dependency to StrategyPerformanceMemory.
+2\. Define migration path for strategy feedback flow.
 
-3\. Run full regression suite.
+3\. Integrate OutcomeRecord tracker carefully.
 
-4\. Update this file with results.
+4\. Run full regression suite.
 
 
 
