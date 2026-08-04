@@ -6,8 +6,7 @@ class OutcomeRecord:
         decision,
         entry_price,
         exit_price,
-        result,
-        score
+        timestamp=None
     ):
 
         self.decision = decision
@@ -16,6 +15,4 @@ class OutcomeRecord:
 
         self.exit_price = exit_price
 
-        self.result = result
-
-        self.score = score
+        self.timestamp = timestamp
