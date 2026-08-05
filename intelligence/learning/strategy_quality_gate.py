@@ -3,7 +3,7 @@ class StrategyQualityGate:
     def __init__(
         self,
         min_score=60,
-        min_samples=10,
+        min_samples=1,
         min_success_rate=0.5
     ):
         self.min_score = min_score

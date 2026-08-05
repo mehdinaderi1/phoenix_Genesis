@@ -38,6 +38,7 @@ from intelligence.strategy_memory import StrategyMemory
 from intelligence.strategy_analyzer import StrategyAnalyzer
 from intelligence.strategy_recall import StrategyRecall
 from intelligence.strategy_context import StrategyContext
+from intelligence.learning.strategy_ranker import StrategyRanker
 from intelligence.strategy_feedback import StrategyFeedback
 from intelligence.strategy_selector import StrategySelector
 from intelligence.strategy_learner import StrategyLearner
@@ -120,6 +121,10 @@ from intelligence.governance.governance_feedback import (
 
 from intelligence.governance.governance_confidence import (
     GovernanceConfidence
+)
+
+from intelligence.governance.strategy_adapter import (
+    StrategyAdapter
 )
 
 
@@ -219,6 +224,7 @@ class IntelligenceFlow:
         self.strategy_history = StrategyHistory()
 
         self.strategy_bridge = StrategyBridge()
+        self.strategy_adapter = StrategyAdapter()
 
 
         self.strategy_update = StrategyUpdate(

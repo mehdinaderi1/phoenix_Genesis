@@ -25,6 +25,18 @@ class StrategyUpdate:
             context = {}
 
 
+        existing = None
+
+        for item in self.strategy_memory.records:
+
+            if item.get("strategy") == strategy_score.strategy:
+
+                existing = item
+
+                break
+
+
+
         record = {
 
             "strategy": strategy_score.strategy,
@@ -44,27 +56,41 @@ class StrategyUpdate:
             ),
 
             "regime": context.get(
-                "regime"
+                "regime",
+                existing.get("regime") if existing else None
             ),
 
             "signal": context.get(
-                "signal"
+                "signal",
+                existing.get("signal") if existing else None
             ),
 
             "risk": context.get(
-                "risk"
+                "risk",
+                existing.get("risk") if existing else None
+            ),
+
+            "status": (
+                existing.get("status")
+                if existing
+                else "ACTIVE"
             )
 
         }
 
 
+
         if self.quality_gate:
 
-            accepted = self.quality_gate.validate(record)
+            accepted = self.quality_gate.validate(
+                record
+            )
 
             if not accepted:
 
-                self.strategy_memory.store(record)
+                self.strategy_memory.store(
+                    record
+                )
 
                 return {
                     "updated": False,
@@ -98,24 +124,33 @@ class StrategyUpdate:
         if self.strategy_history:
 
             self.strategy_history.add_record(
+
                 strategy_score.strategy,
+
                 strategy_score.score,
+
                 getattr(
                     strategy_score,
                     "success_rate",
                     0
                 ),
+
                 getattr(
                     strategy_score,
                     "samples",
                     0
                 )
+
             )
 
 
 
         return {
+
             "updated": True,
+
             "record": record,
+
             **record
+
         }

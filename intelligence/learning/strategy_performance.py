@@ -21,7 +21,11 @@ class StrategyPerformanceAnalyzer:
         successes = sum(
             1
             for item in history
-            if item.get("success", False)
+            if (
+                item.get("success", False)
+                or
+                item.get("result") == "SUCCESS"
+            )
         )
 
 

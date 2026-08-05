@@ -47,9 +47,33 @@ class StrategyAdapter:
 
             name=name,
 
+            version=self._get_value(
+                strategy,
+                "version",
+                "v1"
+            ),
+
+            generation=self._get_value(
+                strategy,
+                "generation",
+                1
+            ),
+
+            parent_strategy=self._get_value(
+                strategy,
+                "parent_strategy",
+                None
+            ),
+
             score=score,
 
-            success_rate=success_rate
+            success_rate=success_rate,
+
+            status=self._get_value(
+                strategy,
+                "status",
+                "ACTIVE"
+            )
 
         )
 

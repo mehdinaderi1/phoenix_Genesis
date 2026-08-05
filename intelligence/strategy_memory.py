@@ -83,10 +83,15 @@ class StrategyMemory:
 
                 if new_score > old_score:
 
-                    self.records[index] = new_strategy
+                    updated = record.copy()
+
+                    updated.update(
+                        new_strategy
+                    )
+
+                    self.records[index] = updated
 
                     return True
-
 
                 return False
 
