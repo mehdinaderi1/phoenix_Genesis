@@ -18,6 +18,7 @@ class MarketReport:
     intelligence_context: object | None = None
     evolution: dict | None = None
     champion_strategy: dict | None = None
+    strategy_ranking: object | None = None
     strategy_intelligence: object | None = None	
 
     def __contains__(self, key):

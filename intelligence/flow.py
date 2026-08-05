@@ -464,16 +464,33 @@ class IntelligenceFlow:
             }
 
                    
-        best_strategy = None
-
-        best_strategy = self.strategy_selector.select(
-            report.regime,
-            report.signal,
-             report.risk
+        strategy_selection = (
+            self.strategy_selector.select_with_result(
+                report.regime,
+                report.signal,
+                report.risk
+            )
         )
+               
 
+
+        best_strategy = None
         champion_strategy = None
 
+
+
+        if strategy_selection:
+
+            best_strategy = (
+                strategy_selection["champion"]
+            )
+
+
+            report.strategy_ranking = (
+                strategy_selection["ranking"]
+            )
+
+        
         if best_strategy:
 
             champion_strategy = (

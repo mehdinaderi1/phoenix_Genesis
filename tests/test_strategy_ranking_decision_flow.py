@@ -108,3 +108,4 @@ def test_strategy_ranking_to_decision_flow():
 
 
     assert decision.action == "PREPARE_LONG"
+    

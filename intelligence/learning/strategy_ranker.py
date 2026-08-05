@@ -1,7 +1,16 @@
+from intelligence.strategy_ranking_builder import StrategyRankingBuilder
+
+
 class StrategyRanker:
     """
     Ranks learned strategies based on performance.
     """
+
+
+    def __init__(self):
+
+        self.builder = StrategyRankingBuilder()
+
 
 
     def rank(
@@ -10,13 +19,34 @@ class StrategyRanker:
     ):
 
         if not strategies:
+
             return []
+
 
         return sorted(
             strategies,
             key=self._score,
             reverse=True
         )
+
+
+
+    def rank_with_result(
+        self,
+        strategies,
+        market_context=None
+    ):
+
+        ranked = self.rank(
+            strategies
+        )
+
+
+        return self.builder.build(
+            ranked,
+            market_context
+        )
+
 
 
     def best(
@@ -28,10 +58,14 @@ class StrategyRanker:
             strategies
         )
 
+
         if not ranked:
+
             return None
 
+
         return ranked[0]
+
 
 
     def _score(
@@ -55,10 +89,12 @@ class StrategyRanker:
             0
         )
 
+
         success_rate = strategy.get(
             "success_rate",
             0
         )
+
 
         samples = strategy.get(
             "samples",

@@ -16,7 +16,7 @@ class StrategySelector:
 
 
 
-    def select(
+    def select_with_result(
         self,
         regime,
         signal,
@@ -30,24 +30,87 @@ class StrategySelector:
         )
 
 
-        ranked = self.strategy_ranking.rank(
-            strategies
-        )
-
-
-        if not ranked:
+        if not strategies:
 
             return None
 
 
-        champion = ranked[0]
+
+        if hasattr(
+            self.strategy_ranking,
+            "rank_with_result"
+        ):
+
+            ranking_result = (
+                self.strategy_ranking.rank_with_result(
+                    strategies,
+                    market_context={
+                        "regime": regime,
+                        "signal": signal,
+                        "risk": risk
+                    }
+                )
+            )
+
+
+        else:
+
+            ranking_result = (
+                self.strategy_ranking.rank(
+                    strategies
+                )
+            )
+
+
+
+        if not ranking_result:
+
+            return None
+
+
+
+        champion = None
+
+
+
+        if hasattr(
+            ranking_result,
+            "top_strategy"
+        ):
+
+            champion_item = (
+                ranking_result.top_strategy
+            )
+
+
+            if champion_item:
+
+                champion = (
+                    champion_item.strategy_record
+                )
+
+
+        else:
+
+            if ranking_result:
+
+                champion = ranking_result[0]
+
+
+
+        if not champion:
+
+            return None
+
 
 
         if self.evolution_intelligence:
 
 
-            evolution_result = self.evolution_intelligence.analyze(
-                ranked
+            evolution_result = (
+                self.evolution_intelligence.analyze(
+                    ranking_result
+                )
             )
 
 
@@ -58,8 +121,10 @@ class StrategySelector:
                 )
             ):
 
-                evolved_strategy = evolution_result.get(
-                    "strategy"
+                evolved_strategy = (
+                    evolution_result.get(
+                        "strategy"
+                    )
                 )
 
 
@@ -69,4 +134,30 @@ class StrategySelector:
 
 
 
-        return champion
+        return {
+            "champion": champion,
+            "ranking": ranking_result
+        }
+
+
+
+    def select(
+        self,
+        regime,
+        signal,
+        risk
+    ):
+
+        result = self.select_with_result(
+            regime,
+            signal,
+            risk
+        )
+
+
+        if not result:
+
+            return None
+
+
+        return result["champion"]
