@@ -1,4 +1,5 @@
 from intelligence.governance.strategy_governor import StrategyGovernor
+from intelligence.learning.strategy_version import StrategyVersion
 
 
 class StrategyBridge:
@@ -13,13 +14,67 @@ class StrategyBridge:
 
 
 
+    def _to_strategy_version(
+        self,
+        record
+    ):
+
+        if isinstance(record, StrategyVersion):
+
+            return record
+
+
+        return StrategyVersion(
+
+            name=record.get(
+                "name",
+                record.get("strategy")
+            ),
+
+            version=record.get(
+                "version",
+                "v1"
+            ),
+
+            generation=record.get(
+                "generation",
+                1
+            ),
+
+            score=record.get(
+                "score",
+                0.0
+            ),
+
+            success_rate=record.get(
+                "success_rate",
+                0.0
+            ),
+
+            status=record.get(
+                "status",
+                "ACTIVE"
+            )
+        )
+
+
+
     def get_best_strategy(
         self,
         strategies
     ):
 
+        strategy_versions = [
+
+            self._to_strategy_version(s)
+
+            for s in strategies
+
+        ]
+
+
         champion = self.governor.select_champion(
-            strategies
+            strategy_versions
         )
 
 
@@ -48,21 +103,21 @@ class StrategyBridge:
 
     def enrich_market_context(
         self,
-        market_context,
+        context,
         strategies
     ):
 
-        strategy = self.get_best_strategy(
+        champion = self.get_best_strategy(
             strategies
         )
 
 
-        if strategy is None:
-
-            return market_context
+        enriched = dict(context)
 
 
-        market_context["champion_strategy"] = strategy
+        if champion:
+
+            enriched["champion_strategy"] = champion
 
 
-        return market_context
+        return enriched

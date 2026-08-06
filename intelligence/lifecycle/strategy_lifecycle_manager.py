@@ -12,13 +12,13 @@ class StrategyLifecycleManager:
 
     def __init__(self, history=None):
 
-        self.history = history
+        
         self.lifecycle_history = history
 
-        @property
-        def history(self):
+    @property
+    def history(self):
 
-            return self.lifecycle_history
+        return self.lifecycle_history
 
 
 

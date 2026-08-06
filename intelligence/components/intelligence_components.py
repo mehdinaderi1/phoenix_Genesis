@@ -93,6 +93,8 @@ from intelligence.lifecycle.strategy_lifecycle_manager import (
     StrategyLifecycleManager
 )
 
+from intelligence.lifecycle.lifecycle_history import LifecycleHistory
+
 
 
 
@@ -245,4 +247,8 @@ class IntelligenceComponents:
 
         # Strategy Lifecycle Intelligence
 
-        self.strategy_lifecycle = StrategyLifecycleManager()
+        self.lifecycle_history = LifecycleHistory()
+
+        self.strategy_lifecycle = StrategyLifecycleManager(
+            self.lifecycle_history
+        )

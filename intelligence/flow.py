@@ -503,19 +503,28 @@ class IntelligenceFlow:
 
         report.strategy_intelligence = None
 
-        
-        strategy_history = (
-            self.strategy_history.get_history(
-                best_strategy
-            )
-        )
 
-        strategy_intelligence_context, strategy_knowledge = (
-            self.strategy_intelligence_adapter.build_context(
-                best_strategy,
-                strategy_history
+        strategy_history = []
+
+        strategy_intelligence_context = None
+        strategy_knowledge = None
+
+
+        if best_strategy:
+
+            strategy_history = (
+                self.strategy_history.get_history(
+                    best_strategy["name"]
+                )
             )
-        )
+
+
+            strategy_intelligence_context, strategy_knowledge = (
+                self.strategy_intelligence_adapter.build_context(
+                    best_strategy,
+                    strategy_history
+                )
+            )
 
 
         if strategy_intelligence_context:
@@ -647,8 +656,7 @@ class IntelligenceFlow:
                 governance_record
             )
 
-            if governance_result["status"] != "APPROVED":
-                return governance_result
+            report.governance_result = governance_result
 
 
         decision = self.decision_engine.decide(
@@ -980,58 +988,49 @@ class IntelligenceFlow:
         self
     ):
 
-        report = {}
+            report = {}
 
 
-        if hasattr(
-            self,
-            "evolution_history"
-        ):
+            if hasattr(
+                self,
+                "evolution_history"
+            ):
 
-            builder = EvolutionReportBuilder(
+                builder = EvolutionReportBuilder(
 
-                EvolutionAnalytics(
-                    self.evolution_history
-                ),
+                    EvolutionAnalytics(
+                        self.evolution_history
+                    ),
 
-                EvolutionRanker(),
+                    EvolutionRanker(),
 
-                EvolutionExplainer()
+                    EvolutionExplainer()
 
-            )
-
-
-            evolution_report = builder.build()
-
-            report["evolution"] = evolution_report
+                )
 
 
-        else:
-
-            report["evolution"] = {
-
-                "summary": {
-
-                    "total_evolutions": 0,
-
-                    "best_strategy": None
-
-                },
-
-                "ranking": {
-
-                    "rank": "UNKNOWN",
-
-                    "score": 0
-
-                },
-
-                "explanation": None
-
-            }
+                evolution_report = builder.build()
 
 
-        return report
+                report["evolution"] = evolution_report
+
+
+            else:
+
+                report["evolution"] = {
+
+                    "summary": {
+
+                        "total_evolutions": 0,
+
+                        "best_strategy": None
+
+                    }
+
+                }
+
+
+            return report
 
 
     def update_governance_feedback(
