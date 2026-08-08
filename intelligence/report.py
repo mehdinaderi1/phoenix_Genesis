@@ -19,7 +19,10 @@ class MarketReport:
     evolution: dict | None = None
     champion_strategy: dict | None = None
     strategy_ranking: object | None = None
-    strategy_intelligence: object | None = None	
+    strategy_intelligence: object | None = None
+    strategy_consensus: dict | None = None
+    
+    	
 
     def __contains__(self, key):
         return hasattr(self, key)

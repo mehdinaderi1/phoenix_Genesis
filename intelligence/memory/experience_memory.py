@@ -1,4 +1,3 @@
-from intelligence.performance_record import PerformanceRecord
 from intelligence.experience_record import ExperienceRecord
 
 
@@ -7,14 +6,17 @@ class ExperienceMemory:
     def __init__(self):
         self.experiences = []
 
+
     def save_experience(
         self,
-        experience: PerformanceRecord
+        experience: ExperienceRecord
     ):
         self.experiences.append(experience)
 
+
     def get_experiences(self):
         return self.experiences
+
 
     def find_by_strategy(
         self,
@@ -25,6 +27,7 @@ class ExperienceMemory:
             for exp in self.experiences
             if exp.strategy == strategy
         ]
+
 
     def find_similar(
         self,

@@ -30,12 +30,28 @@ class ActionProposal:
     def to_dict(self):
 
         return {
-            "action": self.action,
-            "status": self.status,
-            "reason": self.reason,
-            "confidence": self.confidence,
-            "symbol": self.symbol,
-            "strategy": self.strategy,
-            "risk_status": self.risk_status,
-            "metadata": self.metadata
+
+            "action":
+                self.action,
+
+            "status":
+                self.status,
+
+            "reason":
+                self.reason,
+
+            "confidence":
+                self.confidence,
+
+            "symbol":
+                self.symbol,
+
+            "strategy":
+                self.strategy,
+
+            "risk_status":
+                self.risk_status,
+
+            "metadata":
+                self.metadata
         }

@@ -1,7 +1,12 @@
 class DecisionRules:
 
+    CONSENSUS_MIN_CONFIDENCE = 0.6
 
-    def strategy_is_valid(self, report):
+
+    def strategy_is_valid(
+        self,
+        report
+    ):
 
         strategy = getattr(
             report,
@@ -14,25 +19,108 @@ class DecisionRules:
             return True
 
 
-        return strategy.get("status") == "ACTIVE"
-
-
-
-    def can_long(self, report):
-
         return (
-            self.strategy_is_valid(report)
-            and report.signal == "BUY"
-            and report.risk == "LOW"
-            and report.confidence >= 80
+            strategy.get(
+                "status"
+            )
+            ==
+            "ACTIVE"
         )
 
 
 
-    def can_short(self, report):
+    def consensus_is_valid(
+        self,
+        report
+    ):
+
+        consensus = getattr(
+            report,
+            "strategy_consensus",
+            None
+        )
+
+
+        if consensus is None:
+            return True
+
+
+
+        decision = consensus.get(
+            "decision"
+        )
+
+
+        if decision not in [
+            "BUY",
+            "SELL"
+        ]:
+            return False
+
+
+
+        supporting = consensus.get(
+            "supporting_strategies",
+            0
+        )
+
+
+        opposing = consensus.get(
+            "opposing_strategies",
+            0
+        )
+
+
+        if supporting <= opposing:
+            return False
+
+
+
+        confidence = consensus.get(
+            "confidence",
+            0
+        )
+
+
+        if confidence < self.CONSENSUS_MIN_CONFIDENCE:
+            return False
+
+
+
+        return True
+
+
+
+    def can_long(
+        self,
+        report
+    ):
 
         return (
             self.strategy_is_valid(report)
-            and report.signal == "SELL"
-            and report.confidence >= 70
+            and
+            self.consensus_is_valid(report)
+            and
+            report.signal == "BUY"
+            and
+            report.risk == "LOW"
+            and
+            report.confidence >= 80
+        )
+
+
+
+    def can_short(
+        self,
+        report
+    ):
+
+        return (
+            self.strategy_is_valid(report)
+            and
+            self.consensus_is_valid(report)
+            and
+            report.signal == "SELL"
+            and
+            report.confidence >= 70
         )

@@ -17,7 +17,13 @@ class DecisionRecord:
     action: str
     validation_status: str
 
+    champion_strategy: dict | None = None
+
+    strategy: dict | None = None
+
     quality_score: float = 0
+
+    trace: dict | None = None
 
     timestamp: str | None = None
 

@@ -1,22 +1,54 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
 class MarketReport:
+
     symbol: str
 
-    trend: str
-    momentum: str
-    regime: str
+    # legacy decision contract
+    timeframe: str = ""
+    signal: str = ""
+    risk: str = ""
+    reasons: list = field(default_factory=list)
 
-    risk_level: str
+    # current intelligence contract
+    trend: str = ""
+    momentum: str = ""
+    regime: str = ""
 
-    confidence: float
+    risk_level: str = ""
 
-    reasoning: str
+    confidence: float = 0
+
+    reasoning: str = ""
+
+    strategy_consensus: dict = field(
+        default_factory=dict
+    )
+
+
+    def __post_init__(self):
+
+        # risk compatibility
+
+        if not self.risk and self.risk_level:
+            self.risk = self.risk_level
+
+        if not self.risk_level and self.risk:
+            self.risk_level = self.risk
+
+
+        # reasoning compatibility
+
+        if not self.reasoning and self.reasons:
+            self.reasoning = " ".join(
+                self.reasons
+            )
 
 
     def summary(self):
+
         return {
             "symbol": self.symbol,
             "trend": self.trend,

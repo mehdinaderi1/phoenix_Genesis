@@ -37,6 +37,7 @@ from intelligence.components.intelligence_components import (
 from intelligence.strategy_memory import StrategyMemory
 from intelligence.strategy_analyzer import StrategyAnalyzer
 from intelligence.strategy_recall import StrategyRecall
+from intelligence.strategy_council import StrategyCouncil
 from intelligence.strategy_context import StrategyContext
 from intelligence.learning.strategy_ranker import StrategyRanker
 from intelligence.strategy_feedback import StrategyFeedback
@@ -50,6 +51,9 @@ from intelligence.strategy_intelligence_adapter import (
 )
 from intelligence.strategy_bridge import StrategyBridge
 from intelligence.strategy_governance import StrategyGovernance
+from intelligence.strategy_consensus_validator import (
+    StrategyConsensusValidator
+)
 
 
 
@@ -185,6 +189,8 @@ class IntelligenceFlow:
         )
 
         self.strategy_ranker = StrategyRanker()
+        self.strategy_council = StrategyCouncil()
+        self.strategy_consensus_validator = StrategyConsensusValidator()
      
         self.strategy_selector = StrategySelector(
             self.strategy_recall,
@@ -490,6 +496,24 @@ class IntelligenceFlow:
                 strategy_selection["ranking"]
             )
 
+            report.strategy_consensus = (
+                self.strategy_council.evaluate(
+                    strategy_selection["ranking"]
+                )
+            )
+
+            report.strategy_consensus_gate = (
+                self.strategy_consensus_validator.explain(
+                    report.strategy_consensus
+                )
+            )
+
+        if (
+            hasattr(report, "strategy_consensus_gate")
+            and not report.strategy_consensus_gate["allowed"]
+        ):
+            best_strategy = None    
+
         
         if best_strategy:
 
@@ -748,9 +772,26 @@ class IntelligenceFlow:
                 report.performance_feedback["result"] == "SUCCESS"
             ),
 
-            score=report.performance_feedback["score"]
+            score=report.performance_feedback["score"],
 
+            decision=decision.action,
+
+            champion_strategy=getattr(
+                report,
+                "champion_strategy",
+                None
+            ),
+
+            confidence=decision.confidence,
+
+            trace=getattr(
+                decision,
+                "metadata",
+                {}
+            )
         )
+
+        
 
 
         self.experience_memory.save_experience(
@@ -862,9 +903,22 @@ class IntelligenceFlow:
 
             action=decision.action,
 
-            validation_status=report.action_proposal.status
+            validation_status=report.action_proposal.status,
 
+            trace=(
+                decision.metadata.get("trace")
+                if hasattr(decision, "metadata")
+                else None
+            ),
+
+            strategy=getattr(
+                report,
+                "champion_strategy",
+                None
+            )
         )
+
+        
 
 
         quality_result = self.decision_quality.calculate(
