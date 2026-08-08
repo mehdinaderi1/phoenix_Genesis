@@ -1,3 +1,8 @@
+from intelligence.strategy_council_result import (
+    StrategyCouncilResult
+)
+
+
 class StrategyCouncil:
     """
     Evaluates multiple strategies and produces a weighted consensus decision.
@@ -28,6 +33,12 @@ class StrategyCouncil:
         weighted_support = {}
 
         strategy_weights = {}
+
+        strategy_votes = []
+
+        supporting_names = []
+
+        conflicting_names = []
 
         top_strategy = None
 
@@ -86,6 +97,15 @@ class StrategyCouncil:
                 "confidence",
                 0
             )
+
+            strategy_votes.append(
+            {
+                "strategy": name,
+                "action": action,
+                "confidence": confidence,
+                "score": score
+        }
+    )
 
 
             weight = (
@@ -176,36 +196,46 @@ class StrategyCouncil:
 
         )
 
+        for vote in strategy_votes:
 
-        return {
+            if vote["action"] == decision:
 
-            "decision":
-                decision,
+                supporting_names.append(
+                    vote["strategy"]
+                )
 
+            else:
 
-            "supporting_strategies":
-                supporting,
-
-
-            "opposing_strategies":
-                opposing,
-
-
-            "confidence":
-                round(
-                    confidence,
-                    2
-                ),
+                conflicting_names.append(
+                    vote["strategy"]
+                )
 
 
-            "strategy_weights":
-                strategy_weights,
+        return StrategyCouncilResult(
 
+            strategies=strategies,
 
-            "weighted_support":
-                weighted_support,
+            strategy_votes=strategy_votes,
 
+            consensus_action=decision,
 
-            "top_strategy":
-                top_strategy
-        }
+            consensus_confidence=round(
+                confidence,
+                2
+            ),
+
+            supporting_strategies=supporting_names,
+
+            conflicting_strategies=conflicting_names,
+
+            strategy_weights=strategy_weights,
+
+            weighted_support=weighted_support,
+
+            top_strategy=top_strategy,
+
+            explanation=(
+                f"Consensus reached on {decision} "
+                f"with confidence {round(confidence,2)}"
+            )
+        )

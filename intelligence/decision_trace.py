@@ -45,7 +45,14 @@ class DecisionTrace:
                 self.risk,
 
             "strategy_consensus":
-                self.strategy_consensus,
+                (
+                    self.strategy_consensus.to_dict()
+                    if hasattr(
+                        self.strategy_consensus,
+                        "to_dict"
+                    )
+                    else self.strategy_consensus
+                ),
 
             "gates":
                 self.gates,
