@@ -11,6 +11,7 @@ from intelligence.report import MarketReport
 from intelligence.pattern_service import PatternService
 from intelligence.historical_context import HistoricalContext
 from intelligence.adaptive_confidence import AdaptiveConfidence
+from intelligence.adaptive_intelligence import AdaptiveIntelligence
 from intelligence.intelligence_context import IntelligenceContext
 from intelligence.scenario_engine import ScenarioEngine
 from intelligence.performance_feedback import PerformanceFeedback
@@ -215,6 +216,12 @@ class IntelligenceFlow:
 
         self.confidence_adjuster = ConfidenceAdjuster()
 
+        self.adaptive_intelligence = AdaptiveIntelligence(
+            adaptive_confidence=self.adaptive_confidence,
+            experience_confidence=self.experience_confidence,
+            confidence_adjuster=self.confidence_adjuster
+        )
+
         self.strategy_quality_gate = StrategyQualityGate()
 
         self.performance_feedback = PerformanceFeedback()
@@ -316,10 +323,7 @@ class IntelligenceFlow:
             strategy="Trend"
         )
         
-        experience_bonus = self.experience_confidence.calculate(
-            experience_context
-        )
-
+        
         if consensus is None:
 
             regime = type(
@@ -360,10 +364,13 @@ class IntelligenceFlow:
             )
 
         
-        analysis["confidence"] = self.adaptive_confidence.adjust(
-            analysis["confidence"],
-            learning_insight,
-            experience_bonus
+        analysis["confidence"] = (
+            self.adaptive_intelligence
+            .adjust_analysis_confidence(
+                analysis["confidence"],
+                learning_insight,
+                experience_context
+            )
         )
         
 
@@ -636,14 +643,7 @@ class IntelligenceFlow:
         
         if best_strategy:  
    
-            strategy_bonus = (
-                self.experience_confidence
-                .calculate_from_strategy(
-                    best_strategy    
-
-                )
-            )
-
+        
             report.strategy_context = (
                 self.strategy_context.analyze(
                     report.regime,
@@ -653,9 +653,10 @@ class IntelligenceFlow:
             )
 
             report.confidence = (
-                self.confidence_adjuster.adjust(
+                self.adaptive_intelligence
+                .adjust_strategy_confidence(
                     report.confidence,
-                    strategy_bonus    
+                    best_strategy
                 )
             )
 
