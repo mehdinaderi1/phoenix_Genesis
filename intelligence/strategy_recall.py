@@ -21,7 +21,7 @@ class StrategyRecall:
         risk
     ):
 
-        return (
+        strategies = (
             self.strategy_memory
             .find_by_pattern(
                 regime,
@@ -29,6 +29,16 @@ class StrategyRecall:
                 risk
             )
         )
+
+        return [
+            strategy
+            for strategy in strategies
+            if strategy.get("status")
+            not in (
+                "RETIRED",
+                "CANDIDATE"
+            )
+        ]
 
 
 

@@ -41,14 +41,31 @@ class StrategyMemory:
         risk
     ):
 
+        regime = str(regime).upper()
+        signal = str(signal).upper()
+        risk = str(risk).upper()
+
+
         results = []
 
         for record in self.records:
 
+            record_regime = str(
+                record.get("regime", "")
+            ).upper()
+
+            record_signal = str(
+                record.get("signal", "")
+            ).upper()
+
+            record_risk = str(
+                record.get("risk", "")
+            ).upper()
+
             if (
-                record.get("regime") == regime
-                and record.get("signal") == signal
-                and record.get("risk") == risk
+                record_regime == regime
+                and record_signal == signal
+                and record_risk == risk
             ):
 
                 results.append(record)

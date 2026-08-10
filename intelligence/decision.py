@@ -18,6 +18,8 @@ class DecisionResult:
 
     top_strategy: str | None = None
 
+    champion_strategy: dict | None = None
+
     explanation: dict = field(
         default_factory=dict
     )
@@ -54,6 +56,9 @@ class DecisionResult:
 
             "top_strategy":
                 self.top_strategy,
+
+            "champion_strategy":
+                self.champion_strategy,
 
             "explanation":
                 self.explanation,

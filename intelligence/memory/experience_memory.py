@@ -4,17 +4,28 @@ from intelligence.experience_record import ExperienceRecord
 class ExperienceMemory:
 
     def __init__(self):
+
         self.experiences = []
+
+
+    @property
+    def records(self):
+
+        return self.experiences
 
 
     def save_experience(
         self,
         experience: ExperienceRecord
     ):
-        self.experiences.append(experience)
+
+        self.experiences.append(
+            experience
+        )
 
 
     def get_experiences(self):
+
         return self.experiences
 
 
@@ -22,6 +33,7 @@ class ExperienceMemory:
         self,
         strategy: str
     ):
+
         return [
             exp
             for exp in self.experiences
@@ -34,6 +46,7 @@ class ExperienceMemory:
         strategy: str,
         success: bool | None = None
     ):
+
         results = []
 
         for exp in self.experiences:
@@ -41,10 +54,14 @@ class ExperienceMemory:
             if exp.strategy != strategy:
                 continue
 
+
             if success is not None:
+
                 if exp.success != success:
                     continue
 
+
             results.append(exp)
+
 
         return results

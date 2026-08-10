@@ -58,6 +58,20 @@ class DecisionRules:
             return False
 
 
+        report_signal = getattr(
+            report,
+            "signal",
+            None
+        )
+
+        if (
+            report_signal is not None
+            and
+            decision != report_signal
+        ):
+            return False
+
+
 
         supporting = consensus.get(
             "supporting_strategies",

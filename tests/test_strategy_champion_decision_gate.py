@@ -81,10 +81,10 @@ def test_strategy_champion_decision_gate_allows_active_strategy():
 
 def test_strategy_champion_decision_gate_blocks_retired_strategy():
 
-    memory = StrategyMemory()
+    adapter = StrategyAdapter()
 
 
-    memory.store(
+    champion = adapter.convert(
         {
             "name": "old_strategy",
             "strategy": "old_strategy",
@@ -97,44 +97,11 @@ def test_strategy_champion_decision_gate_blocks_retired_strategy():
         }
     )
 
-
-    recall = StrategyRecall(
-        memory
-    )
-
-
-    ranker = StrategyRanker()
-
-
-    selector = StrategySelector(
-        recall,
-        ranker
-    )
-
-
-    selected = selector.select(
-        "bullish",
-        "BUY",
-        "LOW"
-    )
-
-
-    adapter = StrategyAdapter()
-
-
-    champion = adapter.convert(
-        selected
-    )
-
-
     report = MockReport()
-
 
     report.champion_strategy = champion.to_dict()
 
-
     rules = DecisionRules()
-
 
     assert rules.strategy_is_valid(
         report

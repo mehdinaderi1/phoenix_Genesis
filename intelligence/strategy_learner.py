@@ -21,16 +21,13 @@ class StrategyLearner:
             else StrategyEvaluator()
         )
 
-
     def learn(self, patterns):
 
         learned = []
 
-
         for pattern in patterns:
 
             raw_pattern = pattern["pattern"]
-
 
             if isinstance(raw_pattern, tuple):
 
@@ -39,7 +36,6 @@ class StrategyLearner:
                 pattern_name = (
                     f"{regime}_{signal}_{risk}"
                 )
-
 
             elif isinstance(raw_pattern, str):
 
@@ -52,10 +48,8 @@ class StrategyLearner:
 
                 regime, signal, risk = parts
 
-
             else:
                 continue
-
 
             strategy_record = {
 
@@ -71,20 +65,20 @@ class StrategyLearner:
 
                 "success_rate": pattern["success_rate"],
 
-                "score": pattern["avg_score"]
+                "score": pattern["avg_score"],
 
+                "status": "CANDIDATE"
             }
-
 
             evaluation = self.evaluator.evaluate(
                 strategy_record
             )
 
-
             strategy_record["evaluation"] = evaluation
 
-
             if evaluation["accepted"]:
+
+                strategy_record["status"] = "ACTIVE"
 
                 self.strategy_memory.store(
                     strategy_record
@@ -93,6 +87,5 @@ class StrategyLearner:
                 learned.append(
                     strategy_record
                 )
-
 
         return learned

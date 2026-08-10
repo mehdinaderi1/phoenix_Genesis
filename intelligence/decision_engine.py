@@ -147,6 +147,12 @@ class DecisionEngine:
             report
         )
 
+        metadata["champion_strategy"] = getattr(
+            report,
+            "champion_strategy",
+            None
+        )
+
 
         explanation = self._build_explanation(
             report
@@ -165,6 +171,7 @@ class DecisionEngine:
 
                 confidence=
                     report.confidence,
+
 
                 explanation=
                     explanation,
