@@ -28,6 +28,13 @@ class DecisionResult:
         default_factory=dict
     )
 
+    regime: str | None = None
+
+    signal: str | None = None
+
+    risk: str | None = None
+
+    trace: dict | None = None
 
 
     def to_dict(
@@ -64,5 +71,17 @@ class DecisionResult:
                 self.explanation,
 
             "metadata":
-                self.metadata
+                self.metadata,
+
+            "regime":
+                self.regime,
+
+            "signal":
+                self.signal,
+
+            "risk":
+                self.risk,
+
+            "trace":
+                self.trace
         }

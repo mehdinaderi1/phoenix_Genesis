@@ -142,7 +142,8 @@ class DecisionOutcomeBridge:
 
                 performance_learning = (
                     self.performance_learning.process(
-                        performance
+                        performance,
+                        decision
                     )
                 )
 

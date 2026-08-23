@@ -172,6 +172,34 @@ class DecisionEngine:
                 confidence=
                     report.confidence,
 
+                regime=
+                    getattr(
+                        report,
+                        "regime",
+                        None
+                    ),
+
+                signal=
+                    getattr(
+                        report,
+                        "signal",
+                        None
+                    ),
+
+                risk=
+                    getattr(
+                        report,
+                        "risk",
+                        None
+                    ),
+
+                trace=
+                    self._build_trace(
+                        report,
+                        "PREPARE_LONG",
+                        explanation
+                    ),
+
 
                 explanation=
                     explanation,
@@ -202,6 +230,35 @@ class DecisionEngine:
                 confidence=
                     report.confidence,
 
+                regime=
+                    getattr(
+                        report,
+                        "regime",
+                        None
+                    ),
+
+                signal=
+                    getattr(
+                        report,
+                        "signal",
+                        None
+                    ),
+
+                risk=
+                    getattr(
+                        report,
+                        "risk",
+                        None
+                    ),
+
+                trace=
+                    self._build_trace(
+                        report,
+                        "PREPARE_SHORT",
+                        explanation
+                    ),
+
+
                 explanation=
                     explanation,
 
@@ -230,6 +287,34 @@ class DecisionEngine:
 
                 confidence=
                     report.confidence,
+
+                regime=
+                    getattr(
+                        report,
+                        "regime",
+                        None
+                    ),
+
+                signal=
+                    getattr(
+                        report,
+                        "signal",
+                        None
+                    ),
+
+                risk=
+                    getattr(
+                        report,
+                        "risk",
+                        None
+                    ),
+
+                trace=
+                    self._build_trace(
+                        report,
+                        "WAIT",
+                        explanation
+                    ),
 
                 explanation=
                     explanation,

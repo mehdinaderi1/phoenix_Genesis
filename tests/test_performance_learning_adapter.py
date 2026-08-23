@@ -150,3 +150,69 @@ def test_performance_learning_adapter_preserves_multiple_experiences():
 
     assert experiences[0].success is True
     assert experiences[1].success is False
+
+
+from intelligence.decision_record import DecisionRecord
+
+
+def test_performance_learning_adapter_preserves_decision_context():
+
+    experience_memory = ExperienceMemory()
+
+    adapter = PerformanceLearningAdapter(
+        experience_memory=experience_memory
+    )
+
+    performance = PerformanceRecord(
+        strategy="momentum_strategy",
+        profit_loss=1000,
+        success=True
+    )
+
+    decision = DecisionRecord(
+        symbol="BTCUSDT",
+        timeframe="30m",
+        regime="BULL",
+        signal="BUY",
+        confidence=85,
+        risk="LOW",
+        action="PREPARE_LONG",
+        validation_status="APPROVED",
+        champion_strategy={
+            "name": "momentum_strategy"
+        },
+        trace={
+            "source": "decision_engine"
+        }
+    )
+
+    result = adapter.process(
+        performance,
+        decision
+    )
+
+    experience = (
+        experience_memory.records[0]
+    )
+
+    assert result["outcome"] == "SUCCESS"
+
+    assert experience.regime == "BULL"
+    assert experience.signal == "BUY"
+    assert experience.risk == "LOW"
+
+    assert experience.decision == "PREPARE_LONG"
+
+    assert experience.strategy == (
+        "momentum_strategy"
+    )
+
+    assert experience.confidence == 85
+
+    assert experience.champion_strategy == {
+        "name": "momentum_strategy"
+    }
+
+    assert experience.trace == {
+        "source": "decision_engine"
+    }

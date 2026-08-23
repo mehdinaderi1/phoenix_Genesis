@@ -13,7 +13,8 @@ class PerformanceLearningAdapter:
 
     def process(
         self,
-        performance
+        performance,
+        decision=None
     ):
 
         outcome = (
@@ -32,25 +33,96 @@ class PerformanceLearningAdapter:
         )
 
 
+        if decision is None:
+
+            regime = "UNKNOWN"
+
+            signal = "UNKNOWN"
+
+            risk = "UNKNOWN"
+
+            decision_action = None
+
+            confidence = 0
+
+            trace = {}
+
+            champion_strategy = None
+
+        else:
+
+            regime = getattr(
+                decision,
+                "regime",
+                "UNKNOWN"
+            )
+
+            signal = getattr(
+                decision,
+                "signal",
+                "UNKNOWN"
+            )
+
+            risk = getattr(
+                decision,
+                "risk",
+                "UNKNOWN"
+            )
+
+            decision_action = getattr(
+                decision,
+                "action",
+                None
+            )
+
+            confidence = getattr(
+                decision,
+                "confidence",
+                0
+            )
+
+            trace = getattr(
+                decision,
+                "trace",
+                {}
+            )
+
+            champion_strategy = getattr(
+                decision,
+                "champion_strategy",
+                None
+            )
+
+
         experience = ExperienceRecord(
 
-            regime="UNKNOWN",
+            regime=regime,
 
-            signal="UNKNOWN",
+            signal=signal,
 
-            risk="UNKNOWN",
+            risk=risk,
 
             success=performance.success,
 
             score=score,
 
-            strategy=performance.strategy
+            decision=decision_action,
+
+            strategy=performance.strategy,
+
+            confidence=confidence,
+
+            trace=trace,
+
+            champion_strategy=champion_strategy
 
         )
+
 
         self.experience_memory.save_experience(
             experience
         )
+
 
         return {
 
