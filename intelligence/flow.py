@@ -118,6 +118,18 @@ from intelligence.evolution.evolution_explainer import (
 )
 
 
+from intelligence.meta.meta_learning_engine import (
+    MetaLearningEngine
+)
+
+from intelligence.meta.meta_intelligence import (
+    MetaIntelligence
+)
+
+from intelligence.meta.meta_confidence_adapter import (
+    MetaConfidenceAdapter
+)
+
 
 
 from intelligence.governance.governance_record import (
@@ -155,9 +167,6 @@ from intelligence.lifecycle.lifecycle_analytics import (
     LifecycleAnalytics
 )
 
-from intelligence.meta.meta_intelligence import (
-    MetaIntelligence
-)
 
 
 class IntelligenceFlow:
@@ -170,6 +179,8 @@ class IntelligenceFlow:
         self.pattern_intelligence = PatternIntelligence()
 
         self.components = IntelligenceComponents()
+
+        self.meta_learning_engine = MetaLearningEngine()
 
         self.scenario_engine = ScenarioEngine()
 
@@ -280,10 +291,7 @@ class IntelligenceFlow:
             performance_learning=self.performance_learning
         )
 
-
-
-        self.components = IntelligenceComponents()
-
+       
         self.reasoning = self.components.reasoning
         self.regime_analyzer = self.components.regime_analyzer
         self.risk_analyzer = self.components.risk_analyzer
@@ -293,6 +301,9 @@ class IntelligenceFlow:
         self.decision_quality = self.components.decision_quality
 
         self.meta_intelligence = MetaIntelligence()
+        self.meta_confidence_adapter = (
+            MetaConfidenceAdapter()
+        )
 
         self.strategy_governance = (
             self.components.strategy_governance
@@ -974,6 +985,19 @@ class IntelligenceFlow:
         report.meta_insight = (
             self.meta_intelligence.analyze(
                 self.decision_memory.records
+            )
+        )
+
+        report.confidence = (
+            self.meta_confidence_adapter.adjust(
+                report.confidence,
+                report.meta_insight
+            )
+        )
+
+        report.meta_learning = (
+            self.meta_learning_engine.learn(
+                report.meta_insight
             )
         )
 
