@@ -155,6 +155,10 @@ from intelligence.lifecycle.lifecycle_analytics import (
     LifecycleAnalytics
 )
 
+from intelligence.meta.meta_intelligence import (
+    MetaIntelligence
+)
+
 
 class IntelligenceFlow:
 
@@ -287,6 +291,8 @@ class IntelligenceFlow:
         self.decision_validator = self.components.decision_validator
         self.decision_memory = self.components.decision_memory
         self.decision_quality = self.components.decision_quality
+
+        self.meta_intelligence = MetaIntelligence()
 
         self.strategy_governance = (
             self.components.strategy_governance
@@ -964,6 +970,12 @@ class IntelligenceFlow:
 
 
         self.decision_memory.store(record)
+
+        report.meta_insight = (
+            self.meta_intelligence.analyze(
+                self.decision_memory.records
+            )
+        )
 
 
 
