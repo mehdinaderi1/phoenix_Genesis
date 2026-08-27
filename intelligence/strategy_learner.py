@@ -34,19 +34,34 @@ class StrategyLearner:
                 regime, signal, risk = raw_pattern
 
                 pattern_name = (
+                    pattern.get(
+                        "strategy"
+                    )
+                    or
                     f"{regime}_{signal}_{risk}"
                 )
 
             elif isinstance(raw_pattern, str):
 
-                pattern_name = raw_pattern
+                pattern_name = (
+                    pattern.get("strategy")
+                    or raw_pattern
+                )
 
-                parts = pattern_name.split("_")
+                if pattern.get("strategy"):
 
-                if len(parts) != 3:
-                    continue
+                    regime = pattern.get("regime")
+                    signal = pattern.get("signal")
+                    risk = pattern.get("risk")
 
-                regime, signal, risk = parts
+                else:
+
+                    parts = pattern_name.split("_")
+
+                    if len(parts) != 3:
+                        continue
+
+                    regime, signal, risk = parts
 
             else:
                 continue
@@ -58,6 +73,8 @@ class StrategyLearner:
                 "regime": regime,
 
                 "signal": signal,
+
+                "action": signal,
 
                 "risk": risk,
 

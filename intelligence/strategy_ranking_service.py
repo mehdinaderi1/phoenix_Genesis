@@ -29,7 +29,6 @@ class StrategyRankingService:
             strategies
         )
 
-
         return self.builder.build(
             ranked,
             market_context

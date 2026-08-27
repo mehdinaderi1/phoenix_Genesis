@@ -79,14 +79,27 @@ class StrategyCouncil:
                     0
                 )
 
-                name = data.get(
-                    "name"
+                name = (
+                    data.get("strategy_name")
+                    or
+                    data.get("strategy")
+                    or
+                    data.get("name")
                 )
 
 
             action = data.get(
                 "action"
             )
+            if not action:
+                action = data.get(
+                    "signal"
+                )
+
+            if not action:
+                action = data.get(
+                    "decision"
+                )
 
 
             if not action:

@@ -537,13 +537,7 @@ class IntelligenceFlow:
                 )
             )
 
-        if (
-            hasattr(report, "strategy_consensus_gate")
-            and not report.strategy_consensus_gate["allowed"]
-        ):
-            best_strategy = None
-
-
+        
         if best_strategy:
 
             champion_strategy = (
@@ -721,30 +715,44 @@ class IntelligenceFlow:
 
         performance_strategy = None
 
-        learned_strategies = getattr(
+        champion_strategy = getattr(
             report,
-            "learned_strategies",
-            []
+            "champion_strategy",
+            None
         )
 
-        for learned_strategy in learned_strategies:
+        if champion_strategy:
 
-            if (
-                learned_strategy.get("regime")
-                == report.regime
-                and
-                learned_strategy.get("signal")
-                == report.signal
-                and
-                learned_strategy.get("risk")
-                == report.risk
-            ):
+            performance_strategy = (
+                champion_strategy.get("name")
+            )
 
-                performance_strategy = (
-                    learned_strategy.get("strategy")
-                )
+        if performance_strategy is None:
 
-                break
+            learned_strategies = getattr(
+                report,
+                "learned_strategies",
+                []
+            )
+
+            for learned_strategy in learned_strategies:
+
+                if (
+                    learned_strategy.get("regime")
+                    == report.regime
+                    and
+                    learned_strategy.get("signal")
+                    == report.signal
+                    and
+                    learned_strategy.get("risk")
+                    == report.risk
+                ):
+
+                    performance_strategy = (
+                        learned_strategy.get("strategy")
+                    )
+
+                    break
 
 
         if performance_strategy is None:

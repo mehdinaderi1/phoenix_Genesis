@@ -4,6 +4,11 @@ from intelligence.strategy_ranking_builder import StrategyRankingBuilder
 class StrategyRanker:
     """
     Ranks learned strategies based on performance.
+
+    Contracts:
+    - rank() -> legacy list[dict]
+    - rank_with_result() -> StrategyRankingResult
+    - best() -> dict
     """
 
 
@@ -13,7 +18,7 @@ class StrategyRanker:
 
 
 
-    def rank(
+    def _rank_records(
         self,
         strategies
     ):
@@ -31,13 +36,24 @@ class StrategyRanker:
 
 
 
+    def rank(
+        self,
+        strategies
+    ):
+
+        return self._rank_records(
+            strategies
+        )
+
+
+
     def rank_with_result(
         self,
         strategies,
         market_context=None
     ):
 
-        ranked = self.rank(
+        ranked = self._rank_records(
             strategies
         )
 
@@ -84,7 +100,6 @@ class StrategyRanker:
             return -1
 
 
-
         score = strategy.get(
             "score",
             0
@@ -108,5 +123,5 @@ class StrategyRanker:
             +
             success_rate * 0.4
             +
-            min(samples, 100) * 0.1
+            min(samples,100) * 0.1
         )

@@ -1,9 +1,36 @@
 from intelligence.strategy_ranking_builder import StrategyRankingBuilder
 
 
+class StrategyRankRecord(dict):
+    """
+    Backward compatible ranking item.
+
+    Supports:
+    - dict access:
+        item["strategy"]
+
+    - object access:
+        item.strategy_name
+    """
+
+
+    @property
+    def strategy_name(self):
+
+        return self.get(
+            "strategy"
+        )
+
+
+
 class StrategyRanker:
     """
-    Ranks learned strategies based on performance.
+    Learning strategy ranker.
+
+    Contract:
+    - rank() -> list[StrategyRankRecord]
+    - rank_with_result() -> StrategyRankingResult
+    - best() -> StrategyRankRecord
     """
 
 
@@ -13,7 +40,7 @@ class StrategyRanker:
 
 
 
-    def rank(
+    def _rank_records(
         self,
         strategies
     ):
@@ -23,10 +50,27 @@ class StrategyRanker:
             return []
 
 
-        return sorted(
+        ranked = sorted(
             strategies,
             key=self._score,
             reverse=True
+        )
+
+
+        return [
+            StrategyRankRecord(strategy)
+            for strategy in ranked
+        ]
+
+
+
+    def rank(
+        self,
+        strategies
+    ):
+
+        return self._rank_records(
+            strategies
         )
 
 
@@ -37,7 +81,7 @@ class StrategyRanker:
         market_context=None
     ):
 
-        ranked = self.rank(
+        ranked = self._rank_records(
             strategies
         )
 
