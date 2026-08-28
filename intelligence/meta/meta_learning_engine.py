@@ -24,12 +24,18 @@ class MetaLearningEngine:
         )
 
 
-        if reliability == "HIGH":
+        if (
+            reliability == "HIGH"
+            and meta_insight.samples >= 10
+        ):
 
             adjustment = 5
 
 
-        elif reliability == "LOW":
+        elif (
+            reliability == "LOW"
+            and meta_insight.samples >= 10
+        ):
 
             adjustment = -5
 

@@ -130,6 +130,8 @@ from intelligence.meta.meta_confidence_adapter import (
     MetaConfidenceAdapter
 )
 
+from intelligence.meta.meta_memory import MetaMemory
+
 
 
 from intelligence.governance.governance_record import (
@@ -147,7 +149,9 @@ from intelligence.governance.strategy_adapter import (
     StrategyAdapter
 )
 
-
+from intelligence.meta.meta_feedback import (
+    MetaFeedbackRecord
+)
 
 
 from intelligence.learning_analyzer import LearningAnalyzer
@@ -179,8 +183,6 @@ class IntelligenceFlow:
         self.pattern_intelligence = PatternIntelligence()
 
         self.components = IntelligenceComponents()
-
-        self.meta_learning_engine = MetaLearningEngine()
 
         self.scenario_engine = ScenarioEngine()
 
@@ -272,7 +274,7 @@ class IntelligenceFlow:
 
         self.strategy_performance_memory = StrategyPerformanceMemory()
         self.outcome_memory = OutcomeMemory()
-
+        self.meta_memory = MetaMemory()
         self.experience_context = ExperienceContext(
             self.experience_memory
         )
@@ -291,7 +293,7 @@ class IntelligenceFlow:
             performance_learning=self.performance_learning
         )
 
-       
+
         self.reasoning = self.components.reasoning
         self.regime_analyzer = self.components.regime_analyzer
         self.risk_analyzer = self.components.risk_analyzer
@@ -300,10 +302,16 @@ class IntelligenceFlow:
         self.decision_memory = self.components.decision_memory
         self.decision_quality = self.components.decision_quality
 
+
+
         self.meta_intelligence = MetaIntelligence()
         self.meta_confidence_adapter = (
             MetaConfidenceAdapter()
         )
+        self.meta_learning_engine = MetaLearningEngine()
+
+
+
 
         self.strategy_governance = (
             self.components.strategy_governance
@@ -554,7 +562,7 @@ class IntelligenceFlow:
                 )
             )
 
-        
+
         if best_strategy:
 
             champion_strategy = (
@@ -789,6 +797,57 @@ class IntelligenceFlow:
             )
         )
 
+
+
+        meta_learning = getattr(
+            report,
+            "meta_learning",
+            {}
+        )
+
+
+        adjustment = (
+            meta_learning.get(
+                "confidence_adjustment",
+                0
+            )
+            if isinstance(
+                meta_learning,
+                dict
+            )
+            else 0
+        )
+
+
+        meta_feedback = MetaFeedbackRecord(
+
+            confidence_before=(
+                report.confidence - adjustment
+            ),
+
+            adjustment=adjustment,
+
+            confidence_after=report.confidence,
+
+            outcome=(
+                outcome_result["result"]
+            ),
+
+            meta_effective=(
+                outcome_result["result"]
+                == "SUCCESS"
+            )
+
+        )
+
+
+        self.meta_memory.store(
+            meta_feedback
+        )
+
+
+        report.meta_feedback = meta_feedback
+
         report.performance_feedback = (
             outcome_result["feedback"]
         )
@@ -981,23 +1040,23 @@ class IntelligenceFlow:
 
 
         self.decision_memory.store(record)
-
         report.meta_insight = (
             self.meta_intelligence.analyze(
-                self.decision_memory.records
-            )
-        )
-
-        report.confidence = (
-            self.meta_confidence_adapter.adjust(
-                report.confidence,
-                report.meta_insight
+                self.decision_memory.records,
+                self.meta_memory.get_records()
             )
         )
 
         report.meta_learning = (
             self.meta_learning_engine.learn(
                 report.meta_insight
+            )
+        )
+
+        report.confidence = (
+            self.meta_confidence_adapter.adjust(
+                report.confidence,
+                report.meta_learning
             )
         )
 

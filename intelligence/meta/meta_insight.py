@@ -7,7 +7,8 @@ class MetaInsight:
         average_quality=0,
         confidence_accuracy=0,
         reliability="UNKNOWN",
-        bias=None
+        bias=None,
+        meta_feedback=None
     ):
 
         self.samples = samples
@@ -21,6 +22,10 @@ class MetaInsight:
         self.bias = bias or {
             "bias": "UNKNOWN"
         }
+
+        self.meta_feedback = (
+            meta_feedback
+        )
 
 
 

@@ -8,6 +8,10 @@ from intelligence.meta.meta_bias_analyzer import (
 
 from intelligence.meta.meta_insight import MetaInsight
 
+from intelligence.meta.meta_feedback_analyzer import (
+    MetaFeedbackAnalyzer
+)
+
 
 class MetaIntelligence:
 
@@ -22,10 +26,15 @@ class MetaIntelligence:
             MetaBiasAnalyzer()
         )
 
+        self.meta_feedback_analyzer = (
+            MetaFeedbackAnalyzer()
+        )
+
 
     def analyze(
         self,
-        decision_records
+        decision_records,
+        meta_feedback_records=None
     ):
 
         insight = (
@@ -43,6 +52,14 @@ class MetaIntelligence:
 
 
         insight.bias = bias
+
+        if meta_feedback_records:
+
+            insight.meta_feedback = (
+                self.meta_feedback_analyzer.analyze(
+                    meta_feedback_records
+                )
+            )
 
 
         return insight

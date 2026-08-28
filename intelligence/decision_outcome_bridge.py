@@ -10,6 +10,7 @@ class DecisionOutcomeBridge:
         performance_feedback,
         strategy_performance_memory,
         performance_learning=None
+
     ):
 
         self.outcome_memory = outcome_memory
@@ -25,6 +26,7 @@ class DecisionOutcomeBridge:
         self.performance_learning = (
             performance_learning
         )
+
 
 
     def _resolve_strategy(
