@@ -1,7 +1,19 @@
 from intelligence.reasoning import ReasoningEngine
 from intelligence.regime_analyzer import RegimeAnalyzer
 from intelligence.risk_analyzer import RiskAnalyzer
-
+from intelligence.strategy_analyzer import StrategyAnalyzer
+from intelligence.strategy_council import StrategyCouncil
+from intelligence.performance_feedback import PerformanceFeedback
+from intelligence.lifecycle.lifecycle_analytics import (
+    LifecycleAnalytics
+)
+from intelligence.meta.meta_intelligence import MetaIntelligence
+from intelligence.memory.strategy_performance_memory import (
+    StrategyPerformanceMemory
+)
+from intelligence.performance_learning_adapter import (
+    PerformanceLearningAdapter
+)
 from intelligence.decision_engine import DecisionEngine
 from intelligence.decision_validator import DecisionValidator
 from intelligence.decision_memory import DecisionMemory
@@ -95,15 +107,32 @@ from intelligence.lifecycle.strategy_lifecycle_manager import (
 
 from intelligence.lifecycle.lifecycle_history import LifecycleHistory
 
+from intelligence.pattern_service import PatternService
+from intelligence.pattern_intelligence import PatternIntelligence
+from intelligence.scenario_engine import ScenarioEngine
+from intelligence.learning_analyzer import LearningAnalyzer
 
+from intelligence.adaptive_confidence import AdaptiveConfidence
+from intelligence.experience_confidence import ExperienceConfidence
+from intelligence.confidence_adjuster import ConfidenceAdjuster
+from intelligence.adaptive_intelligence import AdaptiveIntelligence
 
+from intelligence.memory.experience_memory import ExperienceMemory
+from intelligence.memory.outcome_memory import OutcomeMemory
+from intelligence.meta.meta_memory import MetaMemory
+
+from intelligence.decision_outcome_bridge import (
+    DecisionOutcomeBridge
+)
 
 
 class IntelligenceComponents:
 
     def __init__(self):
 
+        # ---------------------------------------------------------
         # Decision Intelligence
+        # ---------------------------------------------------------
 
         self.reasoning = ReasoningEngine()
 
@@ -119,62 +148,129 @@ class IntelligenceComponents:
 
         self.decision_quality = DecisionQualityAnalyzer()
 
+        # ---------------------------------------------------------
+        # Memory
+        # ---------------------------------------------------------
+
+        self.experience_memory = ExperienceMemory()
+
+        self.outcome_memory = OutcomeMemory()
+
+        self.meta_memory = MetaMemory()
+
+        self.strategy_performance_memory = (
+            StrategyPerformanceMemory()
+        )
+
+        self.performance_feedback = PerformanceFeedback()
+
+        self.performance_learning = (
+            PerformanceLearningAdapter(
+                self.experience_memory
+            )
+        )
+
+        self.decision_outcome_bridge = (
+            DecisionOutcomeBridge(
+
+                outcome_memory=self.outcome_memory,
+
+                performance_feedback=self.performance_feedback,
+
+                strategy_performance_memory=(
+                    self.strategy_performance_memory
+                ),
+
+                performance_learning=(
+                    self.performance_learning
+                )
+            )
+        )
+
+        # ---------------------------------------------------------
+        # Core Learning / Adaptive Intelligence
+        # ---------------------------------------------------------
+
+        self.pattern_service = PatternService()
+
+        self.pattern_intelligence = PatternIntelligence()
+
+        self.scenario_engine = ScenarioEngine()
+
+        self.learning_analyzer = LearningAnalyzer()
+
+        self.adaptive_confidence = AdaptiveConfidence()
+
+        self.experience_confidence = (
+            ExperienceConfidence()
+        )
+
+        self.confidence_adjuster = (
+            ConfidenceAdjuster()
+        )
+
+        self.adaptive_intelligence = (
+            AdaptiveIntelligence(
+                adaptive_confidence=self.adaptive_confidence,
+                experience_confidence=self.experience_confidence,
+                confidence_adjuster=self.confidence_adjuster
+            )
+        )
+
+        # ---------------------------------------------------------
         # Strategy Intelligence
+        # ---------------------------------------------------------
+
+        self.strategy_analyzer = StrategyAnalyzer()
+
+        self.strategy_council = StrategyCouncil()
 
         self.strategy_memory = StrategyMemory()
 
+        self.meta_intelligence = MetaIntelligence()
+
         self.strategy_history = StrategyHistory()
 
-        self.strategy_performance = StrategyPerformanceAnalyzer()
-
+        self.strategy_performance = (
+            StrategyPerformanceAnalyzer()
+        )
 
         self.strategy_learner = StrategyLearner(
             self.strategy_memory
         )
 
-
         self.strategy_recall = StrategyRecall(
             self.strategy_memory
         )
 
-
         self.strategy_ranker = StrategyRanker()
-
 
         self.strategy_selector = StrategySelector(
             self.strategy_recall,
             self.strategy_ranker
         )
 
-
         self.strategy_intelligence_adapter = (
             StrategyIntelligenceAdapter()
         )
-
 
         self.strategy_intelligence = (
             StrategyIntelligenceService()
         )
 
-
         self.strategy_context = StrategyContext(
             self.strategy_recall
         )
 
-
         self.strategy_feedback = StrategyFeedback()
 
-
         self.strategy_quality_gate = StrategyQualityGate()
-
 
         self.strategy_improvement = (
             StrategyImprovementEngine()
         )
 
-
         self.strategy_bridge = StrategyBridge()
-
 
         self.strategy_update = StrategyUpdate(
             self.strategy_memory,
@@ -182,13 +278,13 @@ class IntelligenceComponents:
             self.strategy_history
         )
 
+        # ---------------------------------------------------------
         # Governance Intelligence
+        # ---------------------------------------------------------
 
         self.strategy_governance = StrategyGovernance()
 
-
         self.governance_memory = GovernanceMemory()
-
 
         self.governance_feedback = GovernanceFeedback(
             self.governance_memory
@@ -196,58 +292,62 @@ class IntelligenceComponents:
 
         self.governance_confidence = GovernanceConfidence()
 
+        # ---------------------------------------------------------
         # Evolution Intelligence
+        # ---------------------------------------------------------
 
         self.evolution_history = EvolutionHistory()
-
 
         self.evolution_recall = EvolutionRecall(
             self.evolution_history
         )
 
-
-        self.evolution_recall_analyzer = EvolutionRecallAnalyzer(
-            self.evolution_recall
+        self.evolution_recall_analyzer = (
+            EvolutionRecallAnalyzer(
+                self.evolution_recall
+            )
         )
-
 
         self.evolution_intelligence = EvolutionIntelligence(
             self.evolution_recall_analyzer
         )
 
+        self.self_evolution_controller = (
+            SelfEvolutionController(
 
-        self.self_evolution_controller = SelfEvolutionController(
+                evolution_engine=StrategyEvolutionEngine(
+                    history=self.evolution_history
+                ),
 
-            evolution_engine=StrategyEvolutionEngine(
-                history=self.evolution_history
-            ),
+                analytics=EvolutionAnalytics(
+                    self.evolution_history
+                ),
 
-            analytics=EvolutionAnalytics(
-                self.evolution_history
-            ),
+                decision=EvolutionDecision(),
 
-            decision=EvolutionDecision(),
+                rollback=RollbackEngine(
+                    self.evolution_history
+                ),
 
-            rollback=RollbackEngine(
-                self.evolution_history
-            ),
+                history=self.evolution_history,
 
-            history=self.evolution_history,
+                recall=self.evolution_recall,
 
-            recall=self.evolution_recall,
-
-            intelligence=self.evolution_intelligence
+                intelligence=self.evolution_intelligence
+            )
         )
-
 
         self.evolution_execution = EvolutionExecution(
             self.self_evolution_controller
         )
 
-
+        # ---------------------------------------------------------
         # Strategy Lifecycle Intelligence
+        # ---------------------------------------------------------
 
         self.lifecycle_history = LifecycleHistory()
+
+        self.lifecycle_analytics = LifecycleAnalytics()
 
         self.strategy_lifecycle = StrategyLifecycleManager(
             self.lifecycle_history
