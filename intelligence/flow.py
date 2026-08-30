@@ -252,7 +252,8 @@ class IntelligenceFlow:
 
         self.strategy_evolution_flow = (
             StrategyEvolutionFlow(
-                performance_analyzer=self.strategy_performance
+                performance_analyzer=self.strategy_performance,
+                governance_memory=self.components.governance_memory
             )
         )
 

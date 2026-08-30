@@ -51,6 +51,27 @@ class AdaptiveIntelligence:
         )
 
 
+    def adjust_context_confidence(
+        self,
+        context
+    ):
+
+        experience_bonus = (
+            self.experience_confidence.calculate(
+                context.experience_context or {}
+            )
+        )
+
+        return (
+            self.adaptive_confidence.adjust(
+                context.base_confidence,
+                context.learning_insight,
+                experience_bonus
+            )
+        )
+
+
+
     def adjust_strategy_confidence(
         self,
         base_confidence,
