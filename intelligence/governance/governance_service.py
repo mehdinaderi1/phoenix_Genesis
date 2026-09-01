@@ -20,16 +20,16 @@ class GovernanceService:
         self.history = history
 
 
-        self.analyzer = (
-            analyzer
-            or GovernanceAnalyzer()
-        )
+        if analyzer is None:
+            analyzer = GovernanceAnalyzer()
+
+        self.analyzer = analyzer
 
 
-        self.learning = (
-            learning
-            or GovernanceLearning()
-        )
+        if learning is None:
+            learning = GovernanceLearning()
+
+        self.learning = learning
 
 
 

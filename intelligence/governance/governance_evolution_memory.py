@@ -11,10 +11,10 @@ class GovernanceEvolutionMemory:
         memory=None
     ):
 
-        self.memory = (
-            memory
-            or GovernanceMemory()
-        )
+        if memory is None:
+            memory = GovernanceMemory()
+
+        self.memory = memory
 
 
     def store(

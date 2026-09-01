@@ -22,24 +22,24 @@ class GovernanceFeedbackFlow:
     ):
 
 
-        self.memory = (
-            memory
-            or GovernanceMemory()
-        )
+        if memory is None:
+            memory = GovernanceMemory()
+
+        self.memory = memory
 
 
-        self.feedback = (
-            feedback
-            or GovernanceFeedback(
+        if feedback is None:
+            feedback = GovernanceFeedback(
                 self.memory
             )
-        )
+
+        self.feedback = feedback
 
 
-        self.trust = (
-            trust
-            or GovernanceTrust()
-        )
+        if trust is None:
+            trust = GovernanceTrust()
+
+        self.trust = trust
 
 
 

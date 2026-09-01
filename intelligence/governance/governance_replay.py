@@ -11,10 +11,10 @@ class GovernanceReplay:
         history=None
     ):
 
-        self.history = (
-            history
-            or GovernanceHistory()
-        )
+        if history is None:
+            history = GovernanceHistory()
+
+        self.history = history
 
 
 

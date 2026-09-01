@@ -12,7 +12,10 @@ class StrategyEvolutionEngine:
         self,
         history=None
     ):
-        self.history = history or EvolutionHistory()
+        if history is None:
+            history = EvolutionHistory()
+
+        self.history = history
 
 
     def evaluate(

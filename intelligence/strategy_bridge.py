@@ -10,7 +10,10 @@ class StrategyBridge:
         governor=None
     ):
 
-        self.governor = governor or StrategyGovernor()
+        if governor is None:
+            governor = StrategyGovernor()
+
+        self.governor = governor
 
 
 

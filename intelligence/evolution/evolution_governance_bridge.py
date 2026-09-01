@@ -11,12 +11,12 @@ class EvolutionGovernanceBridge:
         history=None
     ):
 
-        self.governance_service = (
-            governance_service
-            or GovernanceService(
+        if governance_service is None:
+            governance_service = GovernanceService(
                 history
             )
-        )
+
+        self.governance_service = governance_service
 
 
     def evaluate(

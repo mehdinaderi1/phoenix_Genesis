@@ -16,18 +16,18 @@ class GovernanceRecallFlow:
         memory=None
     ):
 
-        self.memory = (
-            memory
-            or GovernanceMemory()
-        )
+        if memory is None:
+            memory = GovernanceMemory()
+
+        self.memory = memory
 
 
-        self.recall = (
-            recall
-            or GovernanceRecall(
+        if recall is None:
+            recall = GovernanceRecall(
                 self.memory
             )
-        )
+
+        self.recall = recall
 
 
 

@@ -253,6 +253,9 @@ class IntelligenceFlow:
         self.strategy_evolution_flow = (
             StrategyEvolutionFlow(
                 performance_analyzer=self.strategy_performance,
+                evolution_decision=(
+                    self.components.strategy_evolution_decision
+                ),
                 governance_memory=self.components.governance_memory
             )
         )
@@ -362,7 +365,7 @@ class IntelligenceFlow:
         )
 
         self.meta_learning_engine = (
-            MetaLearningEngine()
+            self.components.meta_learning_engine
         )
 
 

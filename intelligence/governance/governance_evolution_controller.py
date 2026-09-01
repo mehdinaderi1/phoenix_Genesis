@@ -11,10 +11,10 @@ class GovernanceEvolutionController:
         learning=None
     ):
 
-        self.learning = (
-            learning
-            or GovernanceLearning()
-        )
+        if learning is None:
+            learning = GovernanceLearning()
+
+        self.learning = learning
 
 
 

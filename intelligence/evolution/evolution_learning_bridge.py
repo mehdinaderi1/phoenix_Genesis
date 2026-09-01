@@ -13,10 +13,10 @@ class EvolutionLearningBridge:
 
         self.analytics = analytics
 
-        self.insight = (
-            insight
-            or StrategyEvolutionInsight()
-        )
+        if insight is None:
+            insight = StrategyEvolutionInsight()
+
+        self.insight = insight
 
 
     def evaluate(

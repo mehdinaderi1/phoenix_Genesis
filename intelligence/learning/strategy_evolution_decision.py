@@ -10,10 +10,10 @@ class StrategyEvolutionDecision:
         evolution_engine=None
     ):
 
-        self.evolution_engine = (
-            evolution_engine
-            or StrategyEvolutionEngine()
-        )
+        if evolution_engine is None:
+            evolution_engine = StrategyEvolutionEngine()
+
+        self.evolution_engine = evolution_engine
 
 
     def evaluate(
