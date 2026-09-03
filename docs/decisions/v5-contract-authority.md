@@ -1,4 +1,4 @@
-# V5 Contract Authority Decision
+ï»¿# V5 Contract Authority Decision
 
 ## Status
 
@@ -40,16 +40,16 @@ Canonical chain baseline commit:
 | Contract | Implementation | Runtime Role | Tests | Classification |
 |---|---|---|---|---|
 | ExperienceRecord | intelligence.experience_record.ExperienceRecord | Core Intelligence Runtime | Active core flow coverage | LIVE / CORE |
-| ExperienceRecord | intelligence.learning.experience_record.ExperienceRecord | Isolated learning subsystem | No tests found | LEGACY |
+| ExperienceRecord | intelligence.learning.experience_record.ExperienceRecord | Isolated learning subsystem | test_experience_engine.py, test_pattern_detector.py | LEGACY / TEST-BACKED |
 | MetaLearningEngine | intelligence.meta.meta_learning_engine.MetaLearningEngine | Core Meta Runtime | test_meta_learning_engine_v2.py, test_meta_learning_feedback_contract.py | LIVE / CORE |
 | MetaLearningEngine | intelligence.learning.meta_learning_engine.MetaLearningEngine | Strategy Meta Runtime | test_meta_learning_engine.py, test_meta_learning_flow.py | LIVE / SECONDARY |
-| MetaLearning | intelligence.meta.meta_learning.MetaLearning | No active runtime consumer found | No tests found | LEGACY / ORPHAN |
+| MetaLearning | intelligence.meta.meta_learning.MetaLearning | No active runtime consumer found | test_meta_learning.py | LEGACY / TEST-BACKED |
 
 ---
 
 # Evidence
 
-## ExperienceRecord — Core
+## ExperienceRecord â€” Core
 
 The authoritative ExperienceRecord is:
 
@@ -72,7 +72,7 @@ composition root.
 
 ---
 
-## ExperienceRecord — Legacy
+## ExperienceRecord â€” Legacy
 
 The following implementation exists:
 
@@ -89,16 +89,20 @@ However:
 - ExperienceEngine is not composed by IntelligenceFlow
 - PatternDetector is not composed by IntelligenceComponents
 - PatternDetector is not composed by IntelligenceFlow
-- No tests referencing ExperienceEngine, PatternDetector, or
-  intelligence.learning.experience_record were found
+- Active contract tests exist:
+  - tests/test_experience_engine.py
+  - tests/test_pattern_detector.py
 
-Therefore this implementation is classified as LEGACY.
+These tests preserve the isolated learning contract, but no active
+composition-root or IntelligenceFlow runtime path was found.
+
+Therefore this implementation is classified as LEGACY / TEST-BACKED.
 
 No deletion is implied by this decision.
 
 ---
 
-## MetaLearningEngine — Core
+## MetaLearningEngine â€” Core
 
 The authoritative Core MetaLearningEngine is:
 
@@ -128,7 +132,7 @@ LIVE / CORE
 
 ---
 
-## MetaLearningEngine — Strategy Secondary Context
+## MetaLearningEngine â€” Strategy Secondary Context
 
 A second implementation exists:
 
@@ -163,7 +167,7 @@ LIVE / SECONDARY
 
 ---
 
-## MetaLearning — Legacy / Orphan
+## MetaLearning â€” Legacy / Test-Backed
 
 The following implementation exists:
 
@@ -178,11 +182,14 @@ Evidence discovery found:
 - no active runtime consumer
 - no IntelligenceComponents composition
 - no IntelligenceFlow composition
-- no test referencing MetaLearning
+- active contract coverage in tests/test_meta_learning.py
+
+The test preserves the historical MetaLearning behavior, but no active
+composition-root or IntelligenceFlow runtime path was found.
 
 Therefore it is classified as:
 
-LEGACY / ORPHAN
+LEGACY / TEST-BACKED
 
 No deletion is implied by this decision.
 
@@ -190,7 +197,7 @@ No deletion is implied by this decision.
 
 # Architecture Rules
 
-## Rule 1 — Same Name Does Not Mean Same Contract
+## Rule 1 â€” Same Name Does Not Mean Same Contract
 
 Two classes with the same name must not be merged solely because their
 class names match.
@@ -207,7 +214,7 @@ Contract identity is determined by:
 
 ---
 
-## Rule 2 — Runtime Authority Overrides File Similarity
+## Rule 2 â€” Runtime Authority Overrides File Similarity
 
 A contract instantiated through the active composition root and consumed
 by the active runtime has architectural authority over an equivalent
@@ -215,7 +222,7 @@ unused implementation.
 
 ---
 
-## Rule 3 — Secondary Live Contracts Must Be Preserved
+## Rule 3 â€” Secondary Live Contracts Must Be Preserved
 
 A contract classified as LIVE / SECONDARY is not legacy merely because
 it is outside the Core Runtime.
@@ -225,7 +232,7 @@ their runtime path and tests establish active usage.
 
 ---
 
-## Rule 4 — Legacy Does Not Mean Delete Immediately
+## Rule 4 â€” Legacy Does Not Mean Delete Immediately
 
 Legacy classification establishes that an implementation is outside the
 current authoritative runtime contract.
@@ -235,6 +242,21 @@ decision and evidence.
 
 ---
 
+## Rule 5 â€” Test-Backed Does Not Mean Runtime-Live
+
+A contract may retain active regression coverage while remaining outside
+the authoritative runtime composition.
+
+Tests establish preserved behavior.
+
+Runtime authority requires evidence of active composition, ownership,
+and execution through the current architecture.
+
+Therefore:
+
+TEST-BACKED != RUNTIME-LIVE
+
+---
 # Freeze Decision
 
 The following contracts are frozen as authoritative for V5:
@@ -250,8 +272,8 @@ LIVE / SECONDARY:
 
 LEGACY:
 
-- intelligence.learning.experience_record.ExperienceRecord
-- intelligence.meta.meta_learning.MetaLearning
+- intelligence.learning.experience_record.ExperienceRecord â€” TEST-BACKED
+- intelligence.meta.meta_learning.MetaLearning â€” TEST-BACKED
 
 ---
 
@@ -273,9 +295,9 @@ full regression suite.
 # Next Phase
 
 V5 Contract Authority
-? Legacy Isolation
-? Contract Freeze
-? Contract Tests
-? Runtime Architecture Verification
-? V5 Learning AI Implementation
+-> Legacy Isolation
+-> Contract Freeze
+-> Contract Tests
+-> Runtime Architecture Verification
+-> V5 Learning AI Implementation
 
