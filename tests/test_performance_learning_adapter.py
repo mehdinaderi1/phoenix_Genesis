@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 from intelligence.performance_learning_adapter import (
     PerformanceLearningAdapter
 )
@@ -10,113 +12,89 @@ from intelligence.memory.experience_memory import (
     ExperienceMemory
 )
 
+from intelligence.decision_record import (
+    DecisionRecord
+)
+
 
 def test_performance_learning_adapter_success_creates_experience():
 
     experience_memory = ExperienceMemory()
 
-
     adapter = PerformanceLearningAdapter(
         experience_memory=experience_memory
     )
 
-
     performance = PerformanceRecord(
-
         strategy="momentum_strategy",
-
         profit_loss=1000,
-
         success=True
-
     )
-
 
     result = adapter.process(
         performance
     )
 
-
     assert result["outcome"] == "SUCCESS"
-
 
     assert len(
         experience_memory.records
     ) == 1
-
 
 
 def test_performance_learning_adapter_failure_creates_experience():
 
     experience_memory = ExperienceMemory()
 
-
     adapter = PerformanceLearningAdapter(
         experience_memory=experience_memory
     )
 
-
     performance = PerformanceRecord(
-
         strategy="breakout_strategy",
-
         profit_loss=-500,
-
         success=False
-
     )
-
 
     result = adapter.process(
         performance
     )
 
-
     assert result["outcome"] == "FAILED"
-
 
     assert len(
         experience_memory.records
     ) == 1
 
 
-
 def test_performance_learning_adapter_keeps_strategy_context():
 
     experience_memory = ExperienceMemory()
-
 
     adapter = PerformanceLearningAdapter(
         experience_memory=experience_memory
     )
 
-
     performance = PerformanceRecord(
-
         strategy="trend_strategy",
-
         profit_loss=250,
-
         success=True
-
     )
-
 
     adapter.process(
         performance
     )
 
-
     experience = (
         experience_memory.records[0]
     )
-
 
     assert (
         experience.strategy
         ==
         "trend_strategy"
     )
+
 
 def test_performance_learning_adapter_preserves_multiple_experiences():
 
@@ -150,9 +128,6 @@ def test_performance_learning_adapter_preserves_multiple_experiences():
 
     assert experiences[0].success is True
     assert experiences[1].success is False
-
-
-from intelligence.decision_record import DecisionRecord
 
 
 def test_performance_learning_adapter_preserves_decision_context():
@@ -216,3 +191,42 @@ def test_performance_learning_adapter_preserves_decision_context():
     assert experience.trace == {
         "source": "decision_engine"
     }
+
+
+def test_performance_learning_adapter_preserves_memory_identity():
+
+    experience_memory = ExperienceMemory()
+
+    adapter = PerformanceLearningAdapter(
+        experience_memory
+    )
+
+    assert adapter.experience_memory is (
+        experience_memory
+    )
+
+
+def test_performance_learning_adapter_returns_same_experience_saved_to_memory():
+
+    experience_memory = ExperienceMemory()
+
+    adapter = PerformanceLearningAdapter(
+        experience_memory
+    )
+
+    performance = SimpleNamespace(
+        success=True,
+        strategy="trend_following"
+    )
+
+    result = adapter.process(
+        performance
+    )
+
+    experience = result["experience"]
+
+    assert experience is (
+        experience_memory.records[0]
+    )
+
+    assert result["outcome"] == "SUCCESS"

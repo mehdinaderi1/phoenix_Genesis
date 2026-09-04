@@ -6,6 +6,7 @@ from intelligence.meta.meta_insight import (
     MetaInsight
 )
 
+from types import SimpleNamespace
 
 def test_meta_learning_engine_high_reliability_adjusts_confidence():
 
@@ -54,3 +55,30 @@ def test_meta_learning_engine_requires_enough_samples():
     )
 
     assert result["confidence_adjustment"] == 0
+
+
+def test_meta_learning_engine_returns_no_data_for_none():
+
+    engine = MetaLearningEngine()
+
+    result = engine.learn(None)
+
+    assert result == {
+        "confidence_adjustment": 0,
+        "learning": "NO_DATA"
+    }
+
+
+def test_meta_learning_engine_keeps_zero_adjustment_for_unknown_reliability():
+
+    engine = MetaLearningEngine()
+
+    insight = SimpleNamespace(
+        reliability="UNKNOWN",
+        samples=20
+    )
+
+    result = engine.learn(insight)
+
+    assert result["confidence_adjustment"] == 0
+    assert result["reliability"] == "UNKNOWN"
