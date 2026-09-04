@@ -414,7 +414,6 @@ class SelfEvolutionController:
             generation=evolved.get(
                 "generation",
                 1
-            
             ),
 
             reason="self evolution",
@@ -429,12 +428,16 @@ class SelfEvolutionController:
 
         )
 
-
         if self.history:
 
-            self.history.add(
-                record
+            engine_history = getattr(
+                self.evolution_engine,
+                "history",
+                None
             )
+
+            if engine_history is not self.history:
+                self.history.add(record)
 
 
         if self.memory:

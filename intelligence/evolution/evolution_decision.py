@@ -20,9 +20,3 @@ class EvolutionDecision:
                 "decision": "ROLLBACK",
                 "reason": "performance degraded"
             }
-
-
-        return {
-            "decision": "EVOLVE",
-            "reason": "needs improvement"
-        }

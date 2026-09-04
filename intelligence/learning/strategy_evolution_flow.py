@@ -173,7 +173,9 @@ class StrategyEvolutionFlow:
 
         if evolution_memory is None:
             evolution_memory = (
-                GovernanceEvolutionMemory()
+                GovernanceEvolutionMemory(
+                    memory=self.governance_memory
+                )
             )
 
         self.evolution_memory = (
