@@ -26,6 +26,8 @@ class MarketReport:
     strategy_consensus: dict = field(
         default_factory=dict
     )
+    champion_strategy: dict = None
+    strategy_consensus: dict = None
 
 
     def __post_init__(self):

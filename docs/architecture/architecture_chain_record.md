@@ -194,3 +194,85 @@ Architecture Chain Record
 → Architecture Decision
 
 rather than reconstructing the entire architecture from scratch.
+
+## 12. Evolution Architecture Delta — V5
+
+### Main Runtime Evolution Chain
+
+Strategy Performance
+
+→ Performance Analysis
+
+→ Evolution Intelligence
+
+→ SelfEvolutionController
+
+→ StrategyEvolutionEngine
+
+→ EvolutionHistory
+
+→ EvolutionDecision
+
+→ KEEP / ROLLBACK
+
+### Evolution Authority
+
+- `EvolutionIntelligence` = Permission Gate
+- `SelfEvolutionController` = Main Runtime Evolution Execution Authority
+- `StrategyEvolutionEngine` = Evolution Execution Engine
+- `EvolutionHistory` = Evolution History / State Owner
+- `EvolutionDecision` = Post-Evolution KEEP / ROLLBACK Decision
+
+### Decision / Execution Boundary
+
+`StrategyEvolutionFlow` is an orchestration / report path.
+
+`StrategyEvolutionDecision` is a decision / report contract only.
+
+`StrategyEvolutionDecision` MUST NOT execute `StrategyEvolutionEngine`.
+
+### Secondary Evolution Path
+
+Lifecycle Evolution:
+
+`LifecycleEvolutionFlow`
+
+→ `LifecycleEvolutionController`
+
+→ `EvolutionEngine`
+
+Classification:
+
+- Secondary
+- Isolated
+- Test-backed
+- No production caller evidence
+
+This path is NOT classified as the Main Runtime Evolution Authority.
+
+### Evolution Audit Findings
+
+- Parallel Evolution Execution Authority → FIXED / VERIFIED
+- Decision / Execution Boundary Leakage → FIXED / VERIFIED
+- Duplicate EvolutionHistory Write → FIXED / VERIFIED
+- EvolutionIntelligence Permission Gate → VERIFIED
+- SelfEvolutionController Execution Authority → VERIFIED
+- StrategyEvolutionFlow Report-only Contract → VERIFIED
+- StrategyEvolutionDecision Contract → FIXED / VERIFIED
+- EvolutionDecision Unreachable EVOLVE Branch → FIXED / VERIFIED
+
+### Evolution Verification
+
+Targeted Evolution Contract Tests: PASSED
+
+Full Regression: 631 passed
+
+Evolution Architecture Status: VERIFIED / FREEZE CANDIDATE
+
+### Architecture Rule
+
+The Main Runtime Evolution Authority is `SelfEvolutionController`.
+
+No parallel Evolution execution authority may be introduced without an explicit Architecture Decision.
+
+---

@@ -108,8 +108,15 @@ class StrategyCouncil:
 
             confidence = data.get(
                 "confidence",
-                0
             )
+            if confidence is None:
+
+                confidence = (
+                    data.get(
+                        "success_rate",
+                        0
+                    )
+                )
 
             strategy_votes.append(
             {

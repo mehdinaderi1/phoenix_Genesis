@@ -21,6 +21,8 @@ class MarketReport:
     strategy_ranking: object | None = None
     strategy_intelligence: object | None = None
     strategy_consensus: dict | None = None
+    strategy_consensus: dict = None
+    champion_strategy: dict = None
     
     	
 

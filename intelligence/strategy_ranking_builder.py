@@ -112,6 +112,9 @@ class StrategyRankingBuilder:
             0
         )
 
+        if success_rate <= 1:
+            return success_rate
+
         return min(
             success_rate / 100,
             1

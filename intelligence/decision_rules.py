@@ -81,7 +81,11 @@ class DecisionRules:
 
         opposing = consensus.get(
             "opposing_strategies",
-            0
+            consensus.get(
+                "consensus_confidence",
+                0
+
+            )
         )
 
 

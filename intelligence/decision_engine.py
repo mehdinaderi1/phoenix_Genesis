@@ -157,7 +157,11 @@ class DecisionEngine:
         explanation = self._build_explanation(
             report
         )
-
+        
+        print(
+            "CAN LONG:",
+            self.rules.can_long(report)
+        )
 
 
         if self.rules.can_long(report):
