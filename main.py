@@ -114,6 +114,10 @@ def main():
         runtime_results
     )
 
+    runtime_records = paper_cycle_runner.build_cycle_records(
+        runtime_results
+    )
+
     lifecycle_result = runtime_results[-1]
 
     lifecycle_action = lifecycle_result["action"]
@@ -139,6 +143,24 @@ def main():
     print("HOLD:", runtime_summary["hold_count"])
     print("CLOSE:", runtime_summary["close_count"])
     print("Lifecycle:", lifecycle_action)
+
+    # ---------------------------------------------------------
+    # Paper Cycle Records
+    # ---------------------------------------------------------
+
+    print("==============================")
+    print("🦅 Phoenix Paper Cycle Records")
+    print("==============================")
+
+    for record in runtime_records:
+
+        print(
+            f"Cycle {record['cycle']} | "
+            f"{record['symbol']} | "
+            f"Price: {record['price']} | "
+            f"Action: {record['action']} | "
+            f"Realized PnL: {record['realized_pnl']}"
+        )
 
     # ---------------------------------------------------------
     # Paper Execution

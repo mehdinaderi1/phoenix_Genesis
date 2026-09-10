@@ -20,6 +20,8 @@ class PaperMarketCycleRunner:
             session=session
         )
 
+        self.last_cycle_inputs = []
+
     def build_cycle_input(
         self,
         symbol="BTCUSDT"
@@ -60,6 +62,8 @@ class PaperMarketCycleRunner:
                 )
             )
 
+        self.last_cycle_inputs = list(cycles)
+
         return self.paper_runtime.run(
             cycles=cycles,
             symbol=symbol
@@ -72,3 +76,45 @@ class PaperMarketCycleRunner:
         return self.paper_runtime.build_summary(
             results
         )
+
+    def build_cycle_records(
+        self,
+        results
+    ):
+        records = []
+
+        for index, result in enumerate(
+            results,
+            start=1
+        ):
+            cycle_input = (
+                self.last_cycle_inputs[index - 1]
+                if index - 1 < len(
+                    self.last_cycle_inputs
+                )
+                else {}
+            )
+
+            records.append(
+                {
+                    "cycle": index,
+                    "symbol": cycle_input.get(
+                        "symbol"
+                    ),
+                    "price": cycle_input.get(
+                        "price"
+                    ),
+                    "action": result.get(
+                        "action"
+                    ),
+                    "realized_pnl": result.get(
+                        "realized_pnl",
+                        0.0
+                    ),
+                    "position": result.get(
+                        "position"
+                    )
+                }
+            )
+
+        return records
