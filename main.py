@@ -8,6 +8,7 @@ from analysis.multi_timeframe_pipeline import MultiTimeframePipeline
 from intelligence.flow import IntelligenceFlow
 
 from execution.paper_trading_session import PaperTradingSession
+from execution.paper_position_lifecycle import PaperPositionLifecycle
 
 
 def main():
@@ -94,29 +95,61 @@ def main():
         position_size_percent=1
     )
 
+    lifecycle = PaperPositionLifecycle(
+        paper_session
+    )
+
     # ---------------------------------------------------------
-    # Paper Trading
+    # Paper Position Lifecycle
     # ---------------------------------------------------------
 
-    session_result = paper_session.process_action(
+    lifecycle_result = lifecycle.process(
         action_proposal=report.action_proposal,
         price=price,
         symbol="BTCUSDT"
     )
 
-    execution_result = session_result["execution_result"]
-    position = session_result["position"]
+    lifecycle_action = lifecycle_result["action"]
+
+    execution_result = lifecycle_result.get(
+        "execution_result"
+    )
+
+    position = lifecycle_result.get(
+        "position"
+    )
+
+    print("==============================")
+    print("🦅 Phoenix Paper Lifecycle")
+    print("==============================")
+
+    print("Lifecycle:", lifecycle_action)
+
+    # ---------------------------------------------------------
+    # Paper Execution
+    # ---------------------------------------------------------
 
     print("==============================")
     print("🦅 Phoenix Paper Execution")
     print("==============================")
 
-    print("Status:", execution_result.status)
-    print("Action:", execution_result.action)
-    print("Symbol:", execution_result.symbol)
-    print("Price:", execution_result.price)
-    print("Quantity:", execution_result.quantity)
-    print("Reason:", execution_result.reason)
+    if execution_result is None:
+
+        print("Status: NOT_EXECUTED")
+        print("Action:", report.action_proposal.action)
+        print("Symbol:", "BTCUSDT")
+        print("Price:", price)
+        print("Quantity:", None)
+        print("Reason:", report.action_proposal.reason)
+
+    else:
+
+        print("Status:", execution_result.status)
+        print("Action:", execution_result.action)
+        print("Symbol:", execution_result.symbol)
+        print("Price:", execution_result.price)
+        print("Quantity:", execution_result.quantity)
+        print("Reason:", execution_result.reason)
 
     # ---------------------------------------------------------
     # Paper Position
@@ -145,19 +178,13 @@ def main():
         print("Unrealized PnL:", pnl)
 
     # ---------------------------------------------------------
-    # Paper Portfolio + Trade History
+    # Paper Portfolio
     # ---------------------------------------------------------
 
-    realized_pnl = 0.0
-
-    if position is not None:
-
-        closed = paper_session.close_position(
-            exit_price=price
-        )
-
-        if closed is not None:
-            realized_pnl = closed["realized_pnl"]
+    realized_pnl = lifecycle_result.get(
+        "realized_pnl",
+        0.0
+    )
 
     print("==============================")
     print("🦅 Phoenix Paper Portfolio")
@@ -182,6 +209,10 @@ def main():
         "Total PnL:",
         paper_session.get_total_pnl()
     )
+
+    # ---------------------------------------------------------
+    # Paper Trade History
+    # ---------------------------------------------------------
 
     print("==============================")
     print("🦅 Phoenix Paper Trade History")
