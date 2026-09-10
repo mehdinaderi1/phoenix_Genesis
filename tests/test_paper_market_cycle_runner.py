@@ -1,0 +1,91 @@
+from types import SimpleNamespace
+
+from execution.paper_market_cycle_runner import (
+    PaperMarketCycleRunner
+)
+from execution.paper_trading_session import (
+    PaperTradingSession
+)
+
+
+class FakeExchangeManager:
+
+    def __init__(self):
+        self.calls = 0
+
+    def get_price(self, symbol):
+        self.calls += 1
+        return 65000.0
+
+
+class FakeMultiTimeframePipeline:
+
+    def __init__(self):
+        self.calls = 0
+
+    def analyze(self, symbol):
+        self.calls += 1
+        return SimpleNamespace(
+            signal="BUY"
+        )
+
+
+class FakeIntelligenceFlow:
+
+    def __init__(self):
+        self.calls = 0
+
+    def create_report(self, consensus):
+        self.calls += 1
+
+        proposal = SimpleNamespace(
+            action="WAIT",
+            status="REJECTED",
+            reason="Monitoring",
+            symbol="BTCUSDT"
+        )
+
+        return SimpleNamespace(
+            action_proposal=proposal
+        )
+
+
+def test_paper_market_cycle_runner_builds_bounded_cycles():
+
+    exchange_manager = FakeExchangeManager()
+
+    pipeline = FakeMultiTimeframePipeline()
+
+    intelligence_flow = FakeIntelligenceFlow()
+
+    session = PaperTradingSession(
+        initial_balance=1000.0,
+        position_size_percent=10.0
+    )
+
+    runner = PaperMarketCycleRunner(
+        exchange_manager=exchange_manager,
+        multi_timeframe_pipeline=pipeline,
+        intelligence_flow=intelligence_flow,
+        session=session
+    )
+
+    results = runner.run(
+        cycle_count=3,
+        symbol="BTCUSDT"
+    )
+
+    assert len(results) == 3
+
+    assert exchange_manager.calls == 3
+    assert pipeline.calls == 3
+    assert intelligence_flow.calls == 3
+
+    assert all(
+        result["action"] == "HOLD"
+        for result in results
+    )
+
+    assert session.get_position() is None
+    assert session.get_trade_count() == 0
+    assert session.get_balance() == 1000.0

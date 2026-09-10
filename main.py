@@ -8,8 +8,7 @@ from analysis.multi_timeframe_pipeline import MultiTimeframePipeline
 from intelligence.flow import IntelligenceFlow
 
 from execution.paper_trading_session import PaperTradingSession
-from execution.paper_position_lifecycle import PaperPositionLifecycle
-
+from execution.paper_market_cycle_runner import PaperMarketCycleRunner
 
 def main():
 
@@ -87,7 +86,7 @@ def main():
     print(report)
 
     # ---------------------------------------------------------
-    # Paper Trading Session
+    # Paper Trading Runtime
     # ---------------------------------------------------------
 
     paper_session = PaperTradingSession(
@@ -95,19 +94,23 @@ def main():
         position_size_percent=1
     )
 
-    lifecycle = PaperPositionLifecycle(
-        paper_session
+    paper_cycle_runner = PaperMarketCycleRunner(
+        exchange_manager=exchange_manager,
+        multi_timeframe_pipeline=multi_timeframe_pipeline,
+        intelligence_flow=intelligence_flow,
+        session=paper_session
     )
 
-    # ---------------------------------------------------------
-    # Paper Position Lifecycle
-    # ---------------------------------------------------------
+    # One real intelligence cycle.
+    # Additional market cycles can be appended here later
+    # without recreating the paper session.
 
-    lifecycle_result = lifecycle.process(
-        action_proposal=report.action_proposal,
-        price=price,
+    runtime_results = paper_cycle_runner.run(
+        cycle_count=3,
         symbol="BTCUSDT"
     )
+
+    lifecycle_result = runtime_results[-1]
 
     lifecycle_action = lifecycle_result["action"]
 
@@ -119,10 +122,15 @@ def main():
         "position"
     )
 
+    # ---------------------------------------------------------
+    # Paper Lifecycle
+    # ---------------------------------------------------------
+
     print("==============================")
     print("🦅 Phoenix Paper Lifecycle")
     print("==============================")
 
+    print("Cycles:", len(runtime_results))
     print("Lifecycle:", lifecycle_action)
 
     # ---------------------------------------------------------
