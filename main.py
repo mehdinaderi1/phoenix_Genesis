@@ -7,10 +7,7 @@ from core.market_data.pipeline import MarketDataPipeline
 from analysis.multi_timeframe_pipeline import MultiTimeframePipeline
 from intelligence.flow import IntelligenceFlow
 
-from execution.paper_execution_engine import PaperExecutionEngine
-from execution.paper_portfolio import PaperPortfolio
-from execution.paper_trade_history import PaperTradeHistory
-from execution.paper_position_manager import PaperPositionManager
+from execution.paper_trading_session import PaperTradingSession
 
 
 def main():
@@ -89,30 +86,26 @@ def main():
     print(report)
 
     # ---------------------------------------------------------
-    # Paper Trading Components
+    # Paper Trading Session
     # ---------------------------------------------------------
 
-    paper_portfolio = PaperPortfolio.create(
-        initial_balance=1000
-    )
-
-    paper_trade_history = PaperTradeHistory()
-
-    paper_position_manager = PaperPositionManager()
-
-    paper_execution_engine = PaperExecutionEngine()
-
-    # ---------------------------------------------------------
-    # Paper Execution
-    # ---------------------------------------------------------
-
-    execution_result = paper_execution_engine.execute(
-        report.action_proposal,
-        price=price,
-        symbol="BTCUSDT",
-        balance=paper_portfolio.get_balance(),
+    paper_session = PaperTradingSession(
+        initial_balance=1000,
         position_size_percent=1
     )
+
+    # ---------------------------------------------------------
+    # Paper Trading
+    # ---------------------------------------------------------
+
+    session_result = paper_session.process_action(
+        action_proposal=report.action_proposal,
+        price=price,
+        symbol="BTCUSDT"
+    )
+
+    execution_result = session_result["execution_result"]
+    position = session_result["position"]
 
     print("==============================")
     print("🦅 Phoenix Paper Execution")
@@ -128,10 +121,6 @@ def main():
     # ---------------------------------------------------------
     # Paper Position
     # ---------------------------------------------------------
-
-    position = paper_position_manager.open_position(
-        execution_result
-    )
 
     print("==============================")
     print("🦅 Phoenix Paper Position")
@@ -149,7 +138,7 @@ def main():
         print("Entry Price:", position.entry_price)
         print("Quantity:", position.quantity)
 
-        pnl = paper_position_manager.calculate_pnl(
+        pnl = paper_session.position_manager.calculate_pnl(
             price
         )
 
@@ -163,23 +152,12 @@ def main():
 
     if position is not None:
 
-        closed = paper_position_manager.close_position_with_pnl(
-            current_price=price
+        closed = paper_session.close_position(
+            exit_price=price
         )
 
         if closed is not None:
-
             realized_pnl = closed["realized_pnl"]
-
-            paper_portfolio.apply_realized_pnl(
-                realized_pnl
-            )
-
-            paper_trade_history.add_trade(
-                position=closed["position"],
-                exit_price=closed["exit_price"],
-                realized_pnl=closed["realized_pnl"]
-            )
 
     print("==============================")
     print("🦅 Phoenix Paper Portfolio")
@@ -187,7 +165,7 @@ def main():
 
     print(
         "Initial Balance:",
-        paper_portfolio.initial_balance
+        paper_session.portfolio.initial_balance
     )
 
     print(
@@ -197,12 +175,12 @@ def main():
 
     print(
         "Virtual Balance:",
-        paper_portfolio.get_balance()
+        paper_session.get_balance()
     )
 
     print(
         "Total PnL:",
-        paper_portfolio.get_total_pnl()
+        paper_session.get_total_pnl()
     )
 
     print("==============================")
@@ -211,12 +189,12 @@ def main():
 
     print(
         "Trades:",
-        paper_trade_history.get_trade_count()
+        paper_session.get_trade_count()
     )
 
     print(
         "Total Realized PnL:",
-        paper_trade_history.get_total_realized_pnl()
+        paper_session.trade_history.get_total_realized_pnl()
     )
 
     # ---------------------------------------------------------
