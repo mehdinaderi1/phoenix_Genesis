@@ -30,3 +30,18 @@ class ExchangeManager:
             raise ValueError("No exchange selected.")
 
         return self.exchange.get_candle(symbol, timeframe)
+
+    def get_historical_candles(
+        self,
+        symbol,
+        timeframe="1m",
+        limit=30
+    ):
+        if self.exchange is None:
+            raise ValueError("No exchange selected.")
+
+        return self.exchange.get_historical_candles(
+            symbol,
+            timeframe,
+            limit
+        )

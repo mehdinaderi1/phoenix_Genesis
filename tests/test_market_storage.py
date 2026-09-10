@@ -2,33 +2,37 @@ from core.database import DatabaseManager
 from core.market_data.repository import MarketDataRepository
 
 
-db = DatabaseManager()
+def test_market_data_storage(tmp_path):
 
-db.connect()
-db.create_tables()
+    database = DatabaseManager(
+        str(tmp_path / "test.db")
+    )
 
+    database.connect()
 
-repo = MarketDataRepository(db)
+    repository = MarketDataRepository(database)
 
+    saved = repository.save_candle(
+        "BTCUSDT",
+        "30m",
+        65000,
+        65100,
+        64900,
+        65000,
+        120,
+        123456789
+    )
 
-repo.save_candle(
-    "BTCUSDT",
-    "30m",
-    65000,
-    65100,
-    64900,
-    65000,
-    120,
-    123456789
-)
+    assert saved is True
 
+    data = repository.get_latest_candles(
+        "BTCUSDT"
+    )
 
-data = repo.get_latest_candles(
-    "BTCUSDT"
-)
+    assert len(data) == 1
+    assert data[0][1] == "BTCUSDT"
+    assert data[0][2] == "30m"
+    assert data[0][3] == 123456789
+    assert data[0][7] == 65000
 
-
-print(data)
-
-
-print("✅ Market Data Storage Passed")
+    database.close()

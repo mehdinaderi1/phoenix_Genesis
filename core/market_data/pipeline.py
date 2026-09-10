@@ -68,3 +68,39 @@ class MarketDataPipeline:
 
 
         return results
+
+    def fetch_and_store_historical(
+        self,
+        symbol="BTCUSDT",
+        timeframe="1m",
+        limit=30
+    ):
+
+        candles = self.exchange.get_historical_candles(
+            symbol,
+            timeframe,
+            limit
+        )
+
+        if not candles:
+            return []
+
+        stored = []
+
+        for candle in candles:
+
+            saved = self.repository.save_candle(
+                symbol,
+                timeframe,
+                candle["open"],
+                candle["high"],
+                candle["low"],
+                candle["close"],
+                candle["volume"],
+                candle["timestamp"]
+            )
+
+            if saved:
+                stored.append(candle)
+
+        return stored

@@ -8,6 +8,7 @@ class MultiTimeframeAnalyzer:
         weights = {
             "30m": 1,
             "4H": 2,
+            "1D": 3,
             "Daily": 3
         }
 
