@@ -110,6 +110,10 @@ def main():
         symbol="BTCUSDT"
     )
 
+    runtime_summary = paper_cycle_runner.build_summary(
+        runtime_results
+    )
+
     lifecycle_result = runtime_results[-1]
 
     lifecycle_action = lifecycle_result["action"]
@@ -130,7 +134,10 @@ def main():
     print("🦅 Phoenix Paper Lifecycle")
     print("==============================")
 
-    print("Cycles:", len(runtime_results))
+    print("Cycles:", runtime_summary["cycles_processed"])
+    print("OPEN:", runtime_summary["open_count"])
+    print("HOLD:", runtime_summary["hold_count"])
+    print("CLOSE:", runtime_summary["close_count"])
     print("Lifecycle:", lifecycle_action)
 
     # ---------------------------------------------------------

@@ -89,3 +89,41 @@ def test_paper_market_cycle_runner_builds_bounded_cycles():
     assert session.get_position() is None
     assert session.get_trade_count() == 0
     assert session.get_balance() == 1000.0
+
+
+def test_paper_market_cycle_runner_builds_summary():
+
+    exchange_manager = FakeExchangeManager()
+    pipeline = FakeMultiTimeframePipeline()
+    intelligence_flow = FakeIntelligenceFlow()
+
+    session = PaperTradingSession(
+        initial_balance=1000.0,
+        position_size_percent=10.0
+    )
+
+    runner = PaperMarketCycleRunner(
+        exchange_manager=exchange_manager,
+        multi_timeframe_pipeline=pipeline,
+        intelligence_flow=intelligence_flow,
+        session=session
+    )
+
+    results = runner.run(
+        cycle_count=3,
+        symbol="BTCUSDT"
+    )
+
+    summary = runner.build_summary(
+        results
+    )
+
+    assert summary["cycles_processed"] == 3
+    assert summary["open_count"] == 0
+    assert summary["hold_count"] == 3
+    assert summary["close_count"] == 0
+
+    assert summary["current_position"] is None
+    assert summary["balance"] == 1000.0
+    assert summary["total_pnl"] == 0.0
+    assert summary["trade_count"] == 0

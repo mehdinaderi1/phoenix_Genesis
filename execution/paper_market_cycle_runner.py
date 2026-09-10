@@ -64,3 +64,11 @@ class PaperMarketCycleRunner:
             cycles=cycles,
             symbol=symbol
         )
+
+    def build_summary(
+        self,
+        results
+    ):
+        return self.paper_runtime.build_summary(
+            results
+        )
