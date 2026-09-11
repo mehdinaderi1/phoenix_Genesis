@@ -2,6 +2,10 @@ from execution.paper_trading_runtime import PaperTradingRuntime
 from execution.paper_session_serializer import (
     PaperSessionSerializer
 )
+from execution.paper_session_archive import (
+    PaperSessionArchive
+)
+
 
 class PaperMarketCycleRunner:
 
@@ -10,7 +14,8 @@ class PaperMarketCycleRunner:
         exchange_manager,
         multi_timeframe_pipeline,
         intelligence_flow,
-        session
+        session,
+        session_archive=None
     ):
         self.exchange_manager = exchange_manager
         self.multi_timeframe_pipeline = (
@@ -21,6 +26,10 @@ class PaperMarketCycleRunner:
         self.paper_runtime = PaperTradingRuntime(
             session=session
         )
+
+        self.session = session
+
+        self.session_archive = session_archive
 
         self.last_cycle_inputs = []
 
@@ -122,96 +131,78 @@ class PaperMarketCycleRunner:
             records.append(
                 {
                     "cycle": index,
-
                     "symbol": cycle_input.get(
                         "symbol"
                     ),
-
                     "price": cycle_input.get(
                         "price"
                     ),
-
                     "signal": cycle_input.get(
                         "signal"
                     ),
-
                     "trend": getattr(
                         report,
                         "trend",
                         None
                     ),
-
                     "regime": getattr(
                         report,
                         "regime",
                         None
                     ),
-
                     "confidence": getattr(
                         report,
                         "confidence",
                         None
                     ),
-
                     "risk": getattr(
                         report,
                         "risk",
                         None
                     ),
-
                     "proposal_action": getattr(
                         action_proposal,
                         "action",
                         None
                     ),
-
                     "proposal_status": getattr(
                         action_proposal,
                         "status",
                         None
                     ),
-
                     "proposal_reason": getattr(
                         action_proposal,
                         "reason",
                         None
                     ),
-
                     "action": result.get(
                         "action"
                     ),
-
                     "execution_status": (
                         execution_result.status
                         if execution_result is not None
                         else None
                     ),
-
                     "realized_pnl": result.get(
                         "realized_pnl",
                         0.0
                     ),
-
                     "position_side": getattr(
                         position,
                         "side",
                         None
                     ),
-
                     "entry_price": getattr(
                         position,
                         "entry_price",
                         None
                     ),
-
                     "quantity": getattr(
                         position,
                         "quantity",
                         None
                     ),
-
                     "report": report,
-
                     "position": position
                 }
             )
@@ -267,6 +258,7 @@ class PaperMarketCycleRunner:
         )
 
         return {
+            "session_id": self.session.session_id,
             "cycles": (
                 self.build_serializable_cycle_records(
                     results
@@ -290,4 +282,24 @@ class PaperMarketCycleRunner:
 
         return serializer.serialize(
             session_record
-        )    
+        )
+
+    def save_session(
+        self,
+        results
+    ):
+        if self.session_archive is None:
+            raise ValueError(
+                "session_archive is required"
+            )
+
+        session_record = self.build_session_record(
+            results
+        )
+
+        self.session_archive.save(
+            self.session.session_id,
+            session_record
+        )
+
+        return session_record

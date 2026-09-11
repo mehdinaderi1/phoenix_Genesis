@@ -613,4 +613,50 @@ def test_serializes_session_from_runner():
 
     assert restored["cycles"][0]["cycle"] == 1
     assert restored["cycles"][0]["symbol"] == "BTCUSDT"
-    assert restored["cycles"][0]["action"] == "HOLD"    
+    assert restored["cycles"][0]["action"] == "HOLD"
+def test_paper_market_cycle_runner_persists_session_archive(tmp_path):
+
+    from execution.paper_session_archive import PaperSessionArchive
+
+    session = PaperTradingSession(
+        initial_balance=1000.0,
+        position_size_percent=10.0
+    )
+
+    archive = PaperSessionArchive(
+        root_path=tmp_path
+    )
+
+    runner = PaperMarketCycleRunner(
+        exchange_manager=FakeExchangeManager(),
+        multi_timeframe_pipeline=FakeMultiTimeframePipeline(),
+        intelligence_flow=FakeIntelligenceFlow(),
+        session=session,
+        session_archive=archive
+    )
+
+    results = runner.run(
+        cycle_count=3,
+        symbol="BTCUSDT"
+    )
+
+    saved_record = runner.save_session(
+        results
+    )
+
+    assert saved_record["summary"]["cycles_processed"] == 3
+    assert saved_record["summary"]["trade_count"] == 0
+    assert saved_record["summary"]["balance"] == 1000.0
+
+    assert archive.list() == [
+        session.session_id
+    ]
+
+    restored = archive.load(
+        session.session_id
+    )
+
+    assert restored["summary"]["cycles_processed"] == 3
+    assert restored["summary"]["hold_count"] == 3
+    assert restored["summary"]["balance"] == 1000.0
+    assert restored["final_position"] is None
