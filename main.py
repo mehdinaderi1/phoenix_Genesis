@@ -9,6 +9,8 @@ from intelligence.flow import IntelligenceFlow
 
 from execution.paper_trading_session import PaperTradingSession
 from execution.paper_market_cycle_runner import PaperMarketCycleRunner
+from execution.paper_trading_runtime import PaperTradingRuntime
+
 
 def main():
 
@@ -161,6 +163,109 @@ def main():
             f"Action: {record['action']} | "
             f"Realized PnL: {record['realized_pnl']}"
         )
+
+    # ---------------------------------------------------------
+    # Paper End-to-End Scenario
+    # ---------------------------------------------------------
+
+    scenario_session = PaperTradingSession(
+        initial_balance=1000,
+        position_size_percent=10
+    )
+
+    scenario_runtime = PaperTradingRuntime(
+        session=scenario_session
+    )
+
+    scenario_cycles = [
+        {
+            "action_proposal": type(
+                "ScenarioActionProposal",
+                (),
+                {
+                    "action": "BUY",
+                    "status": "APPROVED",
+                    "reason": "End-to-end scenario OPEN",
+                }
+            )(),
+            "price": 65000.0,
+            "symbol": "BTCUSDT"
+        },
+        {
+            "action_proposal": type(
+                "ScenarioActionProposal",
+                (),
+                {
+                    "action": "WAIT",
+                    "status": "APPROVED",
+                    "reason": "End-to-end scenario HOLD",
+                }
+            )(),
+            "price": 65500.0,
+            "symbol": "BTCUSDT"
+        },
+        {
+            "action_proposal": type(
+                "ScenarioActionProposal",
+                (),
+                {
+                    "action": "SELL",
+                    "status": "APPROVED",
+                    "reason": "End-to-end scenario CLOSE",
+                }
+            )(),
+            "price": 66000.0,
+            "symbol": "BTCUSDT"
+        }
+    ]
+
+    scenario_results = scenario_runtime.run(
+        cycles=scenario_cycles,
+        symbol="BTCUSDT"
+    )
+
+    scenario_summary = (
+        scenario_runtime.build_summary(
+            scenario_results
+        )
+    )
+
+    print("==============================")
+    print("🦅 Phoenix Paper End-to-End Scenario")
+    print("==============================")
+
+    for index, result in enumerate(
+        scenario_results,
+        start=1
+    ):
+        print(
+            f"Cycle {index} | "
+            f"Action: {result['action']} | "
+            f"Price: {scenario_cycles[index - 1]['price']} | "
+            f"Realized PnL: {result['realized_pnl']}"
+        )
+
+    print(
+        "Final Position:",
+        "NONE"
+        if scenario_summary["current_position"] is None
+        else scenario_summary["current_position"]
+    )
+
+    print(
+        "Balance:",
+        scenario_summary["balance"]
+    )
+
+    print(
+        "Total PnL:",
+        scenario_summary["total_pnl"]
+    )
+
+    print(
+        "Trades:",
+        scenario_summary["trade_count"]
+    )
 
     # ---------------------------------------------------------
     # Paper Execution
