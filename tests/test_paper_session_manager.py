@@ -1,4 +1,4 @@
-﻿from execution.paper_session_archive import PaperSessionArchive
+from execution.paper_session_archive import PaperSessionArchive
 from execution.paper_session_manager import PaperSessionManager
 
 
@@ -128,3 +128,30 @@ def test_manager_integrates_with_real_archive(tmp_path):
         "balance": 1000.0,
         "total_pnl": 0.0
     }
+
+def test_get_session_performance():
+    archive = FakeArchive()
+
+    archive.sessions["session_002"]["cycles"] = [
+        {"cycle": 1, "realized_pnl": 10.0},
+        {"cycle": 2, "realized_pnl": -5.0},
+        {"cycle": 3, "realized_pnl": 15.0}
+    ]
+
+    archive.sessions["session_002"]["summary"]["cycles_processed"] = 3
+    archive.sessions["session_002"]["summary"]["trade_count"] = 3
+    archive.sessions["session_002"]["summary"]["total_pnl"] = 20.0
+
+    manager = PaperSessionManager(archive)
+
+    performance = manager.get_session_performance(
+        "session_002"
+    )
+
+    assert performance["cycles_processed"] == 3
+    assert performance["trade_count"] == 3
+    assert performance["win_count"] == 2
+    assert performance["loss_count"] == 1
+    assert performance["win_rate"] == 2 / 3 * 100
+    assert performance["total_pnl"] == 20.0
+    assert performance["average_pnl"] == 20.0 / 3
