@@ -240,3 +240,48 @@ def test_get_session_report():
     assert report["average_pnl"] == (
         20.0 / 3
     )
+
+
+def test_get_all_session_reports():
+    archive = FakeArchive()
+
+    archive.sessions["session_001"]["cycles"] = [
+        {"cycle": 1, "realized_pnl": 10.0},
+        {"cycle": 2, "realized_pnl": -5.0}
+    ]
+    archive.sessions["session_001"]["summary"]["cycles_processed"] = 2
+    archive.sessions["session_001"]["summary"]["trade_count"] = 2
+    archive.sessions["session_001"]["summary"]["total_pnl"] = 5.0
+
+    archive.sessions["session_002"]["cycles"] = [
+        {"cycle": 1, "realized_pnl": 20.0},
+        {"cycle": 2, "realized_pnl": 30.0},
+        {"cycle": 3, "realized_pnl": -10.0}
+    ]
+    archive.sessions["session_002"]["summary"]["cycles_processed"] = 3
+    archive.sessions["session_002"]["summary"]["trade_count"] = 3
+    archive.sessions["session_002"]["summary"]["total_pnl"] = 40.0
+
+    manager = PaperSessionManager(
+        archive
+    )
+
+    reports = manager.get_all_session_reports()
+
+    assert len(reports) == 2
+    assert reports[0]["session_id"] == "session_001"
+    assert reports[1]["session_id"] == "session_002"
+
+    assert reports[0]["trade_count"] == 2
+    assert reports[0]["win_count"] == 1
+    assert reports[0]["loss_count"] == 1
+    assert reports[0]["win_rate"] == 50.0
+    assert reports[0]["total_pnl"] == 5.0
+
+    assert reports[1]["trade_count"] == 3
+    assert reports[1]["win_count"] == 2
+    assert reports[1]["loss_count"] == 1
+    assert reports[1]["win_rate"] == (
+        2 / 3 * 100
+    )
+    assert reports[1]["total_pnl"] == 40.0

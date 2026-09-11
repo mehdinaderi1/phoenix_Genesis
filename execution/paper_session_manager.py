@@ -66,3 +66,9 @@ class PaperSessionManager:
             session,
             performance
         )
+
+    def get_all_session_reports(self):
+        return [
+            self.get_session_report(session_id)
+            for session_id in self.list_sessions()
+        ]
