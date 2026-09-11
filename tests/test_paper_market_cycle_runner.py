@@ -567,3 +567,50 @@ def test_paper_market_cycle_runner_builds_serializable_e2e_records():
     serialized = json.dumps(records)
 
     assert isinstance(serialized, str)
+
+def test_serializes_session_from_runner():
+    session = PaperTradingSession(
+        initial_balance=1000.0,
+        position_size_percent=10.0
+    )
+
+    runner = PaperMarketCycleRunner(
+        exchange_manager=FakeExchangeManager(),
+        multi_timeframe_pipeline=(
+            FakeMultiTimeframePipeline()
+        ),
+        intelligence_flow=FakeIntelligenceFlow(),
+        session=session
+    )
+
+    results = runner.run(
+        cycle_count=3,
+        symbol="BTCUSDT"
+    )
+
+    serialized = runner.serialize_session(
+        results
+    )
+
+    restored = json.loads(
+        serialized
+    )
+
+    assert restored["summary"]["cycles_processed"] == 3
+    assert restored["summary"]["hold_count"] == 3
+    assert restored["summary"]["open_count"] == 0
+    assert restored["summary"]["close_count"] == 0
+
+    assert restored["summary"]["balance"] == 1000.0
+    assert restored["summary"]["total_pnl"] == 0.0
+    assert restored["summary"]["trade_count"] == 0
+
+    assert restored["final_position"] is None
+
+    assert len(
+        restored["cycles"]
+    ) == 3
+
+    assert restored["cycles"][0]["cycle"] == 1
+    assert restored["cycles"][0]["symbol"] == "BTCUSDT"
+    assert restored["cycles"][0]["action"] == "HOLD"    

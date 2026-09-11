@@ -1,5 +1,7 @@
 from execution.paper_trading_runtime import PaperTradingRuntime
-
+from execution.paper_session_serializer import (
+    PaperSessionSerializer
+)
 
 class PaperMarketCycleRunner:
 
@@ -275,3 +277,17 @@ class PaperMarketCycleRunner:
                 "current_position"
             )
         }
+
+    def serialize_session(
+        self,
+        results
+    ):
+        session_record = self.build_session_record(
+            results
+        )
+
+        serializer = PaperSessionSerializer()
+
+        return serializer.serialize(
+            session_record
+        )    
