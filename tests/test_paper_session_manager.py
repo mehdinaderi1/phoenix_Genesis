@@ -155,3 +155,53 @@ def test_get_session_performance():
     assert performance["win_rate"] == 2 / 3 * 100
     assert performance["total_pnl"] == 20.0
     assert performance["average_pnl"] == 20.0 / 3
+
+def test_manager_get_session_performance_from_real_archive(tmp_path):
+    archive = PaperSessionArchive(tmp_path)
+
+    session_record = {
+        "cycles": [
+            {
+                "cycle": 1,
+                "action": "OPEN",
+                "realized_pnl": None
+            },
+            {
+                "cycle": 2,
+                "action": "CLOSE",
+                "realized_pnl": 25.0
+            },
+            {
+                "cycle": 3,
+                "action": "CLOSE",
+                "realized_pnl": -10.0
+            }
+        ],
+        "summary": {
+            "cycles_processed": 3,
+            "trade_count": 2,
+            "total_pnl": 15.0
+        },
+        "final_position": None
+    }
+
+    archive.save(
+        "session_performance_integration",
+        session_record
+    )
+
+    manager = PaperSessionManager(
+        archive
+    )
+
+    performance = manager.get_session_performance(
+        "session_performance_integration"
+    )
+
+    assert performance["cycles_processed"] == 3
+    assert performance["trade_count"] == 2
+    assert performance["win_count"] == 1
+    assert performance["loss_count"] == 1
+    assert performance["win_rate"] == 50.0
+    assert performance["total_pnl"] == 15.0
+    assert performance["average_pnl"] == 7.5
