@@ -44,8 +44,14 @@ class PaperMarketCycleRunner:
 
         return {
             "action_proposal": report.action_proposal,
+            "report": report,
             "price": price,
-            "symbol": symbol
+            "symbol": symbol,
+            "signal": getattr(
+                consensus,
+                "signal",
+                None
+            )
         }
 
     def run(
@@ -95,26 +101,157 @@ class PaperMarketCycleRunner:
                 else {}
             )
 
+            action_proposal = cycle_input.get(
+                "action_proposal"
+            )
+
+            report = cycle_input.get(
+                "report"
+            )
+
+            execution_result = result.get(
+                "execution_result"
+            )
+
+            position = result.get(
+                "position"
+            )
+
             records.append(
                 {
                     "cycle": index,
+
                     "symbol": cycle_input.get(
                         "symbol"
                     ),
+
                     "price": cycle_input.get(
                         "price"
                     ),
+
+                    "signal": cycle_input.get(
+                        "signal"
+                    ),
+
+                    "trend": getattr(
+                        report,
+                        "trend",
+                        None
+                    ),
+
+                    "regime": getattr(
+                        report,
+                        "regime",
+                        None
+                    ),
+
+                    "confidence": getattr(
+                        report,
+                        "confidence",
+                        None
+                    ),
+
+                    "risk": getattr(
+                        report,
+                        "risk",
+                        None
+                    ),
+
+                    "proposal_action": getattr(
+                        action_proposal,
+                        "action",
+                        None
+                    ),
+
+                    "proposal_status": getattr(
+                        action_proposal,
+                        "status",
+                        None
+                    ),
+
+                    "proposal_reason": getattr(
+                        action_proposal,
+                        "reason",
+                        None
+                    ),
+
                     "action": result.get(
                         "action"
                     ),
+
+                    "execution_status": (
+                        execution_result.status
+                        if execution_result is not None
+                        else None
+                    ),
+
                     "realized_pnl": result.get(
                         "realized_pnl",
                         0.0
                     ),
-                    "position": result.get(
-                        "position"
-                    )
+
+                    "position_side": getattr(
+                        position,
+                        "side",
+                        None
+                    ),
+
+                    "entry_price": getattr(
+                        position,
+                        "entry_price",
+                        None
+                    ),
+
+                    "quantity": getattr(
+                        position,
+                        "quantity",
+                        None
+                    ),
+
+                    "report": report,
+
+                    "position": position
                 }
             )
 
         return records
+
+    def build_serializable_cycle_records(
+        self,
+        results
+    ):
+        records = self.build_cycle_records(
+            results
+        )
+
+        serializable_records = []
+
+        serializable_fields = (
+            "cycle",
+            "symbol",
+            "price",
+            "signal",
+            "trend",
+            "regime",
+            "confidence",
+            "risk",
+            "proposal_action",
+            "proposal_status",
+            "proposal_reason",
+            "action",
+            "execution_status",
+            "realized_pnl",
+            "position_side",
+            "entry_price",
+            "quantity"
+        )
+
+        for record in records:
+            serializable_records.append(
+                {
+                    field: record.get(field)
+                    for field in serializable_fields
+                }
+            )
+
+        return serializable_records
