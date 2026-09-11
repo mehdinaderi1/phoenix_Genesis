@@ -389,6 +389,77 @@ def test_paper_market_cycle_runner_executes_end_to_end_scenario():
         is runner.last_cycle_inputs[0]["report"]
     )
 
+def test_builds_session_record():
+    session = PaperTradingSession(
+        initial_balance=1000,
+        position_size_percent=10
+    )
+
+    runner = PaperMarketCycleRunner(
+        exchange_manager=FakeExchangeManager(),
+        multi_timeframe_pipeline=FakeMultiTimeframePipeline(),
+        intelligence_flow=FakeIntelligenceFlow(),
+        session=session
+    )
+
+    results = runner.run(
+        cycle_count=1,
+        symbol="BTCUSDT"
+    )
+
+    session_record = runner.build_session_record(
+        results
+    )
+
+    assert "cycles" in session_record
+    assert "summary" in session_record
+    assert "final_position" in session_record
+
+    assert len(
+        session_record["cycles"]
+    ) == 1
+
+    assert (
+        session_record["summary"]["cycles_processed"]
+        == 1
+    )
+
+    assert (
+        session_record["final_position"]
+        == session_record["summary"]["current_position"]
+    )
+
+def test_session_record_is_json_serializable():
+    session = PaperTradingSession(
+        initial_balance=1000,
+        position_size_percent=10
+    )
+
+    runner = PaperMarketCycleRunner(
+        exchange_manager=FakeExchangeManager(),
+        multi_timeframe_pipeline=FakeMultiTimeframePipeline(),
+        intelligence_flow=FakeIntelligenceFlow(),
+        session=session
+    )
+
+    results = runner.run(
+        cycle_count=1,
+        symbol="BTCUSDT"
+    )
+
+    session_record = runner.build_session_record(
+        results
+    )
+
+    serialized = json.dumps(
+        session_record
+    )
+
+    assert isinstance(
+        serialized,
+        str
+    )
+
 def test_paper_market_cycle_runner_builds_serializable_e2e_records():
 
     class SequencedIntelligenceFlow:

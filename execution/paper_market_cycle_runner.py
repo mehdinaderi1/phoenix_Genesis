@@ -255,3 +255,23 @@ class PaperMarketCycleRunner:
             )
 
         return serializable_records
+
+    def build_session_record(
+        self,
+        results
+    ):
+        summary = self.build_summary(
+            results
+        )
+
+        return {
+            "cycles": (
+                self.build_serializable_cycle_records(
+                    results
+                )
+            ),
+            "summary": summary,
+            "final_position": summary.get(
+                "current_position"
+            )
+        }

@@ -120,6 +120,12 @@ def main():
         runtime_results
     )
 
+    runtime_session_record = (
+        paper_cycle_runner.build_session_record(
+            runtime_results
+        )
+    )
+
     lifecycle_result = runtime_results[-1]
 
     lifecycle_action = lifecycle_result["action"]
@@ -163,6 +169,52 @@ def main():
             f"Action: {record['action']} | "
             f"Realized PnL: {record['realized_pnl']}"
         )
+
+    # ---------------------------------------------------------
+    # Paper Runtime Session Record
+    # ---------------------------------------------------------
+
+    print("==============================")
+    print("🦅 Phoenix Paper Runtime Session Record")
+    print("==============================")
+
+    print(
+        "Cycles:",
+        len(runtime_session_record["cycles"])
+    )
+
+    print(
+        "Cycles Processed:",
+        runtime_session_record["summary"][
+            "cycles_processed"
+        ]
+    )
+
+    print(
+        "Balance:",
+        runtime_session_record["summary"][
+            "balance"
+        ]
+    )
+
+    print(
+        "Total PnL:",
+        runtime_session_record["summary"][
+            "total_pnl"
+        ]
+    )
+
+    print(
+        "Trades:",
+        runtime_session_record["summary"][
+            "trade_count"
+        ]
+    )
+
+    print(
+        "Final Position:",
+        runtime_session_record["final_position"]
+    )
 
     # ---------------------------------------------------------
     # Paper End-to-End Scenario
