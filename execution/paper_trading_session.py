@@ -1,3 +1,6 @@
+from dataclasses import asdict
+from uuid import uuid4
+
 from execution.paper_execution_engine import PaperExecutionEngine
 from execution.paper_position_manager import PaperPositionManager
 from execution.paper_portfolio import PaperPortfolio
@@ -13,8 +16,11 @@ class PaperTradingSession:
         execution_engine=None,
         position_manager=None,
         portfolio=None,
-        trade_history=None
+        trade_history=None,
+        session_id=None
     ):
+        self.session_id = session_id or str(uuid4())
+        self.initial_balance = initial_balance
         self.position_size_percent = position_size_percent
 
         self.execution_engine = (
@@ -110,3 +116,17 @@ class PaperTradingSession:
 
     def get_trade_count(self):
         return self.trade_history.get_trade_count()
+
+    def get_session_record(self):
+        return {
+            "session_id": self.session_id,
+            "initial_balance": self.initial_balance,
+            "position_size_percent": self.position_size_percent,
+            "balance": self.get_balance(),
+            "total_pnl": self.get_total_pnl(),
+            "trade_count": self.get_trade_count(),
+            "trades": [
+                asdict(trade)
+                for trade in self.trade_history.get_trades()
+            ]
+        }
