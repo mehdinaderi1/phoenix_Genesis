@@ -2,12 +2,41 @@ from exchanges.base_exchange import BaseExchange
 
 
 class MockExchange(BaseExchange):
-    """صرافی آزمایشی برای تست ققنوس"""
+    """Test exchange used by Phoenix Genesis."""
+
+    def __init__(self):
+        self.price_sequences = {}
+        self.price_sequence_indexes = {}
 
     def connect(self):
         return "Mock Exchange Connected"
 
+    def set_price_sequence(self, symbol, prices):
+        if not prices:
+            raise ValueError("prices must not be empty")
+
+        self.price_sequences[symbol] = list(prices)
+        self.price_sequence_indexes[symbol] = 0
+
+    def reset_price_sequences(self):
+        for symbol in self.price_sequences:
+            self.price_sequence_indexes[symbol] = 0
+
     def get_price(self, symbol):
+        sequence = self.price_sequences.get(symbol)
+
+        if sequence:
+            index = self.price_sequence_indexes.get(symbol, 0)
+
+            if index >= len(sequence):
+                index = len(sequence) - 1
+
+            price = sequence[index]
+
+            if index < len(sequence) - 1:
+                self.price_sequence_indexes[symbol] = index + 1
+
+            return price
 
         prices = {
             "BTCUSDT": 65000,
@@ -17,18 +46,14 @@ class MockExchange(BaseExchange):
         return prices.get(symbol)
 
     def get_balance(self):
-
         return {
             "USDT": 1000,
             "BTC": 0.01
         }
 
     def get_candle(self, symbol, timeframe="1m"):
-
         candles = {
-
             "BTCUSDT": {
-
                 "1m": {
                     "timestamp": 1752364800,
                     "open": 64950,
@@ -37,7 +62,6 @@ class MockExchange(BaseExchange):
                     "close": 65000,
                     "volume": 125.5
                 },
-
                 "30m": {
                     "timestamp": 1752366600,
                     "open": 64800,
@@ -46,7 +70,6 @@ class MockExchange(BaseExchange):
                     "close": 65100,
                     "volume": 850
                 },
-
                 "4H": {
                     "timestamp": 1752372000,
                     "open": 64000,
@@ -55,7 +78,6 @@ class MockExchange(BaseExchange):
                     "close": 65000,
                     "volume": 5200
                 },
-
                 "1D": {
                     "timestamp": 1752360000,
                     "open": 63000,
@@ -65,9 +87,7 @@ class MockExchange(BaseExchange):
                     "volume": 15000
                 }
             },
-
             "ETHUSDT": {
-
                 "1m": {
                     "timestamp": 1752364800,
                     "open": 3480,
@@ -87,7 +107,6 @@ class MockExchange(BaseExchange):
         timeframe="1m",
         limit=30
     ):
-
         base_prices = {
             "BTCUSDT": 65000,
             "ETHUSDT": 3500
@@ -113,17 +132,13 @@ class MockExchange(BaseExchange):
         }
 
         interval = timeframe_seconds.get(timeframe, 60)
-
         current_timestamp = current_candle["timestamp"]
 
         candles = []
-
         start_price = current_price - ((limit - 1) * 200)
 
         for index in range(limit):
-
             close = start_price + (index * 200)
-
             open_price = close - 100
             high = close + 150
             low = close - 150
