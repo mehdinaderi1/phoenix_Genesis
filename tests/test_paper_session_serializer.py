@@ -187,3 +187,88 @@ def test_serializes_real_runner_session_record():
         cycle["action"] == "HOLD"
         for cycle in restored["cycles"]
     )
+
+def test_deserializes_session_record_from_json():
+    serializer = PaperSessionSerializer()
+
+    session_record = {
+        "cycles": [
+            {
+                "cycle": 1,
+                "symbol": "BTCUSDT",
+                "price": 65000.0,
+                "action": "OPEN",
+                "realized_pnl": 0.0
+            }
+        ],
+        "summary": {
+            "cycles_processed": 1,
+            "open_count": 1,
+            "hold_count": 0,
+            "close_count": 0,
+            "balance": 1000.0,
+            "total_pnl": 0.0,
+            "trade_count": 0
+        },
+        "final_position": None
+    }
+
+    serialized = json.dumps(
+        session_record
+    )
+
+    restored = serializer.deserialize(
+        serialized
+    )
+
+    assert restored == session_record
+
+
+def test_session_record_survives_serialize_deserialize_round_trip():
+    serializer = PaperSessionSerializer()
+
+    session_record = {
+        "cycles": [
+            {
+                "cycle": 1,
+                "symbol": "BTCUSDT",
+                "price": 65000.0,
+                "action": "OPEN",
+                "realized_pnl": 0.0
+            },
+            {
+                "cycle": 2,
+                "symbol": "BTCUSDT",
+                "price": 65500.0,
+                "action": "HOLD",
+                "realized_pnl": 0.0
+            },
+            {
+                "cycle": 3,
+                "symbol": "BTCUSDT",
+                "price": 66000.0,
+                "action": "CLOSE",
+                "realized_pnl": 1.5384615384615385
+            }
+        ],
+        "summary": {
+            "cycles_processed": 3,
+            "open_count": 1,
+            "hold_count": 1,
+            "close_count": 1,
+            "balance": 1001.5384615384615,
+            "total_pnl": 1.5384615384615472,
+            "trade_count": 1
+        },
+        "final_position": None
+    }
+
+    serialized = serializer.serialize(
+        session_record
+    )
+
+    restored = serializer.deserialize(
+        serialized
+    )
+
+    assert restored == session_record

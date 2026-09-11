@@ -10,3 +10,11 @@ class PaperSessionSerializer:
         return json.dumps(
             session_record
         )
+
+    def deserialize(
+        self,
+        serialized_data
+    ):
+        return json.loads(
+            serialized_data
+        )
