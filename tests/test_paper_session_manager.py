@@ -205,3 +205,38 @@ def test_manager_get_session_performance_from_real_archive(tmp_path):
     assert performance["win_rate"] == 50.0
     assert performance["total_pnl"] == 15.0
     assert performance["average_pnl"] == 7.5
+
+
+def test_get_session_report():
+    archive = FakeArchive()
+
+    archive.sessions["session_002"]["cycles"] = [
+        {"cycle": 1, "realized_pnl": 10.0},
+        {"cycle": 2, "realized_pnl": -5.0},
+        {"cycle": 3, "realized_pnl": 15.0}
+    ]
+
+    archive.sessions["session_002"]["summary"]["cycles_processed"] = 3
+    archive.sessions["session_002"]["summary"]["trade_count"] = 3
+    archive.sessions["session_002"]["summary"]["total_pnl"] = 20.0
+
+    manager = PaperSessionManager(
+        archive
+    )
+
+    report = manager.get_session_report(
+        "session_002"
+    )
+
+    assert report["session_id"] == "session_002"
+    assert report["cycles"] == 3
+    assert report["trade_count"] == 3
+    assert report["win_count"] == 2
+    assert report["loss_count"] == 1
+    assert report["win_rate"] == (
+        2 / 3 * 100
+    )
+    assert report["total_pnl"] == 20.0
+    assert report["average_pnl"] == (
+        20.0 / 3
+    )
