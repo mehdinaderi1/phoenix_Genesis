@@ -1,12 +1,12 @@
 ﻿# Phoenix Genesis - Flight Readiness
 
-Last updated: 2026-09-13
+Last updated: 2026-09-14
 
 ## Current State
 
 - Development / Paper
 - Real Orders: NO
-- Real Market: NEXT
+- Real Market: OBSERVE
 - Paper Flight: IN PROGRESS
 - Autonomous Live: NO
 
@@ -22,30 +22,30 @@ Strategy Intelligence   ##################-- 80%
 
 Paper Execution         #################--- 85%
 Outcome -> Learning     ##################-- 90%
-Operational Runtime     ##########---------- 50%
+Operational Runtime     ############-------- 60%
 
 ### SENSORS
 
 Multi-Source Market Data ############------ 60%
-Real Market Connectivity #######------------- 35%
+Real Market Connectivity ########---------- 40%
 
 ### FLIGHT
 
-Long-running Observation ####---------------- 20%
-Operational Validation   ##------------------ 10%
+Long-running Observation #####--------------- 25%
+Operational Validation   ###----------------- 15%
 
 ## Latest Milestone
 
-Multi-Source Market Data Architecture
+Real Market Observer v1
 
-- 800 tests passing
-- Binance public market-data adapter
-- CoinMarketCap aggregate market-data source
-- Normalized MarketData contract
-- Primary / fallback source manager
-- Multi-source integration tests
-- Commit: f803f3d
-- Push: origin/master successful
+- 809 tests passing
+- Normalized MarketData observation
+- Primary source support
+- Fallback source support
+- Multi-observation sequence
+- Observation loop
+- OBSERVE / PAPER only
+- Real orders remain disabled
 
 ## Development Rule
 
