@@ -1042,3 +1042,153 @@ def test_paper_market_cycle_runner_re_evaluates_intelligence_each_cycle(
 
     database.close()
 
+
+
+def test_paper_market_cycle_runner_rebuilds_action_proposal_each_cycle(
+    tmp_path
+):
+    from core.database import DatabaseManager
+    from core.market_data.pipeline import MarketDataPipeline
+    from analysis.multi_timeframe_pipeline import MultiTimeframePipeline
+    from exchanges.mock_exchange import MockExchange
+
+    database = DatabaseManager(
+        str(tmp_path / "decision_reaction.db")
+    )
+    database.connect()
+
+    exchange = MockExchange()
+
+    exchange.set_price_sequence(
+        "BTCUSDT",
+        [
+            65000.0,
+            65500.0,
+            66000.0
+        ]
+    )
+
+    exchange.set_candle_sequence(
+        "BTCUSDT",
+        "1m",
+        [
+            {
+                "timestamp": 1752364800,
+                "open": 64950,
+                "high": 65100,
+                "low": 64800,
+                "close": 65000,
+                "volume": 125.5
+            },
+            {
+                "timestamp": 1752364860,
+                "open": 65450,
+                "high": 65600,
+                "low": 65300,
+                "close": 65500,
+                "volume": 130.5
+            },
+            {
+                "timestamp": 1752364920,
+                "open": 65950,
+                "high": 66100,
+                "low": 65800,
+                "close": 66000,
+                "volume": 135.5
+            }
+        ]
+    )
+
+    market_data_pipeline = MarketDataPipeline(
+        exchange,
+        database
+    )
+
+    real_pipeline = MultiTimeframePipeline(
+        database
+    )
+
+    class RecordingIntelligenceFlow:
+
+        def __init__(self):
+            self.calls = 0
+            self.consensus_results = []
+            self.reports = []
+
+        def create_report(self, consensus):
+            self.calls += 1
+            self.consensus_results.append(
+                consensus
+            )
+
+            report = FakeIntelligenceFlow().create_report(
+                consensus
+            )
+
+            self.reports.append(report)
+
+            return report
+
+    intelligence_flow = RecordingIntelligenceFlow()
+
+    session = PaperTradingSession(
+        initial_balance=1000.0,
+        position_size_percent=10.0
+    )
+
+    runner = PaperMarketCycleRunner(
+        exchange_manager=exchange,
+        multi_timeframe_pipeline=real_pipeline,
+        intelligence_flow=intelligence_flow,
+        session=session,
+        market_data_pipeline=market_data_pipeline
+    )
+
+    results = runner.run(
+        cycle_count=3,
+        symbol="BTCUSDT"
+    )
+
+    assert len(results) == 3
+
+    assert intelligence_flow.calls == 3
+
+    assert len(
+        intelligence_flow.consensus_results
+    ) == 3
+
+    assert len(
+        intelligence_flow.reports
+    ) == 3
+
+    proposals = [
+        cycle["report"].action_proposal
+        for cycle in runner.last_cycle_inputs
+    ]
+
+    assert len(proposals) == 3
+
+    assert all(
+        proposal is not None
+        for proposal in proposals
+    )
+
+    assert all(
+        hasattr(proposal, "action")
+        for proposal in proposals
+    )
+
+    assert [
+        proposal.action
+        for proposal in proposals
+    ] == [
+        report.action_proposal.action
+        for report in intelligence_flow.reports
+    ]
+
+    assert [
+        cycle["report"]
+        for cycle in runner.last_cycle_inputs
+    ] == intelligence_flow.reports
+
+    database.close()
