@@ -77,3 +77,65 @@ def test_multi_timeframe_pipeline(tmp_path):
     assert 0 <= result.confidence <= 100
 
     database.close()
+
+def test_multi_timeframe_pipeline_reacts_to_new_market_data(
+    tmp_path
+):
+
+    database = DatabaseManager(
+        str(tmp_path / "changing_market.db")
+    )
+
+    database.connect()
+
+    pipeline = MultiTimeframePipeline(
+        database
+    )
+
+    states = [
+        [64000, 64200, 64500, 64800, 65000],
+        [65000, 65500, 66000, 66500, 67000],
+        [67000, 66500, 66000, 65500, 65000]
+    ]
+
+    results = []
+
+    for state_index, prices in enumerate(states):
+
+        for timeframe in ("30m", "4H", "1D"):
+
+            for price_index, price in enumerate(prices):
+
+                candle = Candle(
+                    symbol="BTCUSDT",
+                    timeframe=timeframe,
+                    timestamp=(
+                        state_index * 100000
+                        + price_index
+                    ),
+                    open=price,
+                    high=price,
+                    low=price,
+                    close=price,
+                    volume=100
+                )
+
+                database.insert_candle(candle)
+
+        result = pipeline.analyze(
+            "BTCUSDT"
+        )
+
+        results.append(result)
+
+    assert len(results) == 3
+
+    assert all(
+        result is not None
+        for result in results
+    )
+
+    assert results[0].trend != results[2].trend
+
+    database.close()
+

@@ -816,3 +816,229 @@ def test_paper_market_cycle_runner_persists_changing_market_data(tmp_path):
     ]
 
     database.close()
+
+def test_paper_market_cycle_runner_passes_fresh_market_data_to_analysis(
+    tmp_path
+):
+    from core.database import DatabaseManager
+    from core.market_data.pipeline import MarketDataPipeline
+    from analysis.multi_timeframe_pipeline import MultiTimeframePipeline
+    from market.market_data_reader import MarketDataReader
+    from exchanges.mock_exchange import MockExchange
+
+    database = DatabaseManager(
+        str(tmp_path / "runner_market_data.db")
+    )
+    database.connect()
+
+    exchange = MockExchange()
+
+    exchange.set_candle_sequence(
+        "BTCUSDT",
+        "1m",
+        [
+            {
+                "timestamp": 1752364800,
+                "open": 64950,
+                "high": 65100,
+                "low": 64800,
+                "close": 65000,
+                "volume": 125.5
+            },
+            {
+                "timestamp": 1752364860,
+                "open": 65450,
+                "high": 65600,
+                "low": 65300,
+                "close": 65500,
+                "volume": 130.5
+            },
+            {
+                "timestamp": 1752364920,
+                "open": 65950,
+                "high": 66100,
+                "low": 65800,
+                "close": 66000,
+                "volume": 135.5
+            }
+        ]
+    )
+
+    market_data_pipeline = MarketDataPipeline(
+        exchange,
+        database
+    )
+
+    real_pipeline = MultiTimeframePipeline(
+        database
+    )
+
+    reader = MarketDataReader(
+        database
+    )
+
+    observed_market_data = []
+
+    class ObservingMultiTimeframePipeline:
+
+        def analyze(self, symbol="BTCUSDT"):
+
+            prices = reader.get_close_prices(
+                symbol,
+                "1m"
+            )
+
+            observed_market_data.append(
+                prices[-1]
+            )
+
+            return real_pipeline.analyze(
+                symbol
+            )
+
+    pipeline = ObservingMultiTimeframePipeline()
+
+    intelligence_flow = FakeIntelligenceFlow()
+
+    session = PaperTradingSession(
+        initial_balance=1000.0,
+        position_size_percent=10.0
+    )
+
+    runner = PaperMarketCycleRunner(
+        exchange_manager=exchange,
+        multi_timeframe_pipeline=pipeline,
+        intelligence_flow=intelligence_flow,
+        session=session,
+        market_data_pipeline=market_data_pipeline
+    )
+
+    results = runner.run(
+        cycle_count=3,
+        symbol="BTCUSDT"
+    )
+
+    assert len(results) == 3
+
+    assert observed_market_data == [
+        65000,
+        65500,
+        66000
+    ]
+
+    database.close()
+
+
+def test_paper_market_cycle_runner_re_evaluates_intelligence_each_cycle(
+    tmp_path
+):
+    from core.database import DatabaseManager
+    from core.market_data.pipeline import MarketDataPipeline
+    from analysis.multi_timeframe_pipeline import MultiTimeframePipeline
+    from exchanges.mock_exchange import MockExchange
+
+    database = DatabaseManager(
+        str(tmp_path / "intelligence_cycles.db")
+    )
+    database.connect()
+
+    exchange = MockExchange()
+
+    exchange.set_candle_sequence(
+        "BTCUSDT",
+        "1m",
+        [
+            {
+                "timestamp": 1752364800,
+                "open": 64950,
+                "high": 65100,
+                "low": 64800,
+                "close": 65000,
+                "volume": 125.5
+            },
+            {
+                "timestamp": 1752364860,
+                "open": 65450,
+                "high": 65600,
+                "low": 65300,
+                "close": 65500,
+                "volume": 130.5
+            },
+            {
+                "timestamp": 1752364920,
+                "open": 65950,
+                "high": 66100,
+                "low": 65800,
+                "close": 66000,
+                "volume": 135.5
+            }
+        ]
+    )
+
+    market_data_pipeline = MarketDataPipeline(
+        exchange,
+        database
+    )
+
+    real_pipeline = MultiTimeframePipeline(
+        database
+    )
+
+    class ObservingIntelligenceFlow:
+
+        def __init__(self):
+            self.calls = 0
+            self.consensus_results = []
+
+        def create_report(self, consensus):
+            self.calls += 1
+            self.consensus_results.append(consensus)
+
+            return FakeIntelligenceFlow().create_report(
+                consensus
+            )
+
+    intelligence_flow = ObservingIntelligenceFlow()
+
+    session = PaperTradingSession(
+        initial_balance=1000.0,
+        position_size_percent=10.0
+    )
+
+    runner = PaperMarketCycleRunner(
+        exchange_manager=exchange,
+        multi_timeframe_pipeline=real_pipeline,
+        intelligence_flow=intelligence_flow,
+        session=session,
+        market_data_pipeline=market_data_pipeline
+    )
+
+    results = runner.run(
+        cycle_count=3,
+        symbol="BTCUSDT"
+    )
+
+    assert len(results) == 3
+
+    assert intelligence_flow.calls == 3
+
+    assert len(
+        intelligence_flow.consensus_results
+    ) == 3
+
+    assert all(
+        result is not None
+        for result in intelligence_flow.consensus_results
+    )
+
+    assert [
+        cycle["price"]
+        for cycle in runner.last_cycle_inputs
+    ] == [
+        65000,
+        65000,
+        65000
+    ]
+
+    database.close()
+
