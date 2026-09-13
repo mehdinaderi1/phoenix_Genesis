@@ -7,33 +7,25 @@ class PaperPositionLifecycle:
         self,
         action_proposal,
         price,
-        symbol="BTCUSDT"
+        symbol="BTCUSDT",
+        decision=None
     ):
         position = self.session.get_position()
+        action = getattr(action_proposal, "action", None)
 
-        action = getattr(
-            action_proposal,
-            "action",
-            None
-        )
-
-        # No open position
         if position is None:
-
             if action in ("BUY", "SELL"):
-
                 result = self.session.process_action(
                     action_proposal=action_proposal,
                     price=price,
-                    symbol=symbol
+                    symbol=symbol,
+                    decision=decision
                 )
 
                 if result["position"] is not None:
                     return {
                         "action": "OPEN",
-                        "execution_result": result[
-                            "execution_result"
-                        ],
+                        "execution_result": result["execution_result"],
                         "position": result["position"],
                         "realized_pnl": 0.0
                     }
@@ -44,21 +36,14 @@ class PaperPositionLifecycle:
                 "realized_pnl": 0.0
             }
 
-        # Existing position + WAIT
         if action == "WAIT":
-
             return {
                 "action": "HOLD",
                 "position": position,
                 "realized_pnl": 0.0
             }
 
-        # Existing position + opposite signal
-        if (
-            action in ("BUY", "SELL")
-            and action != position.side
-        ):
-
+        if action in ("BUY", "SELL") and action != position.side:
             closed = self.session.close_position(
                 exit_price=price
             )
@@ -75,10 +60,10 @@ class PaperPositionLifecycle:
                 "position": closed["position"],
                 "exit_price": closed["exit_price"],
                 "realized_pnl": closed["realized_pnl"],
-                "trade": closed["trade"]
+                "trade": closed["trade"],
+                "learning_result": closed.get("learning_result")
             }
 
-        # Existing position + same signal
         return {
             "action": "HOLD",
             "position": position,

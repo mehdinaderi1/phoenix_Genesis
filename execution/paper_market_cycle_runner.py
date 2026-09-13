@@ -24,11 +24,20 @@ class PaperMarketCycleRunner:
         )
         self.intelligence_flow = intelligence_flow
 
-        self.paper_runtime = PaperTradingRuntime(
-            session=session
-        )
+        self.intelligence_flow.enable_inline_outcome_learning = False
 
         self.session = session
+
+        if getattr(self.session, "outcome_bridge", None) is None:
+            self.session.outcome_bridge = getattr(
+                intelligence_flow,
+                "decision_outcome_bridge",
+                None
+            )
+
+        self.paper_runtime = PaperTradingRuntime(
+            session=self.session
+        )
 
         self.session_archive = session_archive
         self.market_data_pipeline = market_data_pipeline
@@ -74,6 +83,11 @@ class PaperMarketCycleRunner:
             "signal": getattr(
                 consensus,
                 "signal",
+                None
+            ),
+            "decision": getattr(
+                report,
+                "decision",
                 None
             )
         }

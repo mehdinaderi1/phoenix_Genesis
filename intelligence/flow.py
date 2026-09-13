@@ -799,18 +799,31 @@ class IntelligenceFlow:
         # 15. Decision -> Outcome -> Performance
         # ---------------------------------------------------------
 
-        outcome_result = (
-            self.decision_outcome_bridge.process(
+        if getattr(
+            self,
+            "enable_inline_outcome_learning",
+            True
+        ):
+            outcome_result = (
+                self.decision_outcome_bridge.process(
 
-                decision=decision,
+                    decision=decision,
 
-                entry_price=65000,
+                    entry_price=65000,
 
-                exit_price=67000,
+                    exit_price=67000,
 
-                strategy=performance_strategy
+                    strategy=performance_strategy
+                )
             )
-        )
+        else:
+            outcome_result = {
+                "result": "UNKNOWN",
+                "score": 50,
+                "feedback": None,
+                "performance_learning": None,
+                "performance": None
+            }
 
         report.performance_feedback = (
             outcome_result["feedback"]

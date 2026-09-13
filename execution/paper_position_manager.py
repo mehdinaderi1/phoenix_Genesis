@@ -8,7 +8,8 @@ class PaperPositionManager:
 
     def open_position(
         self,
-        execution_result
+        execution_result,
+        decision=None
     ):
 
         if self.position is not None:
@@ -21,19 +22,20 @@ class PaperPositionManager:
             return None
 
         if (
-            not execution_result.symbol       
+            not execution_result.symbol
             or execution_result.quantity is None
             or execution_result.quantity <= 0
             or execution_result.price is None
             or execution_result.price <= 0
         ):
-           return None
+            return None
 
         self.position = PaperPosition(
             symbol=execution_result.symbol,
             side=execution_result.action,
             entry_price=execution_result.price,
-            quantity=execution_result.quantity
+            quantity=execution_result.quantity,
+            decision=decision
         )
 
         return self.position

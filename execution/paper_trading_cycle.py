@@ -5,7 +5,6 @@ class PaperTradingCycle:
 
     def __init__(self, session, lifecycle=None):
         self.session = session
-
         self.lifecycle = (
             lifecycle
             or PaperPositionLifecycle(session)
@@ -15,30 +14,22 @@ class PaperTradingCycle:
         self,
         action_proposal,
         price,
-        symbol="BTCUSDT"
+        symbol="BTCUSDT",
+        decision=None
     ):
         result = self.lifecycle.process(
             action_proposal=action_proposal,
             price=price,
-            symbol=symbol
+            symbol=symbol,
+            decision=decision
         )
 
         return {
             "action": result["action"],
-            "execution_result": result.get(
-                "execution_result"
-            ),
-            "position": result.get(
-                "position"
-            ),
-            "exit_price": result.get(
-                "exit_price"
-            ),
-            "realized_pnl": result.get(
-                "realized_pnl",
-                0.0
-            ),
-            "trade": result.get(
-                "trade"
-            )
+            "execution_result": result.get("execution_result"),
+            "position": result.get("position"),
+            "exit_price": result.get("exit_price"),
+            "realized_pnl": result.get("realized_pnl", 0.0),
+            "trade": result.get("trade"),
+            "learning_result": result.get("learning_result")
         }

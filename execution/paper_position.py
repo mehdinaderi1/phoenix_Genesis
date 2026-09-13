@@ -7,6 +7,7 @@ class PaperPosition:
     side: str
     entry_price: float
     quantity: float
+    decision: object = None
 
     def unrealized_pnl(self, current_price):
         if self.side == "BUY":

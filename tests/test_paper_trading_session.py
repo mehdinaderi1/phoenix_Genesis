@@ -219,3 +219,66 @@ def test_paper_trading_session_multiple_trade_cycles():
     assert session.get_balance() == pytest.approx(999.9)
     assert session.get_total_pnl() == pytest.approx(-0.1)
     assert session.get_trade_count() == 2
+
+def test_paper_close_triggers_real_outcome_learning():
+
+    from types import SimpleNamespace
+
+    from intelligence.flow import IntelligenceFlow
+    from execution.paper_trading_session import PaperTradingSession
+
+    flow = IntelligenceFlow()
+
+    flow.enable_inline_outcome_learning = False
+
+    session = PaperTradingSession(
+        initial_balance=1000.0,
+        position_size_percent=1.0,
+        outcome_bridge=flow.decision_outcome_bridge
+    )
+
+    decision = SimpleNamespace(
+        action="PREPARE_LONG",
+        regime="RANGING",
+        signal="BUY",
+        risk="LOW",
+        confidence=80,
+        trace={},
+        strategy={"name": "PAPER_TEST_STRATEGY"},
+        champion_strategy=None
+    )
+
+    buy = SimpleNamespace(action="BUY")
+    sell = SimpleNamespace(action="SELL")
+
+    from execution.paper_trading_cycle import PaperTradingCycle
+
+    cycle = PaperTradingCycle(session)
+
+    opened = cycle.process(
+        action_proposal=buy,
+        price=65000.0,
+        symbol="BTCUSDT",
+        decision=decision
+    )
+
+    assert opened["action"] == "OPEN"
+    assert session.get_position() is not None
+    assert len(flow.experience_memory.experiences) == 0
+
+    closed = cycle.process(
+        action_proposal=sell,
+        price=66000.0,
+        symbol="BTCUSDT"
+    )
+
+    assert closed["action"] == "CLOSE"
+    assert closed["realized_pnl"] > 0
+    assert closed["learning_result"] is not None
+
+    assert len(flow.experience_memory.experiences) == 1
+
+    experience = flow.experience_memory.experiences[0]
+
+    assert experience.strategy == "PAPER_TEST_STRATEGY"
+    assert experience.success is True

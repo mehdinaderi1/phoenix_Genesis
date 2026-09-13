@@ -17,11 +17,13 @@ class PaperTradingSession:
         position_manager=None,
         portfolio=None,
         trade_history=None,
-        session_id=None
+        session_id=None,
+        outcome_bridge=None
     ):
         self.session_id = session_id or str(uuid4())
         self.initial_balance = initial_balance
         self.position_size_percent = position_size_percent
+        self.outcome_bridge = outcome_bridge
 
         self.execution_engine = (
             execution_engine
@@ -49,7 +51,8 @@ class PaperTradingSession:
         self,
         action_proposal,
         price,
-        symbol="BTCUSDT"
+        symbol="BTCUSDT",
+        decision=None
     ):
         execution_result = (
             self.execution_engine.execute(
@@ -63,7 +66,8 @@ class PaperTradingSession:
 
         position = (
             self.position_manager.open_position(
-                execution_result
+                execution_result,
+                decision=decision
             )
         )
 
@@ -96,13 +100,26 @@ class PaperTradingSession:
             realized_pnl=realized_pnl
         )
 
+        learning_result = None
+
+        position = closed["position"]
+        decision = getattr(position, "decision", None)
+
+        if self.outcome_bridge is not None and decision is not None:
+            learning_result = self.outcome_bridge.process(
+                decision=decision,
+                entry_price=position.entry_price,
+                exit_price=closed["exit_price"]
+            )
+
         return {
-            "position": closed["position"],
+            "position": position,
             "exit_price": closed["exit_price"],
             "realized_pnl": realized_pnl,
             "trade": trade,
             "portfolio": self.portfolio,
-            "trade_history": self.trade_history
+            "trade_history": self.trade_history,
+            "learning_result": learning_result
         }
 
     def get_position(self):
