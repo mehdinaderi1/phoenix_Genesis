@@ -22,7 +22,7 @@ Strategy Intelligence   ##################-- 80%
 
 Paper Execution         #################--- 85%
 Outcome -> Learning     ##################-- 90%
-Operational Runtime     ############-------- 60%
+Operational Runtime     ##############---- 70%
 
 ### SENSORS
 
@@ -31,21 +31,23 @@ Real Market Connectivity ########---------- 40%
 
 ### FLIGHT
 
-Long-running Observation #####--------------- 25%
-Operational Validation   ###----------------- 15%
+Long-running Observation ######------------ 30%
+Operational Validation   ###--------------- 15%
 
 ## Latest Milestone
 
-Real Market Observer v1
+Operational Observe Runtime v1
 
-- 809 tests passing
-- Normalized MarketData observation
-- Primary source support
-- Fallback source support
-- Multi-observation sequence
-- Observation loop
+- 813 tests passing
+- Real Market Observer runtime
+- Repeated OBSERVE cycles
+- Primary source handling
+- Fallback source handling
+- BLIND state handling
+- Console observation output
 - OBSERVE / PAPER only
 - Real orders remain disabled
+- Commit: pending
 
 ## Development Rule
 
