@@ -91,6 +91,133 @@ def main():
     print("==============================")
 
     print(report)
+    # ---------------------------------------------------------
+    # Changing Market Data State
+    # ---------------------------------------------------------
+
+    mock.set_candle_sequence(
+        "BTCUSDT",
+        "1m",
+        [
+            {
+                "timestamp": 1752364980,
+                "open": 64950,
+                "high": 65100,
+                "low": 64800,
+                "close": 65000,
+                "volume": 125.5
+            },
+            {
+                "timestamp": 1752365040,
+                "open": 65450,
+                "high": 65600,
+                "low": 65300,
+                "close": 65500,
+                "volume": 130.5
+            },
+            {
+                "timestamp": 1752365100,
+                "open": 65950,
+                "high": 66100,
+                "low": 65800,
+                "close": 66000,
+                "volume": 135.5
+            }
+        ]
+    )
+
+    mock.set_candle_sequence(
+        "BTCUSDT",
+        "30m",
+        [
+            {
+                "timestamp": 1752366600,
+                "open": 64800,
+                "high": 65200,
+                "low": 64750,
+                "close": 65100,
+                "volume": 850
+            },
+            {
+                "timestamp": 1752368400,
+                "open": 65100,
+                "high": 65600,
+                "low": 65000,
+                "close": 65500,
+                "volume": 900
+            },
+            {
+                "timestamp": 1752370200,
+                "open": 65500,
+                "high": 66100,
+                "low": 65400,
+                "close": 66000,
+                "volume": 950
+            }
+        ]
+    )
+
+    mock.set_candle_sequence(
+        "BTCUSDT",
+        "4H",
+        [
+            {
+                "timestamp": 1752372000,
+                "open": 64000,
+                "high": 65500,
+                "low": 63800,
+                "close": 65000,
+                "volume": 5200
+            },
+            {
+                "timestamp": 1752386400,
+                "open": 65000,
+                "high": 66000,
+                "low": 64800,
+                "close": 65500,
+                "volume": 5400
+            },
+            {
+                "timestamp": 1752400800,
+                "open": 65500,
+                "high": 66500,
+                "low": 65300,
+                "close": 66000,
+                "volume": 5600
+            }
+        ]
+    )
+
+    mock.set_candle_sequence(
+        "BTCUSDT",
+        "1D",
+        [
+            {
+                "timestamp": 1752360000,
+                "open": 63000,
+                "high": 66000,
+                "low": 62500,
+                "close": 65000,
+                "volume": 15000
+            },
+            {
+                "timestamp": 1752446400,
+                "open": 65000,
+                "high": 66500,
+                "low": 64500,
+                "close": 65500,
+                "volume": 15500
+            },
+            {
+                "timestamp": 1752532800,
+                "open": 65500,
+                "high": 67000,
+                "low": 65000,
+                "close": 66000,
+                "volume": 16000
+            }
+        ]
+    )
 
     # ---------------------------------------------------------
     # Paper Trading Runtime
@@ -110,7 +237,8 @@ def main():
         multi_timeframe_pipeline=multi_timeframe_pipeline,
         intelligence_flow=intelligence_flow,
         session=paper_session,
-        session_archive=paper_session_archive
+        session_archive=paper_session_archive,
+        market_data_pipeline=pipeline
     )
 
     # One real intelligence cycle.

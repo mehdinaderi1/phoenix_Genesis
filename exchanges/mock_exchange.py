@@ -7,6 +7,8 @@ class MockExchange(BaseExchange):
     def __init__(self):
         self.price_sequences = {}
         self.price_sequence_indexes = {}
+        self.candle_sequences = {}
+        self.candle_sequence_indexes = {}
 
     def connect(self):
         return "Mock Exchange Connected"
@@ -51,7 +53,40 @@ class MockExchange(BaseExchange):
             "BTC": 0.01
         }
 
+    def set_candle_sequence(
+        self,
+        symbol,
+        timeframe,
+        candles
+    ):
+        if not candles:
+            raise ValueError("candles must not be empty")
+
+        key = (symbol, timeframe)
+        self.candle_sequences[key] = list(candles)
+        self.candle_sequence_indexes[key] = 0
+
+    def reset_candle_sequences(self):
+        for key in self.candle_sequences:
+            self.candle_sequence_indexes[key] = 0
+
     def get_candle(self, symbol, timeframe="1m"):
+        key = (symbol, timeframe)
+        sequence = self.candle_sequences.get(key)
+
+        if sequence:
+            index = self.candle_sequence_indexes.get(key, 0)
+
+            if index >= len(sequence):
+                index = len(sequence) - 1
+
+            candle = sequence[index]
+
+            if index < len(sequence) - 1:
+                self.candle_sequence_indexes[key] = index + 1
+
+            return candle
+
         candles = {
             "BTCUSDT": {
                 "1m": {

@@ -15,7 +15,8 @@ class PaperMarketCycleRunner:
         multi_timeframe_pipeline,
         intelligence_flow,
         session,
-        session_archive=None
+        session_archive=None,
+        market_data_pipeline=None
     ):
         self.exchange_manager = exchange_manager
         self.multi_timeframe_pipeline = (
@@ -30,8 +31,20 @@ class PaperMarketCycleRunner:
         self.session = session
 
         self.session_archive = session_archive
+        self.market_data_pipeline = market_data_pipeline
 
         self.last_cycle_inputs = []
+
+    def refresh_market_data(
+        self,
+        symbol="BTCUSDT"
+    ):
+        if self.market_data_pipeline is None:
+            return None
+
+        return self.market_data_pipeline.fetch_multi_timeframes(
+            symbol=symbol
+        )
 
     def build_cycle_input(
         self,
@@ -73,6 +86,10 @@ class PaperMarketCycleRunner:
         cycles = []
 
         for _ in range(cycle_count):
+            self.refresh_market_data(
+                symbol=symbol
+            )
+
             cycles.append(
                 self.build_cycle_input(
                     symbol=symbol
