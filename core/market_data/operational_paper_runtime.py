@@ -1,9 +1,6 @@
-from core.market_data.operational_intelligence_adapter import (
-    OperationalIntelligenceAdapter
-)
-from core.market_data.operational_intelligence_context_builder import (
-    OperationalIntelligenceContextBuilder
-)
+from core.market_data.operational_action_translator import OperationalActionTranslator
+from core.market_data.operational_intelligence_adapter import OperationalIntelligenceAdapter
+from core.market_data.operational_intelligence_context_builder import OperationalIntelligenceContextBuilder
 
 
 class OperationalPaperRuntime:
@@ -17,10 +14,8 @@ class OperationalPaperRuntime:
     ):
         if market_context_runtime is None:
             raise ValueError("market_context_runtime must not be None")
-
         if intelligence_flow is None:
             raise ValueError("intelligence_flow must not be None")
-
         if paper_trading_runtime is None:
             raise ValueError("paper_trading_runtime must not be None")
 
@@ -29,6 +24,7 @@ class OperationalPaperRuntime:
         self.paper_trading_runtime = paper_trading_runtime
         self.context_builder = OperationalIntelligenceContextBuilder()
         self.adapter = OperationalIntelligenceAdapter()
+        self.action_translator = OperationalActionTranslator()
 
     def run(self, symbol="BTCUSDT", cycles=1):
         if cycles <= 0:
@@ -59,8 +55,12 @@ class OperationalPaperRuntime:
                 consensus
             )
 
+            translated_action_proposal = self.action_translator.translate(
+                report.action_proposal
+            )
+
             paper_input = {
-                "action_proposal": report.action_proposal,
+                "action_proposal": translated_action_proposal,
                 "price": observation.price,
                 "symbol": observation.symbol,
                 "decision": report.decision
@@ -80,6 +80,7 @@ class OperationalPaperRuntime:
                 "report": report,
                 "decision": report.decision,
                 "action_proposal": report.action_proposal,
+                "translated_action_proposal": translated_action_proposal,
                 "paper_result": paper_result
             })
 

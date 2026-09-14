@@ -69,9 +69,9 @@ def test_operational_paper_runtime_uses_real_intelligence_and_paper_runtime():
     assert result["action_proposal"].status == "APPROVED"
 
     paper_result = result["paper_result"]
-    assert paper_result["action"] == "HOLD"
-    assert paper_result["position"] is None
+    assert paper_result["action"] == "OPEN"
+    assert paper_result["position"] is not None
 
-    assert session.get_position() is None
+    assert session.get_position() is not None
     assert session.get_trade_count() == 0
     assert session.get_total_pnl() == 0.0
