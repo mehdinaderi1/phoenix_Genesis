@@ -23,36 +23,62 @@ class OperationalMarketContextRuntime:
 
         self.context_pipeline = OperationalMarketContextPipeline(database)
 
+    def run_cycle(self, symbol="BTCUSDT", timeframes=None):
+        if timeframes is None:
+            timeframes = ("30m", "4H", "1D")
+
+        observation = None
+
+        if self.market_data_bridge is not None:
+            observation = self.observer.observe(symbol)
+
+            if observation.source_status == "BLIND":
+                return {
+                    "observation": observation,
+                    "context": None
+                }
+
+            stored = False
+
+            for timeframe in timeframes:
+                candle = self.market_data_bridge.market_data_pipeline.fetch_and_store(
+                    symbol=symbol,
+                    timeframe=timeframe
+                )
+
+                if candle is not None:
+                    stored = True
+
+            if not stored:
+                return {
+                    "observation": observation,
+                    "context": None
+                }
+
+        context = self.context_pipeline.build(symbol)
+
+        return {
+            "observation": observation,
+            "context": context
+        }
+
     def run(self, symbol="BTCUSDT", cycles=1, timeframes=None):
         if cycles <= 0:
             raise ValueError("cycles must be greater than zero")
 
-        if timeframes is None:
-            timeframes = ("30m", "4H", "1D")
-
         contexts = []
 
         for _ in range(cycles):
-            if self.market_data_bridge is not None:
-                observation = self.observer.observe(symbol)
+            result = self.run_cycle(
+                symbol=symbol,
+                timeframes=timeframes
+            )
 
-                if observation.source_status == "BLIND":
-                    continue
+            context = result["context"]
 
-                stored = False
+            if context is None:
+                continue
 
-                for timeframe in timeframes:
-                    candle = self.market_data_bridge.market_data_pipeline.fetch_and_store(
-                        symbol=symbol,
-                        timeframe=timeframe
-                    )
-                    if candle is not None:
-                        stored = True
-
-                if not stored:
-                    continue
-
-            context = self.context_pipeline.build(symbol)
             contexts.append(context)
             self._print_context(context)
 
