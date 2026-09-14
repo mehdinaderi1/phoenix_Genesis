@@ -1,6 +1,14 @@
-from core.market_data.operational_action_translator import OperationalActionTranslator
-from core.market_data.operational_intelligence_adapter import OperationalIntelligenceAdapter
-from core.market_data.operational_intelligence_context_builder import OperationalIntelligenceContextBuilder
+from dataclasses import asdict, is_dataclass
+
+from core.market_data.operational_action_translator import (
+    OperationalActionTranslator
+)
+from core.market_data.operational_intelligence_adapter import (
+    OperationalIntelligenceAdapter
+)
+from core.market_data.operational_intelligence_context_builder import (
+    OperationalIntelligenceContextBuilder
+)
 
 
 class OperationalPaperRuntime:
@@ -14,23 +22,42 @@ class OperationalPaperRuntime:
         session_archive=None
     ):
         if market_context_runtime is None:
-            raise ValueError("market_context_runtime must not be None")
+            raise ValueError(
+                "market_context_runtime must not be None"
+            )
+
         if intelligence_flow is None:
-            raise ValueError("intelligence_flow must not be None")
+            raise ValueError(
+                "intelligence_flow must not be None"
+            )
+
         if paper_trading_runtime is None:
-            raise ValueError("paper_trading_runtime must not be None")
+            raise ValueError(
+                "paper_trading_runtime must not be None"
+            )
 
         self.market_context_runtime = market_context_runtime
         self.intelligence_flow = intelligence_flow
         self.paper_trading_runtime = paper_trading_runtime
         self.session_archive = session_archive
-        self.context_builder = OperationalIntelligenceContextBuilder()
+
+        self.context_builder = (
+            OperationalIntelligenceContextBuilder()
+        )
+
         self.adapter = OperationalIntelligenceAdapter()
         self.action_translator = OperationalActionTranslator()
 
-    def run(self, symbol="BTCUSDT", cycles=1, continue_on_error=False):
+    def run(
+        self,
+        symbol="BTCUSDT",
+        cycles=1,
+        continue_on_error=False
+    ):
         if cycles <= 0:
-            raise ValueError("cycles must be greater than zero")
+            raise ValueError(
+                "cycles must be greater than zero"
+            )
 
         results = []
 
@@ -46,8 +73,10 @@ class OperationalPaperRuntime:
                 if observation is None or market_context is None:
                     continue
 
-                intelligence_context = self.context_builder.build(
-                    market_context
+                intelligence_context = (
+                    self.context_builder.build(
+                        market_context
+                    )
                 )
 
                 consensus = self.adapter.to_consensus(
@@ -58,20 +87,26 @@ class OperationalPaperRuntime:
                     consensus
                 )
 
-                translated_action_proposal = self.action_translator.translate(
-                    report.action_proposal
+                translated_action_proposal = (
+                    self.action_translator.translate(
+                        report.action_proposal
+                    )
                 )
 
                 paper_input = {
-                    "action_proposal": translated_action_proposal,
+                    "action_proposal": (
+                        translated_action_proposal
+                    ),
                     "price": observation.price,
                     "symbol": observation.symbol,
                     "decision": report.decision
                 }
 
-                paper_results = self.paper_trading_runtime.run(
-                    cycles=[paper_input],
-                    symbol=symbol
+                paper_results = (
+                    self.paper_trading_runtime.run(
+                        cycles=[paper_input],
+                        symbol=symbol
+                    )
                 )
 
                 paper_result = paper_results[0]
@@ -84,7 +119,9 @@ class OperationalPaperRuntime:
                     "report": report,
                     "decision": report.decision,
                     "action_proposal": report.action_proposal,
-                    "translated_action_proposal": translated_action_proposal,
+                    "translated_action_proposal": (
+                        translated_action_proposal
+                    ),
                     "paper_result": paper_result,
                     "error": None
                 })
@@ -107,10 +144,59 @@ class OperationalPaperRuntime:
                 })
 
         self._archive_session(results)
+
         return results
+
+    @staticmethod
+    def _serialize_value(value):
+        if value is None:
+            return None
+
+        if is_dataclass(value):
+            return OperationalPaperRuntime._serialize_value(
+                asdict(value)
+            )
+
+        if isinstance(value, dict):
+            return {
+                str(key): OperationalPaperRuntime._serialize_value(
+                    item
+                )
+                for key, item in value.items()
+            }
+
+        if isinstance(value, (list, tuple)):
+            return [
+                OperationalPaperRuntime._serialize_value(
+                    item
+                )
+                for item in value
+            ]
+
+        if isinstance(value, (str, int, float, bool)):
+            return value
+
+        if hasattr(value, "__dict__"):
+            return {
+                str(key): OperationalPaperRuntime._serialize_value(
+                    item
+                )
+                for key, item in vars(value).items()
+            }
+
+        return str(value)
 
     def _build_session_record(self, results):
         summary = self.build_summary(results)
+
+        serializable_summary = (
+            self._serialize_value(summary)
+        )
+
+        serializable_summary["cycles_processed"] = len(
+            results
+        )
+
         cycles = []
 
         for result in results:
@@ -121,16 +207,56 @@ class OperationalPaperRuntime:
 
             cycles.append({
                 "cycle": result.get("cycle_number"),
-                "symbol": getattr(observation, "symbol", None),
-                "price": getattr(observation, "price", None),
-                "signal": getattr(report, "signal", None),
-                "trend": getattr(report, "trend", None),
-                "regime": getattr(report, "regime", None),
-                "confidence": getattr(report, "confidence", None),
-                "risk": getattr(report, "risk", None),
-                "proposal_action": getattr(action_proposal, "action", None),
-                "proposal_status": getattr(action_proposal, "status", None),
-                "proposal_reason": getattr(action_proposal, "reason", None),
+                "symbol": getattr(
+                    observation,
+                    "symbol",
+                    None
+                ),
+                "price": getattr(
+                    observation,
+                    "price",
+                    None
+                ),
+                "signal": getattr(
+                    report,
+                    "signal",
+                    None
+                ),
+                "trend": getattr(
+                    report,
+                    "trend",
+                    None
+                ),
+                "regime": getattr(
+                    report,
+                    "regime",
+                    None
+                ),
+                "confidence": getattr(
+                    report,
+                    "confidence",
+                    None
+                ),
+                "risk": getattr(
+                    report,
+                    "risk",
+                    None
+                ),
+                "proposal_action": getattr(
+                    action_proposal,
+                    "action",
+                    None
+                ),
+                "proposal_status": getattr(
+                    action_proposal,
+                    "status",
+                    None
+                ),
+                "proposal_reason": getattr(
+                    action_proposal,
+                    "reason",
+                    None
+                ),
                 "action": (
                     paper_result.get("action")
                     if paper_result is not None
@@ -138,7 +264,9 @@ class OperationalPaperRuntime:
                 ),
                 "execution_status": (
                     getattr(
-                        paper_result.get("execution_result"),
+                        paper_result.get(
+                            "execution_result"
+                        ),
                         "status",
                         None
                     )
@@ -146,7 +274,10 @@ class OperationalPaperRuntime:
                     else None
                 ),
                 "realized_pnl": (
-                    paper_result.get("realized_pnl", 0.0)
+                    paper_result.get(
+                        "realized_pnl",
+                        0.0
+                    )
                     if paper_result is not None
                     else None
                 ),
@@ -179,17 +310,25 @@ class OperationalPaperRuntime:
             })
 
         return {
-            "session_id": self.paper_trading_runtime.session.session_id,
+            "session_id": (
+                self.paper_trading_runtime
+                .session
+                .session_id
+            ),
             "cycles": cycles,
-            "summary": summary,
-            "final_position": summary.get("current_position")
+            "summary": serializable_summary,
+            "final_position": self._serialize_value(
+                summary.get("current_position")
+            )
         }
 
     def _archive_session(self, results):
         if self.session_archive is None:
             return None
 
-        session_record = self._build_session_record(results)
+        session_record = self._build_session_record(
+            results
+        )
 
         self.session_archive.save(
             self.paper_trading_runtime.session.session_id,
@@ -200,7 +339,9 @@ class OperationalPaperRuntime:
 
     def build_summary(self, results):
         if results is None:
-            raise ValueError("results must not be None")
+            raise ValueError(
+                "results must not be None"
+            )
 
         paper_results = [
             result["paper_result"]

@@ -101,3 +101,26 @@ def test_operational_paper_runtime_runs_multiple_cycles():
     assert session.get_position() is None
     assert session.get_trade_count() == 1
     assert session.get_total_pnl() > 0
+def test_operational_paper_runtime_builds_session_summary():
+    market_runtime = FakeOperationalMarketContextRuntime()
+    intelligence = FakeIntelligenceFlow()
+    session = PaperTradingSession()
+    paper_runtime = PaperTradingRuntime(session)
+
+    runtime = OperationalPaperRuntime(
+        market_runtime,
+        intelligence,
+        paper_runtime
+    )
+
+    results = runtime.run(cycles=3)
+    summary = runtime.build_summary(results)
+
+    assert summary["cycles_processed"] == 3
+    assert summary["open_count"] == 1
+    assert summary["hold_count"] == 1
+    assert summary["close_count"] == 1
+    assert summary["current_position"] is None
+    assert summary["trade_count"] == 1
+    assert summary["balance"] > 1000.0
+    assert summary["total_pnl"] > 0.0
