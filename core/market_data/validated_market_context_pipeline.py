@@ -1,8 +1,9 @@
 from core.market_data.operational_market_context_pipeline import OperationalMarketContextPipeline
+from core.market_data.validated_market_context import ValidatedMarketContext
 
 
 class ValidatedMarketContextPipeline:
-    """Builds market context only when cross-source validation permits it."""
+    """Builds validated market context when cross-source validation permits it."""
 
     ALLOWED_STATUSES = {"VALID", "INSUFFICIENT"}
 
@@ -22,12 +23,17 @@ class ValidatedMarketContextPipeline:
         if validation.status not in self.ALLOWED_STATUSES:
             return {
                 "validation": validation,
-                "context": None
+                "context": None,
             }
 
         context = self.context_pipeline.build(symbol)
 
+        validated_context = ValidatedMarketContext(
+            context=context,
+            validation=validation,
+        )
+
         return {
             "validation": validation,
-            "context": context
+            "context": validated_context,
         }
