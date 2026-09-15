@@ -1,38 +1,17 @@
 from core.engine import PhoenixEngine
-from core.market_data.market_data import MarketData
 from core.market_data.observer import RealMarketObserver
 from core.market_data.operational_market_context_runtime import OperationalMarketContextRuntime
 from core.market_data.operational_paper_runtime import OperationalPaperRuntime
 from core.market_data.pipeline import MarketDataPipeline
+from core.market_data.source_manager import MarketDataSourceManager
+from exchanges.binance_exchange import BinanceExchange
+from exchanges.coinmarketcap_source import CoinMarketCapSource
 from exchanges.exchange_manager import ExchangeManager
 from exchanges.mock_exchange import MockExchange
 from execution.paper_session_archive import PaperSessionArchive
 from execution.paper_trading_runtime import PaperTradingRuntime
 from execution.paper_trading_session import PaperTradingSession
 from intelligence.flow import IntelligenceFlow
-
-
-class PrototypeSourceManager:
-    """Deterministic OBSERVE source used by the local paper prototype."""
-
-    def __init__(self):
-        self.prices = [65000.0, 65500.0, 66000.0]
-        self.index = 0
-
-    def get_price(self, symbol):
-        if self.index >= len(self.prices):
-            price = self.prices[-1]
-        else:
-            price = self.prices[self.index]
-            self.index += 1
-
-        return MarketData(
-            symbol=symbol,
-            price=price,
-            source="prototype",
-            fallback_used=False,
-            source_status="HEALTHY",
-        )
 
 
 def configure_market(exchange):
@@ -56,11 +35,22 @@ def configure_market(exchange):
 def print_cycle(result):
     observation = result["observation"]
     market_context = result["market_context"]
-    report = result["report"]
     decision = result["decision"]
     action_proposal = result["action_proposal"]
     translated = result["translated_action_proposal"]
     paper_result = result["paper_result"]
+
+    if observation is not None and observation.source_status == "BLIND":
+        print(
+            f"Cycle {result["cycle_number"]} | "
+            "Price=None | "
+            "Source=None | "
+            "Status=BLIND | "
+            "Market Context=None | "
+            "Intelligence=SKIPPED | "
+            "Paper=SKIPPED"
+        )
+        return
 
     print(
         f"Cycle {result["cycle_number"]} | "
@@ -83,6 +73,9 @@ def print_session_summary(summary):
     print("PAPER SESSION SUMMARY")
     print("=" * 60)
     print("Cycles Processed:", summary["cycles_processed"])
+    print("Successful Cycles:", summary.get("successful_cycles", 0))
+    print("BLIND Cycles:", summary.get("blind_cycles", 0))
+    print("Error Cycles:", summary.get("error_cycles", 0))
     print("OPEN:", summary["open_count"])
     print("HOLD:", summary["hold_count"])
     print("CLOSE:", summary["close_count"])
@@ -115,16 +108,32 @@ def print_learning_summary(intelligence_flow):
         )
 
 
+def build_real_source_manager():
+    binance = BinanceExchange(timeout=5)
+    coinmarketcap = CoinMarketCapSource(timeout=5)
+
+    manager = MarketDataSourceManager({
+        "binance": binance,
+        "coinmarketcap": coinmarketcap,
+    })
+    manager.set_primary_source("binance")
+
+    return manager
+
+
 def main():
     print("PHOENIX GENESIS - OPERATIONAL PROTOTYPE")
     print("=" * 60)
     print("MODE: OBSERVE / PAPER")
     print("REAL ORDERS: DISABLED")
+    print("MARKET SOURCES: BINANCE + COINMARKETCAP")
     print("=" * 60)
 
     engine = PhoenixEngine()
     engine.start()
 
+    # Candle pipeline remains deterministic for the current OBSERVE/PAPER prototype.
+    # Real exchange/aggregator price observation is handled by the source manager below.
     exchange_manager = ExchangeManager()
     exchange = MockExchange()
     exchange_manager.set_exchange(exchange)
@@ -137,7 +146,7 @@ def main():
         engine.database,
     )
 
-    source_manager = PrototypeSourceManager()
+    source_manager = build_real_source_manager()
     observer = RealMarketObserver(source_manager)
 
     market_context_runtime = OperationalMarketContextRuntime(
@@ -176,7 +185,7 @@ def main():
     results = operational_runtime.run(
         symbol="BTCUSDT",
         cycles=3,
-        continue_on_error=False,
+        continue_on_error=True,
     )
 
     print()
@@ -185,6 +194,12 @@ def main():
     print("=" * 60)
 
     for result in results:
+        if result.get("error") is not None:
+            print(
+                f"Cycle {result.get("cycle_number")} | "
+                f"ERROR={result["error"]}"
+            )
+            continue
         print_cycle(result)
 
     summary = operational_runtime.build_summary(results)
@@ -208,6 +223,7 @@ def main():
     print("Market Mode: OBSERVE")
     print("Execution Mode: PAPER")
     print("Real Orders: DISABLED")
+    print("Market Sources: BINANCE + COINMARKETCAP")
     print("Prototype Cycles:", len(results))
     print("=" * 60)
 

@@ -71,6 +71,18 @@ class OperationalPaperRuntime:
                 market_context = cycle["context"]
 
                 if observation is None or market_context is None:
+                    results.append({
+                        "cycle_number": cycle_number,
+                        "observation": observation,
+                        "market_context": market_context,
+                        "intelligence_context": None,
+                        "report": None,
+                        "decision": None,
+                        "action_proposal": None,
+                        "translated_action_proposal": None,
+                        "paper_result": None,
+                        "error": None
+                    })
                     continue
 
                 intelligence_context = (
@@ -191,10 +203,6 @@ class OperationalPaperRuntime:
 
         serializable_summary = (
             self._serialize_value(summary)
-        )
-
-        serializable_summary["cycles_processed"] = len(
-            results
         )
 
         cycles = []
@@ -349,6 +357,28 @@ class OperationalPaperRuntime:
             if result.get("paper_result") is not None
         ]
 
-        return self.paper_trading_runtime.build_summary(
+        summary = self.paper_trading_runtime.build_summary(
             paper_results
         )
+
+        blind_cycles = sum(
+            1
+            for result in results
+            if (
+                result.get("observation") is not None
+                and result.get("observation").source_status == "BLIND"
+            )
+        )
+
+        error_cycles = sum(
+            1
+            for result in results
+            if result.get("error") is not None
+        )
+
+        summary["cycles_processed"] = len(results)
+        summary["successful_cycles"] = len(paper_results)
+        summary["blind_cycles"] = blind_cycles
+        summary["error_cycles"] = error_cycles
+
+        return summary
