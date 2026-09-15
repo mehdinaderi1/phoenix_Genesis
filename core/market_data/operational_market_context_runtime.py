@@ -8,7 +8,8 @@ class OperationalMarketContextRuntime:
         observer=None,
         market_data_pipeline=None,
         database=None,
-        validation_pipeline=None
+        validation_pipeline=None,
+        validated_context_pipeline=None
     ):
         if database is None:
             if observer is not None and market_data_pipeline is None:
@@ -28,6 +29,7 @@ class OperationalMarketContextRuntime:
 
         self.context_pipeline = OperationalMarketContextPipeline(database)
         self.validation_pipeline = validation_pipeline
+        self.validated_context_pipeline = validated_context_pipeline
 
     def run_cycle(self, symbol="BTCUSDT", timeframes=None):
         if timeframes is None:
@@ -54,6 +56,15 @@ class OperationalMarketContextRuntime:
 
             if not stored:
                 return {"observation": observation, "context": None}
+
+        if self.validated_context_pipeline is not None:
+            validated_result = self.validated_context_pipeline.build(symbol)
+
+            return {
+                "observation": observation,
+                "validation": validated_result["validation"],
+                "context": validated_result["context"]
+            }
 
         if self.validation_pipeline is not None:
             validation = self.validation_pipeline.validate(symbol)
