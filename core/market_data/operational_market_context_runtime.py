@@ -3,7 +3,13 @@ from core.market_data.operational_market_context_pipeline import OperationalMark
 
 
 class OperationalMarketContextRuntime:
-    def __init__(self, observer=None, market_data_pipeline=None, database=None):
+    def __init__(
+        self,
+        observer=None,
+        market_data_pipeline=None,
+        database=None,
+        validation_pipeline=None
+    ):
         if database is None:
             if observer is not None and market_data_pipeline is None:
                 database = observer
@@ -17,11 +23,11 @@ class OperationalMarketContextRuntime:
         else:
             self.observer = observer
             self.market_data_bridge = ObservationMarketDataBridge(
-                observer,
-                market_data_pipeline
+                observer, market_data_pipeline
             )
 
         self.context_pipeline = OperationalMarketContextPipeline(database)
+        self.validation_pipeline = validation_pipeline
 
     def run_cycle(self, symbol="BTCUSDT", timeframes=None):
         if timeframes is None:
@@ -33,10 +39,7 @@ class OperationalMarketContextRuntime:
             observation = self.observer.observe(symbol)
 
             if observation.source_status == "BLIND":
-                return {
-                    "observation": observation,
-                    "context": None
-                }
+                return {"observation": observation, "context": None}
 
             stored = False
 
@@ -50,15 +53,26 @@ class OperationalMarketContextRuntime:
                     stored = True
 
             if not stored:
+                return {"observation": observation, "context": None}
+
+        if self.validation_pipeline is not None:
+            validation = self.validation_pipeline.validate(symbol)
+
+            if validation.status not in {"VALID", "INSUFFICIENT"}:
                 return {
                     "observation": observation,
+                    "validation": validation,
                     "context": None
                 }
+
+        else:
+            validation = None
 
         context = self.context_pipeline.build(symbol)
 
         return {
             "observation": observation,
+            "validation": validation,
             "context": context
         }
 

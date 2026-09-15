@@ -7,7 +7,6 @@ class MarketDataSourceManager:
     def __init__(self, sources=None):
         self.sources = {}
         self.primary_source = None
-
         if sources:
             for name, source in sources.items():
                 self.add_source(name, source)
@@ -15,19 +14,15 @@ class MarketDataSourceManager:
     def add_source(self, name, source):
         if not name:
             raise ValueError("Source name must not be empty")
-
         if source is None:
             raise ValueError("Source must not be None")
-
         self.sources[name] = source
-
         if self.primary_source is None:
             self.primary_source = name
 
     def set_primary_source(self, name):
         if name not in self.sources:
             raise ValueError(f"Unknown market-data source: {name}")
-
         self.primary_source = name
 
     def get_source(self, name):
@@ -41,25 +36,39 @@ class MarketDataSourceManager:
 
     def get_healthy_sources(self):
         healthy = []
-
         for name, source in self.sources.items():
             if self._is_healthy(source):
                 healthy.append(name)
-
         return healthy
+
+    def get_prices(self, symbol):
+        prices = {}
+
+        for name, source in self.sources.items():
+            if not self._is_healthy(source):
+                continue
+
+            try:
+                price = source.get_price(symbol)
+            except Exception:
+                continue
+
+            if price is None:
+                continue
+
+            prices[name] = float(price)
+
+        return prices
 
     def get_price(self, symbol):
         if not self.sources:
             raise RuntimeError("No market-data sources configured")
 
         ordered_names = []
-
         if self.primary_source:
             ordered_names.append(self.primary_source)
-
         ordered_names.extend(
-            name
-            for name in self.sources
+            name for name in self.sources
             if name != self.primary_source
         )
 
@@ -67,7 +76,6 @@ class MarketDataSourceManager:
 
         for name in ordered_names:
             source = self.sources[name]
-
             if not self._is_healthy(source):
                 failures.append(name)
                 continue
@@ -94,5 +102,4 @@ class MarketDataSourceManager:
             f"No healthy market-data source available for {symbol}. "
             f"Failed sources: {failures}"
         )
-
         raise RuntimeError(message)
