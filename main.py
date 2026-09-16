@@ -2,6 +2,7 @@ from core.engine import PhoenixEngine
 from core.market_data.observer import RealMarketObserver
 from core.market_data.operational_market_context_runtime import OperationalMarketContextRuntime
 from core.market_data.operational_paper_runtime import OperationalPaperRuntime
+from core.market_data.operational_observation_runner import OperationalObservationRunner
 from core.market_data.pipeline import MarketDataPipeline
 from core.market_data.source_manager import MarketDataSourceManager
 from exchanges.binance_exchange import BinanceExchange
@@ -182,9 +183,14 @@ def main():
     print()
     print("Starting operational cycles...")
 
-    results = operational_runtime.run(
+    observation_runner = OperationalObservationRunner(
+        runtime=operational_runtime
+    )
+
+    results = observation_runner.run(
         symbol="BTCUSDT",
         cycles=3,
+        interval_seconds=0,
         continue_on_error=True,
     )
 
