@@ -5,6 +5,7 @@ from core.market_data.operational_paper_runtime import OperationalPaperRuntime
 from core.market_data.operational_observation_runner import OperationalObservationRunner
 from core.market_data.pipeline import MarketDataPipeline
 from core.market_data.source_manager import MarketDataSourceManager
+from core.market_data.source_candle_pipeline import SourceCandlePipeline
 from exchanges.binance_exchange import BinanceExchange
 from exchanges.coinmarketcap_source import CoinMarketCapSource
 from exchanges.exchange_manager import ExchangeManager
@@ -148,12 +149,18 @@ def main():
     )
 
     source_manager = build_real_source_manager()
+    source_candle_pipeline = SourceCandlePipeline(
+        source_manager=source_manager,
+        database=engine.database,
+    )
+
     observer = RealMarketObserver(source_manager)
 
     market_context_runtime = OperationalMarketContextRuntime(
         observer=observer,
         market_data_pipeline=market_data_pipeline,
         database=engine.database,
+        source_candle_pipeline=source_candle_pipeline,
     )
 
     intelligence_flow = IntelligenceFlow()
