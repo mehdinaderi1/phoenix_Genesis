@@ -42,6 +42,7 @@ def test_runner_repeats_operational_runtime():
     )
 
     assert len(results) == 3
+    assert [result["cycle_number"] for result in results] == [1, 2, 3]
     assert runtime.calls == [
         ("BTCUSDT", 1, True),
         ("BTCUSDT", 1, True),

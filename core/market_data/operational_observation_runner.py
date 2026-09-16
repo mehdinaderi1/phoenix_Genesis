@@ -7,10 +7,8 @@ class OperationalObservationRunner:
     def __init__(self, runtime, sleep_fn=sleep):
         if runtime is None:
             raise ValueError("runtime must not be None")
-
         if sleep_fn is None:
             raise ValueError("sleep_fn must not be None")
-
         self.runtime = runtime
         self.sleep_fn = sleep_fn
 
@@ -25,7 +23,6 @@ class OperationalObservationRunner:
             raise ValueError(
                 "cycles must be greater than zero"
             )
-
         if interval_seconds < 0:
             raise ValueError(
                 "interval_seconds must be greater than or equal to zero"
@@ -40,7 +37,9 @@ class OperationalObservationRunner:
                 continue_on_error=continue_on_error
             )
 
-            results.extend(cycle_results)
+            for result in cycle_results:
+                result["cycle_number"] = cycle_number
+                results.append(result)
 
             if cycle_number < cycles and interval_seconds > 0:
                 self.sleep_fn(interval_seconds)
