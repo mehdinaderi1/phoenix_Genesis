@@ -42,9 +42,11 @@ def print_cycle(result):
     translated = result["translated_action_proposal"]
     paper_result = result["paper_result"]
 
+    cycle_number = result["cycle_number"]
+
     if observation is not None and observation.source_status == "BLIND":
         print(
-            f"Cycle {result["cycle_number"]} | "
+            f"Cycle {cycle_number} | "
             "Price=None | "
             "Source=None | "
             "Status=BLIND | "
@@ -54,8 +56,20 @@ def print_cycle(result):
         )
         return
 
+    if market_context is None:
+        print(
+            f"Cycle {cycle_number} | "
+            f"Price={observation.price if observation is not None else None} | "
+            f"Source={observation.source if observation is not None else None} | "
+            f"Status={observation.source_status if observation is not None else "UNKNOWN"} | "
+            "Market Context=None | "
+            "Intelligence=SKIPPED | "
+            "Paper=SKIPPED"
+        )
+        return
+
     print(
-        f"Cycle {result["cycle_number"]} | "
+        f"Cycle {cycle_number} | "
         f"Price={observation.price} | "
         f"Source={observation.source} | "
         f"Trend={market_context.trend} | "
@@ -149,6 +163,8 @@ def main():
     )
 
     source_manager = build_real_source_manager()
+    print("DEBUG SOURCE HEALTH:", source_manager.get_healthy_sources())
+    print("DEBUG SOURCE PRICES:", source_manager.get_prices("BTCUSDT"))
     source_candle_pipeline = SourceCandlePipeline(
         source_manager=source_manager,
         database=engine.database,

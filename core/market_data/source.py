@@ -21,6 +21,9 @@ class MarketDataSource(ABC):
         pass
 
     def health_check(self):
+        if getattr(self, "connected", False):
+            return True
+
         try:
             self.connect()
             return True

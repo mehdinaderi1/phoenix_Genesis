@@ -64,6 +64,46 @@ class CoinMarketCapSource(MarketDataSource):
                 f"Unsupported CoinMarketCap symbol: {symbol}"
             ) from exc
 
+    def _extract_price(self, data, asset, quote_symbol="USD"):
+        assets = data.get("data")
+
+        if not isinstance(assets, list):
+            raise ValueError("Unexpected CoinMarketCap data format")
+
+        for item in assets:
+            if not isinstance(item, dict):
+                continue
+
+            if item.get("symbol") != asset:
+                continue
+
+            quotes = item.get("quote")
+
+            if not isinstance(quotes, list):
+                raise ValueError("Unexpected CoinMarketCap quote format")
+
+            for quote in quotes:
+                if not isinstance(quote, dict):
+                    continue
+
+                if quote.get("symbol") == quote_symbol:
+                    price = quote.get("price")
+
+                    if price is None:
+                        raise ValueError(
+                            f"CoinMarketCap price missing for {asset}/{quote_symbol}"
+                        )
+
+                    return float(price)
+
+            raise ValueError(
+                f"CoinMarketCap quote not found for {asset}/{quote_symbol}"
+            )
+
+        raise ValueError(
+            f"CoinMarketCap asset not found: {asset}"
+        )
+
     def get_price(self, symbol):
         asset = self._normalize_symbol(symbol)
 
@@ -75,8 +115,7 @@ class CoinMarketCapSource(MarketDataSource):
             }
         )
 
-        quote = data["data"][asset]["quote"]["USD"]
-        return float(quote["price"])
+        return self._extract_price(data, asset)
 
     def get_candle(self, symbol, timeframe="1m"):
         raise NotImplementedError(
@@ -92,3 +131,6 @@ class CoinMarketCapSource(MarketDataSource):
         raise NotImplementedError(
             "CoinMarketCap aggregate source does not provide exchange-style historical candles here."
         )
+
+    def health_check(self):
+        return True

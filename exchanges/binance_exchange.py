@@ -115,3 +115,10 @@ class BinanceExchange(BaseExchange):
             self._candle_from_binance(candle)
             for candle in data
         ]
+
+    def health_check(self):
+        try:
+            self.get_price("BTCUSDT")
+            return True
+        except Exception:
+            return False

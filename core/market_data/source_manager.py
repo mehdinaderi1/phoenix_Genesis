@@ -82,7 +82,12 @@ class MarketDataSourceManager:
 
             try:
                 price = source.get_price(symbol)
-            except Exception:
+            except Exception as exc:
+                print(
+                    "SOURCE PRICE ERROR:",
+                    type(source).__name__,
+                    exc
+                )
                 failures.append(name)
                 continue
 

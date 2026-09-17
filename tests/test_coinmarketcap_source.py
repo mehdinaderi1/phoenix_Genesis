@@ -21,15 +21,18 @@ class FakeResponse:
 
 def test_coinmarketcap_get_price(monkeypatch):
     payload = {
-        "data": {
-            "BTC": {
-                "quote": {
-                    "USD": {
+        "data": [
+            {
+                "id": 1,
+                "symbol": "BTC",
+                "quote": [
+                    {
+                        "symbol": "USD",
                         "price": 65012.34
                     }
-                }
+                ]
             }
-        }
+        ]
     }
 
     def fake_urlopen(request, timeout):
@@ -47,15 +50,18 @@ def test_coinmarketcap_get_price(monkeypatch):
 
 def test_coinmarketcap_connect(monkeypatch):
     payload = {
-        "data": {
-            "BTC": {
-                "quote": {
-                    "USD": {
+        "data": [
+            {
+                "id": 1,
+                "symbol": "BTC",
+                "quote": [
+                    {
+                        "symbol": "USD",
                         "price": 65000.0
                     }
-                }
+                ]
             }
-        }
+        ]
     }
 
     def fake_urlopen(request, timeout):

@@ -1,5 +1,7 @@
 from core.market_data.observation_market_data import ObservationMarketDataBridge
-from core.market_data.operational_market_context_pipeline import OperationalMarketContextPipeline
+from core.market_data.operational_market_context_pipeline import (
+    OperationalMarketContextPipeline
+)
 
 
 class OperationalMarketContextRuntime:
@@ -65,7 +67,7 @@ class OperationalMarketContextRuntime:
                 if result.get("stored"):
                     stored = True
 
-        elif self.market_data_bridge is not None:
+        if not stored and self.market_data_bridge is not None:
 
             for timeframe in timeframes:
                 candle = (

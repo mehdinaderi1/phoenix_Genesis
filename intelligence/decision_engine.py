@@ -98,7 +98,19 @@ class DecisionEngine:
                     self.rules.strategy_is_valid(report),
 
                 "consensus":
-                    self.rules.consensus_is_valid(report)
+                    self.rules.consensus_is_valid(report),
+                    
+                "signal":
+                    getattr(report, "signal", None)
+                    in ["BUY", "SELL"],
+
+                "risk":
+                    getattr(report, "risk", None)
+                    == "LOW",
+
+                "confidence":
+                    getattr(report, "confidence", 0)
+                    >= 80    
 
             },
 
@@ -161,6 +173,17 @@ class DecisionEngine:
         print(
             "CAN LONG:",
             self.rules.can_long(report)
+        )
+
+        print(
+            "LONG CHECK:",
+            {
+                "strategy_valid": self.rules.strategy_is_valid(report),
+                "consensus_valid": self.rules.consensus_is_valid(report),
+                "signal": report.signal,
+                "risk": report.risk,
+                "confidence": report.confidence,
+            }
         )
 
 

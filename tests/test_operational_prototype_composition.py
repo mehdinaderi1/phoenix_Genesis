@@ -108,3 +108,111 @@ def test_operational_prototype_composition(tmp_path):
     assert session.get_trade_count() >= 0
 
     database.close()
+
+class FailingSourceCandlePipeline:
+    def fetch_and_store(self, symbol="BTCUSDT", timeframe="1m"):
+        return {
+            "stored": False,
+            "source": None,
+            "candle": None
+        }
+
+
+class RealPriceSourceManager:
+    def get_price(self, symbol):
+        return MarketData(
+            symbol=symbol,
+            price=65012.34,
+            source="coinmarketcap",
+            fallback_used=False,
+            source_status="HEALTHY"
+        )
+
+
+def test_operational_prototype_composition_real_price_prototype_candle(
+    tmp_path
+):
+    database = DatabaseManager(str(tmp_path / "prototype_fallback.db"))
+    database.connect()
+
+    exchange = MockExchange()
+
+    for timeframe in ("30m", "4H", "1D"):
+        exchange.set_candle_sequence(
+            "BTCUSDT",
+            timeframe,
+            [{
+                "timestamp": 2001,
+                "open": 65000,
+                "high": 65100,
+                "low": 64900,
+                "close": 65000,
+                "volume": 1
+            }]
+        )
+
+    exchange_manager = ExchangeManager()
+    exchange_manager.set_exchange(exchange)
+
+    prototype_pipeline = MarketDataPipeline(
+        exchange_manager,
+        database
+    )
+
+    observer = RealMarketObserver(
+        RealPriceSourceManager()
+    )
+
+    market_context_runtime = OperationalMarketContextRuntime(
+        observer=observer,
+        market_data_pipeline=prototype_pipeline,
+        database=database,
+        source_candle_pipeline=FailingSourceCandlePipeline()
+    )
+
+    intelligence_flow = IntelligenceFlow()
+    intelligence_flow.enable_inline_outcome_learning = False
+
+    session = PaperTradingSession(
+        initial_balance=1000,
+        position_size_percent=10
+    )
+
+    archive = PaperSessionArchive(
+        root_path=str(tmp_path / "sessions")
+    )
+
+    paper_runtime = PaperTradingRuntime(
+        session=session
+    )
+
+    runtime = OperationalPaperRuntime(
+        market_context_runtime=market_context_runtime,
+        intelligence_flow=intelligence_flow,
+        paper_trading_runtime=paper_runtime,
+        session_archive=archive
+    )
+
+    results = runtime.run(
+        symbol="BTCUSDT",
+        cycles=3
+    )
+
+    assert len(results) == 3
+
+    for result in results:
+        assert result["observation"] is not None
+        assert result["observation"].price == 65012.34
+        assert result["observation"].source == "coinmarketcap"
+        assert result["observation"].source_status == "HEALTHY"
+
+        assert result["market_context"] is not None
+        assert result["intelligence_context"] is not None
+        assert result["report"] is not None
+        assert result["decision"] is not None
+        assert result["action_proposal"] is not None
+        assert result["translated_action_proposal"] is not None
+        assert result["paper_result"] is not None
+        assert result["error"] is None
+
+    database.close()
