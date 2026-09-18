@@ -8,6 +8,7 @@ from core.market_data.source_manager import MarketDataSourceManager
 from core.market_data.source_candle_pipeline import SourceCandlePipeline
 from exchanges.binance_exchange import BinanceExchange
 from exchanges.coinmarketcap_source import CoinMarketCapSource
+from exchanges.xt_exchange import XTExchange
 from exchanges.exchange_manager import ExchangeManager
 from exchanges.mock_exchange import MockExchange
 from execution.paper_session_archive import PaperSessionArchive
@@ -125,14 +126,14 @@ def print_learning_summary(intelligence_flow):
 
 
 def build_real_source_manager():
-    binance = BinanceExchange(timeout=5)
+    xt = XTExchange(timeout=5)
     coinmarketcap = CoinMarketCapSource(timeout=5)
 
     manager = MarketDataSourceManager({
-        "binance": binance,
+        "xt": xt,
         "coinmarketcap": coinmarketcap,
     })
-    manager.set_primary_source("binance")
+    manager.set_primary_source("xt")
 
     return manager
 
@@ -142,7 +143,7 @@ def main():
     print("=" * 60)
     print("MODE: OBSERVE / PAPER")
     print("REAL ORDERS: DISABLED")
-    print("MARKET SOURCES: BINANCE + COINMARKETCAP")
+    print("MARKET SOURCES: XT + COINMARKETCAP")
     print("=" * 60)
 
     engine = PhoenixEngine()
@@ -252,10 +253,14 @@ def main():
     print("Market Mode: OBSERVE")
     print("Execution Mode: PAPER")
     print("Real Orders: DISABLED")
-    print("Market Sources: BINANCE + COINMARKETCAP")
+    print("Market Sources: XT + COINMARKETCAP")
     print("Prototype Cycles:", len(results))
     print("=" * 60)
 
 
 if __name__ == "__main__":
     main()
+
+
+
+
