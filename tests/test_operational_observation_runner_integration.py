@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from core.market_data.operational_observation_runner import OperationalObservationRunner
 from core.market_data.operational_paper_runtime import OperationalPaperRuntime
 from core.market_data.operational_market_context import OperationalMarketContext
+from execution.paper_session_archive import PaperSessionArchive
 from execution.paper_trading_runtime import PaperTradingRuntime
 from execution.paper_trading_session import PaperTradingSession
 
@@ -100,16 +101,18 @@ class FakeMarketContextRuntime:
         }
 
 
-def test_observation_runner_integrates_with_operational_paper_runtime():
+def test_observation_runner_integrates_with_operational_paper_runtime(tmp_path):
     market_runtime = FakeMarketContextRuntime()
     intelligence = StableIntelligenceFlow()
     session = PaperTradingSession()
     paper_runtime = PaperTradingRuntime(session)
+    archive = PaperSessionArchive(tmp_path / "paper_sessions")
 
     operational_runtime = OperationalPaperRuntime(
         market_context_runtime=market_runtime,
         intelligence_flow=intelligence,
-        paper_trading_runtime=paper_runtime
+        paper_trading_runtime=paper_runtime,
+        session_archive=archive
     )
 
     sleeps = []
@@ -133,3 +136,7 @@ def test_observation_runner_integrates_with_operational_paper_runtime():
     )
     assert session.get_position() is None
     assert sleeps == [5, 5]
+
+    saved = archive.load(session.session_id)
+    assert saved["summary"]["cycles_processed"] == 3
+    assert len(saved["cycles"]) == 3

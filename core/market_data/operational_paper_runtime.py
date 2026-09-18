@@ -345,6 +345,9 @@ class OperationalPaperRuntime:
 
         return session_record
 
+    def archive_results(self, results):
+        return self._archive_session(results)
+
     def build_summary(self, results):
         if results is None:
             raise ValueError(
