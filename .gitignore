@@ -1,7 +1,7 @@
 # Python cache
 __pycache__/
 *.py[cod]
-*$py.class
+*.class
 
 # Virtual Environment
 venv/
@@ -12,6 +12,9 @@ env/
 
 # Logs
 logs/*.log
+
+# Operational runtime artifacts
+data/paper_sessions/*.json
 
 # IDE
 .vscode/
