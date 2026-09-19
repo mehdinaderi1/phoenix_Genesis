@@ -23,3 +23,4 @@ data/paper_sessions/*.json
 # OS
 .DS_Store
 Thumbs.db
+PHOENIX_GENESIS_PROJECT_SNAPSHOT.txt
