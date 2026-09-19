@@ -817,28 +817,28 @@ class IntelligenceFlow:
                 )
             )
         else:
-            outcome_result = {
-                "result": "UNKNOWN",
-                "score": 50,
-                "feedback": None,
-                "performance_learning": None,
-                "performance": None
-            }
+            outcome_result = None
 
         report.performance_feedback = (
             outcome_result["feedback"]
+            if outcome_result is not None
+            else None
         )
 
         report.performance_learning = (
             outcome_result.get(
                 "performance_learning"
             )
+            if outcome_result is not None
+            else None
         )
 
         strategy_record = (
             outcome_result.get(
                 "performance"
             )
+            if outcome_result is not None
+            else None
         )
 
         # ---------------------------------------------------------
@@ -1077,27 +1077,30 @@ class IntelligenceFlow:
             - confidence_before
         )
 
-        meta_feedback = MetaFeedbackRecord(
+        meta_feedback = None
 
-            confidence_before=confidence_before,
+        if outcome_result is not None:
+            meta_feedback = MetaFeedbackRecord(
 
-            adjustment=adjustment,
+                confidence_before=confidence_before,
 
-            confidence_after=report.confidence,
+                adjustment=adjustment,
 
-            outcome=(
-                outcome_result["result"]
-            ),
+                confidence_after=report.confidence,
 
-            meta_effective=(
-                outcome_result["result"]
-                == "SUCCESS"
+                outcome=(
+                    outcome_result["result"]
+                ),
+
+                meta_effective=(
+                    outcome_result["result"]
+                    == "SUCCESS"
+                )
             )
-        )
 
-        self.meta_memory.store(
-            meta_feedback
-        )
+            self.meta_memory.store(
+                meta_feedback
+            )
 
         report.meta_feedback = meta_feedback
 
