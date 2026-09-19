@@ -14,6 +14,7 @@ from exchanges.mock_exchange import MockExchange
 from execution.paper_session_archive import PaperSessionArchive
 from execution.paper_trading_runtime import PaperTradingRuntime
 from execution.paper_trading_session import PaperTradingSession
+from intelligence.decision_rules import DecisionRules
 from intelligence.flow import IntelligenceFlow
 
 
@@ -62,12 +63,17 @@ def print_cycle(result):
             f"Cycle {cycle_number} | "
             f"Price={observation.price if observation is not None else None} | "
             f"Source={observation.source if observation is not None else None} | "
-            f"Status={observation.source_status if observation is not None else "UNKNOWN"} | "
+            f"Status={observation.source_status if observation is not None else 'UNKNOWN'} | "
             "Market Context=None | "
             "Intelligence=SKIPPED | "
             "Paper=SKIPPED"
         )
         return
+
+    report = result.get("report")
+    rules = DecisionRules()
+    long_gate = rules.can_long(report) if report is not None else False
+    short_gate = rules.can_short(report) if report is not None else False
 
     print(
         f"Cycle {cycle_number} | "
@@ -76,13 +82,14 @@ def print_cycle(result):
         f"Trend={market_context.trend} | "
         f"Signal={market_context.signal} | "
         f"Confidence={market_context.confidence:.2f}% | "
-        f"Decision={getattr(decision, "action", None)} | "
-        f"Proposal={getattr(action_proposal, "action", None)} | "
-        f"Translated={getattr(translated, "action", None)} | "
-        f"Paper={paper_result["action"]} | "
-        f"PnL={paper_result["realized_pnl"]}"
+        f"Decision={getattr(decision, 'action', None)} | "
+        f"LongGate={'OPEN' if long_gate else 'BLOCKED'} | "
+        f"ShortGate={'OPEN' if short_gate else 'BLOCKED'} | "
+        f"Proposal={getattr(action_proposal, 'action', None)} | "
+        f"Translated={getattr(translated, 'action', None)} | "
+        f"Paper={paper_result['action']} | "
+        f"PnL={paper_result['realized_pnl']}"
     )
-
 
 def print_session_summary(summary):
     print()

@@ -54,3 +54,34 @@ def test_print_cycle_handles_blind_observation(capsys):
     assert "Market Context=None" in output
     assert "Intelligence=SKIPPED" in output
     assert "Paper=SKIPPED" in output
+
+class FakeDecision:
+    def __init__(self, action="WAIT"):
+        self.action = action
+
+
+class FakePaperResult(dict):
+    def __init__(self):
+        super().__init__(action="HOLD", realized_pnl=0)
+
+def test_print_cycle_shows_decision_gate_visibility(capsys):
+    result = {
+        "cycle_number": 3,
+        "observation": FakeObservation(),
+        "market_context": type("Context", (), {
+            "trend": "BULLISH",
+            "signal": "BUY",
+            "confidence": 70.0,
+        })(),
+        "decision": FakeDecision("WAIT"),
+        "action_proposal": None,
+        "translated_action_proposal": None,
+        "paper_result": FakePaperResult(),
+    }
+
+    main.print_cycle(result)
+
+    output = capsys.readouterr().out
+
+    assert "Decision=WAIT" in output
+    assert "LongGate=BLOCKED" in output
