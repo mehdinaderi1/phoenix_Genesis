@@ -75,14 +75,31 @@ def print_cycle(result):
     long_gate = rules.can_long(report) if report is not None else False
     short_gate = rules.can_short(report) if report is not None else False
 
+    decision_confidence = (
+        getattr(decision, "confidence", None)
+        if decision is not None
+        else None
+    )
+
+    decision_strategy = (
+        getattr(decision, "strategy", None)
+        if decision is not None
+        else None
+    )
+
+    if isinstance(decision_strategy, dict):
+        decision_strategy = decision_strategy.get("name")
+
     print(
         f"Cycle {cycle_number} | "
         f"Price={observation.price} | "
         f"Source={observation.source} | "
         f"Trend={market_context.trend} | "
         f"Signal={market_context.signal} | "
-        f"Confidence={market_context.confidence:.2f}% | "
+        f"ContextConfidence={market_context.confidence:.2f}% | "
         f"Decision={getattr(decision, 'action', None)} | "
+        f"DecisionConfidence={decision_confidence} | "
+        f"Strategy={decision_strategy} | "
         f"LongGate={'OPEN' if long_gate else 'BLOCKED'} | "
         f"ShortGate={'OPEN' if short_gate else 'BLOCKED'} | "
         f"Proposal={getattr(action_proposal, 'action', None)} | "
