@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from exchanges.xt_exchange import XTExchange
 
 
@@ -39,3 +41,32 @@ def test_xt_timeframe_validation():
         pass
     else:
         raise AssertionError("Unsupported timeframe must raise ValueError")
+
+
+def test_xt_request_retries_after_transient_failure():
+    exchange = XTExchange(timeout=5)
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self):
+            return b"{\"result\": {\"ok\": true}}"
+
+    attempts = []
+
+    def fake_urlopen(request, timeout):
+        attempts.append(timeout)
+        if len(attempts) < 3:
+            raise OSError("temporary network failure")
+        return FakeResponse()
+
+    with patch("exchanges.xt_exchange.urllib.request.urlopen", side_effect=fake_urlopen):
+        with patch("exchanges.xt_exchange.time.sleep"):
+            result = exchange._request("/test")
+
+    assert result == {"result": {"ok": True}}
+    assert attempts == [5, 5, 5]

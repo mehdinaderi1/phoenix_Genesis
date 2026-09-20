@@ -1,5 +1,6 @@
 from urllib.parse import urlencode
 import json
+import time
 import urllib.request
 
 from exchanges.base_exchange import BaseExchange
@@ -32,12 +33,22 @@ class XTExchange(BaseExchange):
             headers={"User-Agent": "PhoenixGenesis/1.0"}
         )
 
-        with urllib.request.urlopen(
-            request,
-            timeout=self.timeout
-        ) as response:
-            return json.loads(response.read().decode("utf-8"))
+        last_error = None
 
+        for attempt in range(3):
+            try:
+                with urllib.request.urlopen(
+                    request,
+                    timeout=self.timeout
+                ) as response:
+                    return json.loads(response.read().decode("utf-8"))
+            except OSError as exc:
+                last_error = exc
+                if attempt == 2:
+                    raise
+                time.sleep(2 ** attempt)
+
+        raise last_error
     def connect(self):
         self._request(
             "/v4/public/ticker/price",
