@@ -7,6 +7,7 @@ def test_performance_feedback_flow():
 
 
     flow = IntelligenceFlow()
+    flow.enable_inline_outcome_learning = True
 
 
     consensus = ConsensusResult(

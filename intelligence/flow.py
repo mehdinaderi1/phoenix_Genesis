@@ -802,7 +802,7 @@ class IntelligenceFlow:
         if getattr(
             self,
             "enable_inline_outcome_learning",
-            True
+            False
         ):
             outcome_result = (
                 self.decision_outcome_bridge.process(
