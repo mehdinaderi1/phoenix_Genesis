@@ -13,6 +13,8 @@ class XTExchange(BaseExchange):
 
     TIMEFRAME_MAP = {
         "1m": "1m",
+        "5m": "5m",
+        "15m": "15m",
         "30m": "30m",
         "4H": "4h",
         "1D": "1d",
@@ -136,6 +138,11 @@ class XTExchange(BaseExchange):
         )
 
         result = data.get("result") or []
+
+        result = sorted(
+            result,
+            key=lambda candle: candle["t"]
+        )
 
         return [
             self._candle_from_xt(candle)

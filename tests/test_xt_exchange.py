@@ -32,11 +32,13 @@ def test_xt_timeframe_validation():
 
     assert exchange._normalize_interval("1m") == "1m"
     assert exchange._normalize_interval("30m") == "30m"
+    assert exchange._normalize_interval("5m") == "5m"
+    assert exchange._normalize_interval("15m") == "15m"
     assert exchange._normalize_interval("4H") == "4h"
     assert exchange._normalize_interval("1D") == "1d"
 
     try:
-        exchange._normalize_interval("5m")
+        exchange._normalize_interval("2h")
     except ValueError:
         pass
     else:
@@ -70,3 +72,18 @@ def test_xt_request_retries_after_transient_failure():
 
     assert result == {"result": {"ok": True}}
     assert attempts == [5, 5, 5]
+def test_xt_historical_candles_are_chronological():
+    exchange = XTExchange(timeout=5)
+
+    payload = {
+        "result": [
+            {"t": 3000, "o": "103", "h": "104", "l": "102", "c": "103.5", "v": "30"},
+            {"t": 2000, "o": "102", "h": "103", "l": "101", "c": "102.5", "v": "20"},
+            {"t": 1000, "o": "101", "h": "102", "l": "100", "c": "101.5", "v": "10"}
+        ]
+    }
+
+    with patch.object(exchange, "_request", return_value=payload):
+        candles = exchange.get_historical_candles("BTCUSDT", timeframe="5m", limit=3)
+
+    assert [candle["timestamp"] for candle in candles] == [1, 2, 3]
