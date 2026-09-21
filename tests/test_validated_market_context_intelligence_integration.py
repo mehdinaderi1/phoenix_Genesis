@@ -20,7 +20,7 @@ class RecordingContextPipeline:
     def __init__(self, database):
         self.database = database
 
-    def build(self, symbol):
+    def build(self, symbol, timeframes=None):
         from core.market_data.operational_market_context import OperationalMarketContext
 
         return OperationalMarketContext(

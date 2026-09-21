@@ -119,7 +119,10 @@ class OperationalMarketContextRuntime:
         else:
             validation = None
 
-        context = self.context_pipeline.build(symbol)
+        context = self.context_pipeline.build(
+    symbol,
+    timeframes=timeframes
+)
 
         return {
             "observation": observation,

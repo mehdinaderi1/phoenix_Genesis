@@ -11,11 +11,18 @@ class MultiTimeframePipeline:
         self.timeframe_analyzer = TimeframeAnalyzer()
         self.consensus_analyzer = MultiTimeframeAnalyzer()
 
-    def analyze(self, symbol="BTCUSDT"):
+    def analyze(
+        self,
+        symbol="BTCUSDT",
+        timeframes=None
+    ):
+
+        if timeframes is None:
+            timeframes = ("30m", "4H", "1D")
 
         timeframe_analyses = []
 
-        for timeframe in ("30m", "4H", "1D"):
+        for timeframe in timeframes:
 
             prices = self.reader.get_close_prices(
                 symbol,

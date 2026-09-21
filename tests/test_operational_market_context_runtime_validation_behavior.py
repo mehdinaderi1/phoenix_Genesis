@@ -29,7 +29,7 @@ class RecordingContextPipeline:
     def __init__(self):
         self.calls = 0
 
-    def build(self, symbol):
+    def build(self, symbol, timeframes=None):
         self.calls += 1
         return FakeContext()
 

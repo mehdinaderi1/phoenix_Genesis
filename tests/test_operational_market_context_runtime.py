@@ -51,3 +51,50 @@ def test_operational_market_context_runtime_rejects_invalid_cycles(tmp_path):
         raise AssertionError("Expected ValueError")
 
     database.close()
+
+
+
+def test_operational_market_context_runtime_passes_custom_timeframes(
+    tmp_path
+):
+    database = DatabaseManager(
+        db_path=str(tmp_path / "custom_timeframes.db")
+    )
+    database.connect()
+
+    runtime = OperationalMarketContextRuntime(database)
+
+    captured = {}
+
+    def fake_build(symbol, timeframes=None):
+        captured["symbol"] = symbol
+        captured["timeframes"] = timeframes
+
+        return OperationalMarketContext(
+            symbol=symbol,
+            trend="BULLISH",
+            signal="BUY",
+            confidence=80.0,
+            timestamp="test"
+        )
+
+    runtime.context_pipeline.build = fake_build
+
+    timeframes = (
+        "5m",
+        "15m",
+        "30m",
+        "4H",
+        "1D"
+    )
+
+    result = runtime.run_cycle(
+        symbol="BTCUSDT",
+        timeframes=timeframes
+    )
+
+    assert result["context"] is not None
+    assert captured["symbol"] == "BTCUSDT"
+    assert captured["timeframes"] == timeframes
+
+    database.close()
