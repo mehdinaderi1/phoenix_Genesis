@@ -135,3 +135,59 @@ def test_operational_executable_decision_opens_paper_position(tmp_path):
     print("  entry_price={}".format(paper_result["position"].entry_price))
 
     database.close()
+
+def test_operational_short_decision_reaches_paper_open():
+    from types import SimpleNamespace
+
+    from core.market_data.operational_action_translator import OperationalActionTranslator as ActionTranslator
+    from execution.paper_trading_runtime import PaperTradingRuntime
+    from execution.paper_trading_session import PaperTradingSession
+
+    decision = SimpleNamespace(action="SELL")
+
+    proposal = SimpleNamespace(
+        action="PREPARE_SHORT",
+        status="APPROVED",
+        reason="Bearish market conditions with strategy consensus",
+        confidence=75,
+        symbol="BTCUSDT",
+        strategy=None,
+        risk_status="ACCEPTED",
+        metadata={},
+    )
+
+    translated = ActionTranslator().translate(proposal)
+
+    assert decision.action == "SELL"
+    assert proposal.action == "PREPARE_SHORT"
+    assert translated.action == "SELL"
+
+    session = PaperTradingSession(initial_balance=1000)
+    runtime = PaperTradingRuntime(session=session)
+
+    results = runtime.run(
+        cycles=[
+            {
+                "action_proposal": translated,
+                "price": 65000,
+                "symbol": "BTCUSDT",
+                "decision": decision,
+            }
+        ]
+    )
+
+    assert len(results) == 1
+
+    result = results[0]
+
+    assert result["action"] == "OPEN"
+    assert result["execution_result"] is not None
+    assert result["position"] is not None
+    assert result["position"].side == "SELL"
+    assert result["position"].entry_price == 65000
+    assert result["position"].quantity > 0
+    assert result["realized_pnl"] == 0.0
+
+    assert session.get_position() is not None
+    assert session.get_position().side == "SELL"
+
