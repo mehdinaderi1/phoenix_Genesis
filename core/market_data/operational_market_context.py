@@ -8,6 +8,7 @@ class OperationalMarketContext:
     signal: str
     confidence: float
     timestamp: str
+    consensus_breakdown: dict | None = None
 
     def summary(self):
         return {

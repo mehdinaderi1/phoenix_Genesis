@@ -90,6 +90,12 @@ def print_cycle(result):
     if isinstance(decision_strategy, dict):
         decision_strategy = decision_strategy.get("name")
 
+    breakdown = getattr(
+        market_context,
+        "consensus_breakdown",
+        None,
+    )
+
     print(
         f"Cycle {cycle_number} | "
         f"Price={observation.price} | "
@@ -107,6 +113,24 @@ def print_cycle(result):
         f"Paper={paper_result['action']} | "
         f"PnL={paper_result['realized_pnl']}"
     )
+
+    if breakdown:
+        print(
+            f"  Consensus | "
+            f"Weighted={breakdown['weighted_confidence']:.2f} | "
+            f"Conflict={breakdown['signal_conflict']} | "
+            f"Penalty={breakdown['conflict_penalty']} | "
+            f"Final={breakdown['final_confidence']:.2f}"
+        )
+
+        for item in breakdown["timeframes"]:
+            print(
+                f"  MTF {item['timeframe']} | "
+                f"Signal={item['signal']} | "
+                f"Confidence={item['confidence']:.2f} | "
+                f"Weight={item['weight']}"
+            )
+
 
 def print_session_summary(summary):
     print()
@@ -190,6 +214,7 @@ def main():
     source_manager = build_real_source_manager()
     print("DEBUG SOURCE HEALTH:", source_manager.get_healthy_sources())
     print("DEBUG SOURCE PRICES:", source_manager.get_prices("BTCUSDT"))
+
     source_candle_pipeline = SourceCandlePipeline(
         source_manager=source_manager,
         database=engine.database,
@@ -234,6 +259,7 @@ def main():
     observation_runner = OperationalObservationRunner(
         runtime=operational_runtime
     )
+
     timeframes = ("5m", "15m", "30m", "4H", "1D")
 
     results = observation_runner.run(
@@ -252,10 +278,11 @@ def main():
     for result in results:
         if result.get("error") is not None:
             print(
-                f"Cycle {result.get("cycle_number")} | "
-                f"ERROR={result["error"]}"
+                f"Cycle {result.get('cycle_number')} | "
+                f"ERROR={result['error']}"
             )
             continue
+
         print_cycle(result)
 
     summary = operational_runtime.build_summary(results)
@@ -286,7 +313,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-

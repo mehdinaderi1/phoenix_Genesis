@@ -13,5 +13,6 @@ class OperationalMarketContextBuilder:
             trend=consensus.trend,
             signal=consensus.signal,
             confidence=consensus.confidence,
-            timestamp=datetime.now(timezone.utc).isoformat()
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            consensus_breakdown=consensus.breakdown
         )

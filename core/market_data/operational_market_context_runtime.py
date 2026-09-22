@@ -165,7 +165,6 @@ class OperationalMarketContextRuntime:
         return contexts
 
     def _print_context(self, context):
-
         print(
             f"[MARKET] {context.symbol} | "
             f"trend={context.trend} | "

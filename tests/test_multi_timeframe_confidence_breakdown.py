@@ -1,0 +1,31 @@
+from analysis.timeframe import TimeframeAnalysis
+from intelligence.multitimeframe import MultiTimeframeAnalyzer
+
+
+def test_multi_timeframe_analyzer_builds_confidence_breakdown():
+    analyzer = MultiTimeframeAnalyzer()
+
+    analyses = [
+        TimeframeAnalysis("5m", "BEARISH", "WAIT", 50),
+        TimeframeAnalysis("15m", "BULLISH", "BUY", 70),
+        TimeframeAnalysis("30m", "BULLISH", "WAIT", 40),
+        TimeframeAnalysis("4H", "BULLISH", "BUY", 70),
+        TimeframeAnalysis("1D", "BULLISH", "BUY", 70),
+    ]
+
+    result = analyzer.analyze(analyses)
+    breakdown = result.breakdown
+
+    assert breakdown is not None
+    assert breakdown["weighted_confidence"] == 63.75
+    assert breakdown["signal_conflict"] is True
+    assert breakdown["conflict_penalty"] == 0.5
+    assert breakdown["final_confidence"] == 31.875
+
+    assert breakdown["timeframes"] == [
+        {"timeframe": "5m", "confidence": 50, "weight": 1, "signal": "WAIT"},
+        {"timeframe": "15m", "confidence": 70, "weight": 1, "signal": "BUY"},
+        {"timeframe": "30m", "confidence": 40, "weight": 1, "signal": "WAIT"},
+        {"timeframe": "4H", "confidence": 70, "weight": 2, "signal": "BUY"},
+        {"timeframe": "1D", "confidence": 70, "weight": 3, "signal": "BUY"},
+    ]
