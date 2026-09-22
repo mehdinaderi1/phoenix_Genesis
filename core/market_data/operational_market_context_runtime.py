@@ -54,7 +54,7 @@ class OperationalMarketContextRuntime:
                     "context": None
                 }
 
-        stored = False
+        market_data_available = False
 
         if self.source_candle_pipeline is not None:
 
@@ -64,10 +64,13 @@ class OperationalMarketContextRuntime:
                     timeframe=timeframe
                 )
 
-                if result.get("stored"):
-                    stored = True
+                if result.get("candle") is not None:
+                    market_data_available = True
 
-        if not stored and self.market_data_bridge is not None:
+        if (
+            not market_data_available
+            and self.market_data_bridge is not None
+        ):
 
             for timeframe in timeframes:
                 candle = (
@@ -80,14 +83,14 @@ class OperationalMarketContextRuntime:
                 )
 
                 if candle is not None:
-                    stored = True
+                    market_data_available = True
 
         if (
             self.observer is not None
             or self.source_candle_pipeline is not None
             or self.market_data_bridge is not None
         ):
-            if not stored:
+            if not market_data_available:
                 return {
                     "observation": observation,
                     "context": None
@@ -120,9 +123,9 @@ class OperationalMarketContextRuntime:
             validation = None
 
         context = self.context_pipeline.build(
-    symbol,
-    timeframes=timeframes
-)
+            symbol,
+            timeframes=timeframes
+        )
 
         return {
             "observation": observation,
