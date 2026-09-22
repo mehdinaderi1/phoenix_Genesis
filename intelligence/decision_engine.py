@@ -169,6 +169,26 @@ class DecisionEngine:
         explanation = self._build_explanation(
             report
         )
+
+        can_long = self.rules.can_long(report)
+        can_short = self.rules.can_short(report)
+
+        
+        print(
+            "CAN SHORT:",
+            can_short
+        )
+
+        print(
+            "SHORT CHECK:",
+            {
+                "strategy_valid": self.rules.strategy_is_valid(report),
+                "consensus_valid": self.rules.consensus_is_valid(report),
+                "signal": report.signal,
+                "risk": report.risk,
+                "confidence": report.confidence,
+            }
+        )
         
         print(
             "CAN LONG:",
@@ -187,7 +207,7 @@ class DecisionEngine:
         )
 
 
-        if self.rules.can_long(report):
+        if can_long:
 
             return DecisionResult(
 
@@ -245,7 +265,7 @@ class DecisionEngine:
 
 
 
-        elif self.rules.can_short(report):
+        elif can_short:
 
             return DecisionResult(
 
