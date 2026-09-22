@@ -75,9 +75,15 @@ class StableIntelligenceFlow:
 class FakeMarketContextRuntime:
     def __init__(self):
         self.calls = 0
+        self.timeframe_calls = []
 
-    def run_cycle(self, symbol="BTCUSDT"):
+    def run_cycle(
+        self,
+        symbol="BTCUSDT",
+        timeframes=None
+    ):
         self.calls += 1
+        self.timeframe_calls.append(timeframes)
 
         observation = SimpleNamespace(
             symbol=symbol,
@@ -122,14 +128,22 @@ def test_observation_runner_integrates_with_operational_paper_runtime(tmp_path):
         sleep_fn=sleeps.append
     )
 
+    timeframes = ("5m", "15m", "30m", "4H", "1D")
+
     results = runner.run(
         symbol="BTCUSDT",
         cycles=3,
-        interval_seconds=5
+        interval_seconds=5,
+        timeframes=timeframes
     )
 
     assert len(results) == 3
     assert market_runtime.calls == 3
+    assert market_runtime.timeframe_calls == [
+        timeframes,
+        timeframes,
+        timeframes
+    ]
     assert all(
         result["paper_result"]["action"] == "HOLD"
         for result in results

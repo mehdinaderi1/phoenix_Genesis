@@ -9,12 +9,14 @@ class FakeOperationalRuntime:
         self,
         symbol="BTCUSDT",
         cycles=1,
-        continue_on_error=False
+        continue_on_error=False,
+        timeframes=None
     ):
         self.calls.append((
             symbol,
             cycles,
-            continue_on_error
+            continue_on_error,
+            timeframes
         ))
         return [
             {"cycle_number": index}
@@ -44,11 +46,33 @@ def test_runner_repeats_operational_runtime():
     assert len(results) == 3
     assert [result["cycle_number"] for result in results] == [1, 2, 3]
     assert runtime.calls == [
-        ("BTCUSDT", 1, True),
-        ("BTCUSDT", 1, True),
-        ("BTCUSDT", 1, True),
+        ("BTCUSDT", 1, True, None),
+        ("BTCUSDT", 1, True, None),
+        ("BTCUSDT", 1, True, None),
     ]
     assert sleeps == [10, 10]
+
+
+def test_runner_propagates_custom_timeframes():
+    runtime = FakeOperationalRuntime()
+
+    runner = OperationalObservationRunner(
+        runtime=runtime
+    )
+
+    timeframes = ("5m", "15m", "30m", "4H", "1D")
+
+    results = runner.run(
+        symbol="BTCUSDT",
+        cycles=2,
+        timeframes=timeframes
+    )
+
+    assert len(results) == 2
+    assert runtime.calls == [
+        ("BTCUSDT", 1, False, timeframes),
+        ("BTCUSDT", 1, False, timeframes),
+    ]
 
 
 def test_runner_rejects_invalid_cycles():

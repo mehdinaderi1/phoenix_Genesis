@@ -234,12 +234,14 @@ def main():
     observation_runner = OperationalObservationRunner(
         runtime=operational_runtime
     )
+    timeframes = ("5m", "15m", "30m", "4H", "1D")
 
     results = observation_runner.run(
         symbol="BTCUSDT",
-        cycles=3,
+        cycles=20,
         interval_seconds=0,
         continue_on_error=True,
+        timeframes=timeframes,
     )
 
     print()

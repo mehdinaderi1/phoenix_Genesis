@@ -52,7 +52,8 @@ class OperationalPaperRuntime:
         self,
         symbol="BTCUSDT",
         cycles=1,
-        continue_on_error=False
+        continue_on_error=False,
+        timeframes=None
     ):
         if cycles <= 0:
             raise ValueError(
@@ -63,9 +64,15 @@ class OperationalPaperRuntime:
 
         for cycle_number in range(1, cycles + 1):
             try:
-                cycle = self.market_context_runtime.run_cycle(
-                    symbol=symbol
-                )
+                if timeframes is None:
+                    cycle = self.market_context_runtime.run_cycle(
+                        symbol=symbol
+                    )
+                else:
+                    cycle = self.market_context_runtime.run_cycle(
+                        symbol=symbol,
+                        timeframes=timeframes
+                    )
 
                 observation = cycle["observation"]
                 market_context = cycle["context"]

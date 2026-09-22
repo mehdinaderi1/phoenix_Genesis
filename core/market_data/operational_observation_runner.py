@@ -17,7 +17,8 @@ class OperationalObservationRunner:
         symbol="BTCUSDT",
         cycles=1,
         interval_seconds=0,
-        continue_on_error=False
+        continue_on_error=False,
+        timeframes=None
     ):
         if cycles <= 0:
             raise ValueError(
@@ -34,7 +35,8 @@ class OperationalObservationRunner:
             cycle_results = self.runtime.run(
                 symbol=symbol,
                 cycles=1,
-                continue_on_error=continue_on_error
+                continue_on_error=continue_on_error,
+                timeframes=timeframes
             )
 
             for result in cycle_results:

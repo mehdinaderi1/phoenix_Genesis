@@ -10,7 +10,19 @@ from core.market_data.operational_paper_runtime import (
 
 
 class FakeMarketContextRuntime:
-    def run_cycle(self, symbol="BTCUSDT"):
+    def __init__(self):
+        self.calls = []
+
+    def run_cycle(
+        self,
+        symbol="BTCUSDT",
+        timeframes=None
+    ):
+        self.calls.append((
+            symbol,
+            timeframes
+        ))
+
         observation = SimpleNamespace(
             symbol=symbol,
             price=65000.0,
@@ -84,6 +96,11 @@ def test_operational_paper_runtime_connects_market_intelligence_and_paper():
     assert len(intelligence.consensuses) == 2
     assert len(paper_runtime.cycles) == 2
 
+    assert market_runtime.calls == [
+        ("BTCUSDT", None),
+        ("BTCUSDT", None),
+    ]
+
     assert paper_runtime.cycles[0]["price"] == 65000.0
     assert paper_runtime.cycles[0]["symbol"] == "BTCUSDT"
     assert paper_runtime.cycles[0]["decision"].action == "BUY"
@@ -91,6 +108,31 @@ def test_operational_paper_runtime_connects_market_intelligence_and_paper():
 
     assert results[0]["paper_result"]["action"] == "OPEN"
     assert results[0]["paper_result"]["position"].entry_price == 65000.0
+
+
+def test_operational_paper_runtime_propagates_custom_timeframes():
+    market_runtime = FakeMarketContextRuntime()
+    intelligence = FakeIntelligenceFlow()
+    paper_runtime = FakePaperTradingRuntime()
+
+    runtime = OperationalPaperRuntime(
+        market_runtime,
+        intelligence,
+        paper_runtime
+    )
+
+    timeframes = ("5m", "15m", "30m", "4H", "1D")
+
+    results = runtime.run(
+        cycles=2,
+        timeframes=timeframes
+    )
+
+    assert len(results) == 2
+    assert market_runtime.calls == [
+        ("BTCUSDT", timeframes),
+        ("BTCUSDT", timeframes),
+    ]
 
 
 def test_operational_paper_runtime_rejects_missing_dependencies():
