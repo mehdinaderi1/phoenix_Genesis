@@ -91,3 +91,18 @@ class MarketDataRepository:
         (symbol, limit))
 
         return cursor.fetchall()
+    def get_latest_candle(self, symbol, timeframe):
+
+        cursor = self.db.connection.cursor()
+
+        cursor.execute("""
+        SELECT *
+        FROM market_candles
+        WHERE symbol=?
+        AND timeframe=?
+        ORDER BY timestamp DESC
+        LIMIT 1
+        """,
+        (symbol, timeframe))
+
+        return cursor.fetchone()
