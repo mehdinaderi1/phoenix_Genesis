@@ -220,6 +220,16 @@ def main():
         database=engine.database,
     )
 
+    timeframes = ("5m", "15m", "30m", "4H", "1D")
+
+    warm_up_results = source_candle_pipeline.warm_up(
+        symbol="BTCUSDT",
+        timeframes=timeframes,
+        limit=30,
+    )
+
+    print("Historical MTF warm-up:", warm_up_results)
+
     observer = RealMarketObserver(source_manager)
 
     market_context_runtime = OperationalMarketContextRuntime(

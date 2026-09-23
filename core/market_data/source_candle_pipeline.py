@@ -62,3 +62,93 @@ class SourceCandlePipeline:
             "source": None,
             "candle": None
         }
+
+    def fetch_and_store_historical(
+        self,
+        symbol="BTCUSDT",
+        timeframe="1m",
+        limit=30
+    ):
+        if not symbol:
+            raise ValueError("symbol must not be empty")
+
+        if limit <= 0:
+            return {
+                "source": None,
+                "fetched": 0,
+                "stored": 0
+            }
+
+        ordered_names = []
+        if self.source_manager.primary_source:
+            ordered_names.append(self.source_manager.primary_source)
+
+        ordered_names.extend(
+            name
+            for name in self.source_manager.sources
+            if name != self.source_manager.primary_source
+        )
+
+        for name in ordered_names:
+            source = self.source_manager.sources[name]
+
+            try:
+                if not source.health_check():
+                    continue
+
+                candles = source.get_historical_candles(
+                    symbol,
+                    timeframe,
+                    limit
+                )
+            except Exception:
+                continue
+
+            if not candles:
+                continue
+
+            stored_count = 0
+
+            for candle in candles:
+                saved = self.repository.save_candle(
+                    symbol,
+                    timeframe,
+                    candle["open"],
+                    candle["high"],
+                    candle["low"],
+                    candle["close"],
+                    candle["volume"],
+                    candle["timestamp"]
+                )
+
+                if saved:
+                    stored_count += 1
+
+            return {
+                "source": name,
+                "fetched": len(candles),
+                "stored": stored_count
+            }
+
+        return {
+            "source": None,
+            "fetched": 0,
+            "stored": 0
+        }
+
+    def warm_up(
+        self,
+        symbol="BTCUSDT",
+        timeframes=("5m", "15m", "30m", "4H", "1D"),
+        limit=30
+    ):
+        results = {}
+
+        for timeframe in timeframes:
+            results[timeframe] = self.fetch_and_store_historical(
+                symbol=symbol,
+                timeframe=timeframe,
+                limit=limit
+            )
+
+        return results
