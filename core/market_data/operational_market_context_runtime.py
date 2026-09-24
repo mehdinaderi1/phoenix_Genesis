@@ -2,6 +2,9 @@ from core.market_data.observation_market_data import ObservationMarketDataBridge
 from core.market_data.operational_market_context_pipeline import (
     OperationalMarketContextPipeline
 )
+from core.market_data.repository import MarketDataRepository
+from core.market_data.candle_boundary import get_candle_boundary
+from time import time
 
 
 class OperationalMarketContextRuntime:
@@ -33,10 +36,43 @@ class OperationalMarketContextRuntime:
             )
 
         self.source_candle_pipeline = source_candle_pipeline
+        self.repository = MarketDataRepository(database)
 
         self.context_pipeline = OperationalMarketContextPipeline(database)
         self.validation_pipeline = validation_pipeline
         self.validated_context_pipeline = validated_context_pipeline
+
+    def _build_candle_boundaries(self, symbol, timeframes, now=None):
+        if now is None:
+            now = int(time())
+
+        boundaries = {}
+
+        for timeframe in timeframes:
+            row = self.repository.get_latest_candle(
+                symbol,
+                timeframe
+            )
+
+            if row is None:
+                boundaries[timeframe] = None
+                continue
+
+            boundary = get_candle_boundary(
+                row[3],
+                timeframe
+            )
+
+            boundaries[timeframe] = {
+                "timeframe": boundary.timeframe,
+                "candle_start": boundary.candle_start,
+                "next_boundary": boundary.next_boundary,
+                "duration_seconds": boundary.duration_seconds,
+                "age_seconds": boundary.age_seconds(now),
+                "is_closed": boundary.is_closed(now)
+            }
+
+        return boundaries
 
     def run_cycle(self, symbol="BTCUSDT", timeframes=None):
 
@@ -55,7 +91,8 @@ class OperationalMarketContextRuntime:
             if observation.source_status == "BLIND":
                 return {
                     "observation": observation,
-                    "context": None
+                    "context": None,
+                    "candle_boundaries": {}
                 }
 
         market_data_available = False
@@ -98,8 +135,14 @@ class OperationalMarketContextRuntime:
             if not market_data_available:
                 return {
                     "observation": observation,
-                    "context": None
+                    "context": None,
+                    "candle_boundaries": {}
                 }
+
+        candle_boundaries = self._build_candle_boundaries(
+            symbol,
+            timeframes
+        )
 
         if self.validated_context_pipeline is not None:
 
@@ -110,7 +153,8 @@ class OperationalMarketContextRuntime:
             return {
                 "observation": observation,
                 "validation": validated_result["validation"],
-                "context": validated_result["context"]
+                "context": validated_result["context"],
+                "candle_boundaries": candle_boundaries
             }
 
         if self.validation_pipeline is not None:
@@ -121,7 +165,8 @@ class OperationalMarketContextRuntime:
                 return {
                     "observation": observation,
                     "validation": validation,
-                    "context": None
+                    "context": None,
+                    "candle_boundaries": candle_boundaries
                 }
 
         else:
@@ -135,7 +180,8 @@ class OperationalMarketContextRuntime:
         return {
             "observation": observation,
             "validation": validation,
-            "context": context
+            "context": context,
+            "candle_boundaries": candle_boundaries
         }
 
     def run(
