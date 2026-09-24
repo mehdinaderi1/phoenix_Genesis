@@ -44,9 +44,13 @@ class OperationalMarketContextRuntime:
             timeframes = ("30m", "4H", "1D")
 
         observation = None
+        health_cache = {}
 
         if self.observer is not None:
-            observation = self.observer.observe(symbol)
+            observation = self.observer.observe(
+                symbol,
+                _health_cache=health_cache
+            )
 
             if observation.source_status == "BLIND":
                 return {
@@ -61,7 +65,8 @@ class OperationalMarketContextRuntime:
             for timeframe in timeframes:
                 result = self.source_candle_pipeline.fetch_and_store(
                     symbol=symbol,
-                    timeframe=timeframe
+                    timeframe=timeframe,
+                    _health_cache=health_cache
                 )
 
                 if result.get("candle") is not None:

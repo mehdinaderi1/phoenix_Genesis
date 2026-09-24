@@ -13,7 +13,12 @@ class SourceCandlePipeline:
         self.source_manager = source_manager
         self.repository = MarketDataRepository(database)
 
-    def fetch_and_store(self, symbol="BTCUSDT", timeframe="1m"):
+    def fetch_and_store(
+        self,
+        symbol="BTCUSDT",
+        timeframe="1m",
+        _health_cache=None
+    ):
         if not symbol:
             raise ValueError("symbol must not be empty")
 
@@ -31,8 +36,17 @@ class SourceCandlePipeline:
             source = self.source_manager.sources[name]
 
             try:
-                if not source.health_check():
+                if _health_cache is not None and name in _health_cache:
+                    healthy = _health_cache[name]
+                else:
+                    healthy = source.health_check()
+
+                    if _health_cache is not None:
+                        _health_cache[name] = healthy
+
+                if not healthy:
                     continue
+
                 candle = source.get_candle(symbol, timeframe)
             except Exception:
                 continue
@@ -67,7 +81,8 @@ class SourceCandlePipeline:
         self,
         symbol="BTCUSDT",
         timeframe="1m",
-        limit=30
+        limit=30,
+        _health_cache=None
     ):
         if not symbol:
             raise ValueError("symbol must not be empty")
@@ -93,7 +108,15 @@ class SourceCandlePipeline:
             source = self.source_manager.sources[name]
 
             try:
-                if not source.health_check():
+                if _health_cache is not None and name in _health_cache:
+                    healthy = _health_cache[name]
+                else:
+                    healthy = source.health_check()
+
+                    if _health_cache is not None:
+                        _health_cache[name] = healthy
+
+                if not healthy:
                     continue
 
                 candles = source.get_historical_candles(
@@ -143,12 +166,14 @@ class SourceCandlePipeline:
         limit=30
     ):
         results = {}
+        health_cache = {}
 
         for timeframe in timeframes:
             results[timeframe] = self.fetch_and_store_historical(
                 symbol=symbol,
                 timeframe=timeframe,
-                limit=limit
+                limit=limit,
+                _health_cache=health_cache
             )
 
         return results

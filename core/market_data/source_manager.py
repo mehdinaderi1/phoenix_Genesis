@@ -28,16 +28,24 @@ class MarketDataSourceManager:
     def get_source(self, name):
         return self.sources.get(name)
 
-    def _is_healthy(self, source):
+    def _is_healthy(self, name, source, health_cache=None):
+        if health_cache is not None and name in health_cache:
+            return health_cache[name]
+
         try:
-            return bool(source.health_check())
+            healthy = bool(source.health_check())
         except Exception:
-            return False
+            healthy = False
+
+        if health_cache is not None:
+            health_cache[name] = healthy
+
+        return healthy
 
     def get_healthy_sources(self):
         healthy = []
         for name, source in self.sources.items():
-            if self._is_healthy(source):
+            if self._is_healthy(name, source):
                 healthy.append(name)
         return healthy
 
@@ -45,7 +53,7 @@ class MarketDataSourceManager:
         prices = {}
 
         for name, source in self.sources.items():
-            if not self._is_healthy(source):
+            if not self._is_healthy(name, source):
                 continue
 
             try:
@@ -60,7 +68,7 @@ class MarketDataSourceManager:
 
         return prices
 
-    def get_price(self, symbol):
+    def get_price(self, symbol, _health_cache=None):
         if not self.sources:
             raise RuntimeError("No market-data sources configured")
 
@@ -76,7 +84,12 @@ class MarketDataSourceManager:
 
         for name in ordered_names:
             source = self.sources[name]
-            if not self._is_healthy(source):
+
+            if not self._is_healthy(
+                name,
+                source,
+                health_cache=_health_cache
+            ):
                 failures.append(name)
                 continue
 

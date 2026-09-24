@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 
@@ -22,12 +22,18 @@ class RealMarketObserver:
         self.source_manager = source_manager
         self.observation_count = 0
 
-    def observe(self, symbol="BTCUSDT"):
+    def observe(self, symbol="BTCUSDT", _health_cache=None):
         self.observation_count += 1
         timestamp = datetime.now(timezone.utc).isoformat()
 
         try:
-            market_data = self.source_manager.get_price(symbol)
+            if _health_cache is None:
+                market_data = self.source_manager.get_price(symbol)
+            else:
+                market_data = self.source_manager.get_price(
+                    symbol,
+                    _health_cache=_health_cache
+                )
         except RuntimeError:
             return MarketObservation(
                 symbol=symbol,

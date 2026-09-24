@@ -98,3 +98,87 @@ def test_operational_market_context_runtime_passes_custom_timeframes(
     assert captured["timeframes"] == timeframes
 
     database.close()
+
+
+def test_operational_market_context_runtime_reuses_source_health_within_cycle(
+    tmp_path
+):
+    database = DatabaseManager(
+        db_path=str(tmp_path / "health_reuse.db")
+    )
+    database.connect()
+
+    class FakeSource:
+        def __init__(self):
+            self.health_check_calls = 0
+
+        def health_check(self):
+            self.health_check_calls += 1
+            return True
+
+    source = FakeSource()
+
+    class FakeObserver:
+        def observe(self, symbol, _health_cache=None):
+            if _health_cache is None or "xt" not in _health_cache:
+                source.health_check()
+                if _health_cache is not None:
+                    _health_cache["xt"] = True
+
+            return type(
+                "Observation",
+                (),
+                {
+                    "source_status": "HEALTHY",
+                    "price": 65000.0,
+                    "source": "xt",
+                    "fallback_used": False,
+                },
+            )()
+
+    class FakeSourceCandlePipeline:
+        def fetch_and_store(
+            self,
+            symbol,
+            timeframe,
+            _health_cache=None,
+        ):
+            if _health_cache is None or "xt" not in _health_cache:
+                source.health_check()
+                if _health_cache is not None:
+                    _health_cache["xt"] = True
+
+            return {
+                "stored": True,
+                "source": "xt",
+                "candle": object(),
+            }
+
+    runtime = OperationalMarketContextRuntime(
+        observer=FakeObserver(),
+        market_data_pipeline=object(),
+        database=database,
+        source_candle_pipeline=FakeSourceCandlePipeline(),
+    )
+
+    runtime.context_pipeline.build = (
+        lambda symbol, timeframes=None: OperationalMarketContext(
+            symbol=symbol,
+            trend="NEUTRAL",
+            signal="WAIT",
+            confidence=50.0,
+            timestamp="test",
+        )
+    )
+
+    result = runtime.run_cycle(
+        symbol="BTCUSDT",
+        timeframes=("5m", "15m", "30m", "4H", "1D"),
+    )
+
+    assert result["context"] is not None
+
+    # One source health check per operational cycle.
+    assert source.health_check_calls == 1
+
+    database.close()

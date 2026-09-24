@@ -775,3 +775,70 @@ def test_source_candle_pipeline_warm_up_is_consumed_by_operational_runtime(tmp_p
         assert len(prices) >= 5
 
     database.close()
+
+def test_source_candle_pipeline_warm_up_checks_source_health_once_per_source(
+    tmp_path
+):
+    database = DatabaseManager(
+        db_path=str(tmp_path / "phoenix.db")
+    )
+    database.connect()
+
+    candle = {
+        "timestamp": 20000,
+        "open": 65000.0,
+        "high": 65100.0,
+        "low": 64900.0,
+        "close": 65000.0,
+        "volume": 10.0,
+    }
+
+    class CountingFakeSource(FakeSource):
+        def __init__(self, candle):
+            super().__init__(candle)
+            self.health_check_calls = 0
+            self.historical_calls = []
+
+        def health_check(self):
+            self.health_check_calls += 1
+            return super().health_check()
+
+        def get_historical_candles(
+            self,
+            symbol,
+            timeframe="1m",
+            limit=30,
+        ):
+            self.historical_calls.append(timeframe)
+            return [self.candle]
+
+    source = CountingFakeSource(candle)
+
+    manager = MarketDataSourceManager({
+        "primary": source
+    })
+
+    pipeline = SourceCandlePipeline(manager, database)
+
+    result = pipeline.warm_up(
+        symbol="BTCUSDT",
+        timeframes=("5m", "15m", "30m", "4H", "1D"),
+        limit=1,
+    )
+
+    assert all(
+        result[timeframe]["source"] == "primary"
+        for timeframe in result
+    )
+
+    assert source.health_check_calls == 1
+
+    assert source.historical_calls == [
+        "5m",
+        "15m",
+        "30m",
+        "4H",
+        "1D",
+    ]
+
+    database.close()
