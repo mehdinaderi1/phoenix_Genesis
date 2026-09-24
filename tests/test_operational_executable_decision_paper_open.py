@@ -16,7 +16,7 @@ class FixedSourceManager:
     def health_check(self):
         return True
 
-    def get_price(self, symbol):
+    def get_price(self, symbol, _health_cache=None):
         return MarketData(
             symbol=symbol,
             price=65000.0,

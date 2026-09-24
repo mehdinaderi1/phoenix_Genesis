@@ -17,12 +17,12 @@ class FakeObservation:
 
 
 class FakeObserver:
-    def observe(self, symbol):
+    def observe(self, symbol, _health_cache=None):
         return FakeObservation()
 
 
 class FailingSourceCandlePipeline:
-    def fetch_and_store(self, symbol="BTCUSDT", timeframe="1m"):
+    def fetch_and_store(self, symbol="BTCUSDT", timeframe="1m", _health_cache=None):
         return {
             "stored": False,
             "source": None,

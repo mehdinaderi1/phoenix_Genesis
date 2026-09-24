@@ -10,7 +10,7 @@ from exchanges.mock_exchange import MockExchange
 
 
 class FakeSourceManager:
-    def get_price(self, symbol):
+    def get_price(self, symbol, _health_cache=None):
         return MarketData(
             symbol=symbol,
             price=65000.0,

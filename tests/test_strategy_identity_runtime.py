@@ -5,6 +5,7 @@ from intelligence.consensus import ConsensusResult
 def test_runtime_strategy_identity_drift():
 
     flow = IntelligenceFlow()
+    flow.enable_inline_outcome_learning = True
 
     flow.strategy_memory.store({
         "name": "trend_following",
@@ -74,3 +75,4 @@ def test_runtime_strategy_identity_drift():
     assert strategy_insight_identity == decision_action
     assert champion_history != []
     assert action_history == []
+

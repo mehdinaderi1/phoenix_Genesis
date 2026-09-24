@@ -5,6 +5,7 @@ from intelligence.consensus import ConsensusResult
 def test_flow_preserves_champion_strategy_into_experience():
 
     flow = IntelligenceFlow()
+    flow.enable_inline_outcome_learning = True
 
 
     # -------------------------------------------------
@@ -118,3 +119,4 @@ def test_flow_preserves_champion_strategy_into_experience():
     assert latest_experience.champion_strategy == (
         champion
     )
+

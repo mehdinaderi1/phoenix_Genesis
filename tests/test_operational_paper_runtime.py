@@ -1,6 +1,5 @@
 from types import SimpleNamespace
 
-from core.market_data.market_data import MarketData
 from core.market_data.operational_market_context import (
     OperationalMarketContext
 )
@@ -41,7 +40,17 @@ class FakeMarketContextRuntime:
 
         return {
             "observation": observation,
-            "context": context
+            "context": context,
+            "candle_boundaries": {
+                "5m": {
+                    "timeframe": "5m",
+                    "candle_start": 1790111100,
+                    "next_boundary": 1790111400,
+                    "duration_seconds": 300,
+                    "age_seconds": 100,
+                    "is_closed": False
+                }
+            }
         }
 
 
@@ -109,6 +118,12 @@ def test_operational_paper_runtime_connects_market_intelligence_and_paper():
     assert results[0]["paper_result"]["action"] == "OPEN"
     assert results[0]["paper_result"]["position"].entry_price == 65000.0
 
+    assert results[0]["candle_boundaries"]["5m"]["timeframe"] == "5m"
+    assert results[0]["candle_boundaries"]["5m"]["candle_start"] == 1790111100
+    assert results[0]["candle_boundaries"]["5m"]["next_boundary"] == 1790111400
+    assert results[0]["candle_boundaries"]["5m"]["age_seconds"] == 100
+    assert results[0]["candle_boundaries"]["5m"]["is_closed"] is False
+
 
 def test_operational_paper_runtime_propagates_custom_timeframes():
     market_runtime = FakeMarketContextRuntime()
@@ -129,10 +144,13 @@ def test_operational_paper_runtime_propagates_custom_timeframes():
     )
 
     assert len(results) == 2
+
     assert market_runtime.calls == [
         ("BTCUSDT", timeframes),
         ("BTCUSDT", timeframes),
     ]
+
+    assert results[0]["candle_boundaries"]["5m"]["timeframe"] == "5m"
 
 
 def test_operational_paper_runtime_rejects_missing_dependencies():

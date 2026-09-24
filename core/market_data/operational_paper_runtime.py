@@ -74,6 +74,7 @@ class OperationalPaperRuntime:
                         timeframes=timeframes
                     )
 
+                candle_boundaries = cycle.get("candle_boundaries", {})
                 observation = cycle["observation"]
                 market_context = cycle["context"]
 
@@ -88,6 +89,7 @@ class OperationalPaperRuntime:
                         "action_proposal": None,
                         "translated_action_proposal": None,
                         "paper_result": None,
+                        "candle_boundaries": candle_boundaries,
                         "error": None
                     })
                     continue
@@ -142,6 +144,7 @@ class OperationalPaperRuntime:
                         translated_action_proposal
                     ),
                     "paper_result": paper_result,
+                    "candle_boundaries": candle_boundaries,
                     "error": None
                 })
 
@@ -159,6 +162,7 @@ class OperationalPaperRuntime:
                     "action_proposal": None,
                     "translated_action_proposal": None,
                     "paper_result": None,
+                    "candle_boundaries": {},
                     "error": exc
                 })
 
@@ -392,3 +396,5 @@ class OperationalPaperRuntime:
         summary["error_cycles"] = error_cycles
 
         return summary
+
+

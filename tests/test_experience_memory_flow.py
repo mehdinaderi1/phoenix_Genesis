@@ -1,11 +1,10 @@
 from intelligence.flow import IntelligenceFlow
 from intelligence.consensus import ConsensusResult
 
-
 def test_experience_saved_after_report():
 
     flow = IntelligenceFlow()
-
+    flow.enable_inline_outcome_learning = True
 
     consensus = ConsensusResult(
         trend="BULLISH",
@@ -13,11 +12,9 @@ def test_experience_saved_after_report():
         confidence=80
     )
 
-
     report = flow.create_report(
         consensus
     )
-
 
     assert len(
         flow.experience_memory.experiences

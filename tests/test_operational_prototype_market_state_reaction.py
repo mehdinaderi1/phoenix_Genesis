@@ -16,7 +16,7 @@ class ChangingSourceManager:
         self.prices = [65000.0, 64000.0, 63000.0]
         self.index = 0
 
-    def get_price(self, symbol):
+    def get_price(self, symbol, _health_cache=None):
         price = self.prices[min(self.index, len(self.prices) - 1)]
         self.index += 1
         return MarketData(

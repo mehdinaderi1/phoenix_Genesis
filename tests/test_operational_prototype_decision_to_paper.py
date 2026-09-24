@@ -19,7 +19,7 @@ class FakeSourceManager:
     def __init__(self):
         self.calls = 0
 
-    def get_price(self, symbol):
+    def get_price(self, symbol, _health_cache=None):
         prices = [65000.0, 65500.0, 66000.0]
         price = prices[self.calls]
         self.calls += 1

@@ -5,6 +5,7 @@ from intelligence.consensus import ConsensusResult
 def test_strategy_memory_flow():
 
     flow = IntelligenceFlow()
+    flow.enable_inline_outcome_learning = True
 
 
     consensus = ConsensusResult(
@@ -36,3 +37,4 @@ def test_strategy_memory_flow():
     print(report.learned_strategies)
     
     assert record is not None
+

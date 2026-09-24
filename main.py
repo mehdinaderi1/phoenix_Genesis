@@ -131,6 +131,22 @@ def print_cycle(result):
                 f"Weight={item['weight']}"
             )
 
+    candle_boundaries = result.get("candle_boundaries", {})
+
+    if candle_boundaries:
+        for timeframe, boundary in candle_boundaries.items():
+            if boundary is None:
+                print(f"  {timeframe} | CandleBoundary=None")
+                continue
+
+            print(
+                f"  {timeframe} | "
+                f"CandleStart={boundary["candle_start"]} | "
+                f"NextBoundary={boundary["next_boundary"]} | "
+                f"Age={boundary["age_seconds"]} | "
+                f"Closed={boundary["is_closed"]}"
+            )
+
 
 def print_session_summary(summary):
     print()

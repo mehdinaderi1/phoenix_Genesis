@@ -5,6 +5,7 @@ from intelligence.consensus import ConsensusResult
 def test_outcome_to_strategy_performance_memory_flow():
 
     flow = IntelligenceFlow()
+    flow.enable_inline_outcome_learning = True
 
     consensus = ConsensusResult(
         trend="BULLISH",

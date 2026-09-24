@@ -9,7 +9,7 @@ class FakeSourceCandlePipeline:
     def __init__(self):
         self.calls = []
 
-    def fetch_and_store(self, symbol, timeframe):
+    def fetch_and_store(self, symbol, timeframe, _health_cache=None):
         self.calls.append((symbol, timeframe))
         return {
             "stored": True,

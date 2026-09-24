@@ -14,7 +14,7 @@ from intelligence.flow import IntelligenceFlow
 
 
 class FakeSourceManager:
-    def get_price(self, symbol):
+    def get_price(self, symbol, _health_cache=None):
         return MarketData(
             symbol=symbol,
             price=65000.0,
