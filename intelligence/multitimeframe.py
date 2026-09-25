@@ -42,7 +42,8 @@ class MultiTimeframeAnalyzer:
                 "timeframe": item.timeframe,
                 "confidence": item.confidence,
                 "weight": weight,
-                "signal": item.signal
+                "signal": item.signal,
+                "trend": item.trend
             })
 
         average_confidence = weighted_sum / total_weight

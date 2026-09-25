@@ -9,11 +9,17 @@ class OperationalIntelligenceContext:
     trend: str
     signal: str
     confidence: float
+    consensus_breakdown: dict | None = None
 
     def summary(self):
-        return {
+        result = {
             "symbol": self.symbol,
             "trend": self.trend,
             "signal": self.signal,
             "confidence": self.confidence
         }
+
+        if self.consensus_breakdown is not None:
+            result["consensus_breakdown"] = self.consensus_breakdown
+
+        return result

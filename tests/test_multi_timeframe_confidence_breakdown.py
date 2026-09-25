@@ -23,9 +23,9 @@ def test_multi_timeframe_analyzer_builds_confidence_breakdown():
     assert breakdown["final_confidence"] == 31.875
 
     assert breakdown["timeframes"] == [
-        {"timeframe": "5m", "confidence": 50, "weight": 1, "signal": "WAIT"},
-        {"timeframe": "15m", "confidence": 70, "weight": 1, "signal": "BUY"},
-        {"timeframe": "30m", "confidence": 40, "weight": 1, "signal": "WAIT"},
-        {"timeframe": "4H", "confidence": 70, "weight": 2, "signal": "BUY"},
-        {"timeframe": "1D", "confidence": 70, "weight": 3, "signal": "BUY"},
+        {"timeframe": "5m", "confidence": 50, "weight": 1, "signal": "WAIT", "trend": "BEARISH"},
+        {"timeframe": "15m", "confidence": 70, "weight": 1, "signal": "BUY", "trend": "BULLISH"},
+        {"timeframe": "30m", "confidence": 40, "weight": 1, "signal": "WAIT", "trend": "BULLISH"},
+        {"timeframe": "4H", "confidence": 70, "weight": 2, "signal": "BUY", "trend": "BULLISH"},
+        {"timeframe": "1D", "confidence": 70, "weight": 3, "signal": "BUY", "trend": "BULLISH"},
     ]

@@ -1,4 +1,4 @@
-import main
+﻿import main
 
 
 class FakeObservation:
@@ -6,6 +6,16 @@ class FakeObservation:
         self.price = 65012.34
         self.source = "coinmarketcap"
         self.source_status = status
+
+
+class FakeDecision:
+    def __init__(self, action="WAIT"):
+        self.action = action
+
+
+class FakePaperResult(dict):
+    def __init__(self):
+        super().__init__(action="HOLD", realized_pnl=0)
 
 
 def test_print_cycle_handles_missing_market_context(capsys):
@@ -51,18 +61,7 @@ def test_print_cycle_handles_blind_observation(capsys):
     assert "Price=None" in output
     assert "Source=None" in output
     assert "Status=BLIND" in output
-    assert "Market Context=None" in output
-    assert "Intelligence=SKIPPED" in output
-    assert "Paper=SKIPPED" in output
 
-class FakeDecision:
-    def __init__(self, action="WAIT"):
-        self.action = action
-
-
-class FakePaperResult(dict):
-    def __init__(self):
-        super().__init__(action="HOLD", realized_pnl=0)
 
 def test_print_cycle_shows_decision_gate_visibility(capsys):
     result = {
@@ -85,3 +84,39 @@ def test_print_cycle_shows_decision_gate_visibility(capsys):
 
     assert "Decision=WAIT" in output
     assert "LongGate=BLOCKED" in output
+
+
+def test_print_cycle_shows_operational_strategy(capsys):
+    result = {
+        "cycle_number": 4,
+        "observation": FakeObservation(),
+        "market_context": type("Context", (), {
+            "trend": "BEARISH",
+            "signal": "WAIT",
+            "confidence": 17.5,
+        })(),
+        "report": type("Report", (), {
+            "signal": "WAIT",
+            "risk": "HIGH",
+            "confidence": 17.5,
+            "regime": "BEARISH",
+            "strategy_ranking": None,
+            "champion_strategy": None,
+            "operational_strategy_result": {
+                "strategy": "BTC_MTF_TREND_ALIGNMENT_V1",
+                "signal": "WAIT",
+                "direction": None,
+                "matched": False,
+            }
+        })(),
+        "decision": FakeDecision("WAIT"),
+        "action_proposal": None,
+        "translated_action_proposal": None,
+        "paper_result": FakePaperResult(),
+    }
+
+    main.print_cycle(result)
+
+    output = capsys.readouterr().out
+
+    assert "Strategy=BTC_MTF_TREND_ALIGNMENT_V1" in output

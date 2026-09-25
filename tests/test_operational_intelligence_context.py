@@ -9,7 +9,8 @@ def test_operational_intelligence_context_builder_creates_context():
         symbol="BTCUSDT",
         trend="BULLISH",
         signal="BUY",
-        confidence=85.0
+        confidence=85.0,
+        consensus_breakdown={"timeframes": [{"timeframe": "4H", "trend": "BULLISH"}]}
     )
 
     context = OperationalIntelligenceContextBuilder().build(
@@ -21,6 +22,7 @@ def test_operational_intelligence_context_builder_creates_context():
     assert context.trend == "BULLISH"
     assert context.signal == "BUY"
     assert context.confidence == 85.0
+    assert context.consensus_breakdown == market_context.consensus_breakdown
 
 
 def test_operational_intelligence_context_summary():

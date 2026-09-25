@@ -87,6 +87,26 @@ def print_cycle(result):
         else None
     )
 
+    if decision_strategy is None and report is not None:
+        operational_strategy = getattr(
+            report,
+            "operational_strategy_result",
+            None
+        )
+
+        if isinstance(operational_strategy, dict):
+            decision_strategy = operational_strategy.get("strategy")
+
+    if decision_strategy is None and decision is not None:
+        champion = getattr(
+            decision,
+            "champion_strategy",
+            None
+        )
+
+        if isinstance(champion, dict):
+            decision_strategy = champion.get("name")
+
     if isinstance(decision_strategy, dict):
         decision_strategy = decision_strategy.get("name")
 

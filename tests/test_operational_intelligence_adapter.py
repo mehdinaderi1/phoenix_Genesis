@@ -9,11 +9,19 @@ from core.market_data.operational_intelligence_context import (
 
 
 def test_operational_intelligence_adapter_creates_consensus():
+    breakdown = {
+        "timeframes": [
+            {"timeframe": "4H", "trend": "BULLISH", "signal": "BUY"}
+        ],
+        "final_confidence": 85.0
+    }
+
     context = OperationalIntelligenceContext(
         symbol="BTCUSDT",
         trend="BULLISH",
         signal="BUY",
-        confidence=85.0
+        confidence=85.0,
+        consensus_breakdown=breakdown
     )
 
     consensus = OperationalIntelligenceAdapter().to_consensus(context)
@@ -22,6 +30,7 @@ def test_operational_intelligence_adapter_creates_consensus():
     assert consensus.trend == "BULLISH"
     assert consensus.signal == "BUY"
     assert consensus.confidence == 85.0
+    assert consensus.breakdown == breakdown
 
 
 def test_operational_intelligence_adapter_rejects_none():

@@ -1,4 +1,4 @@
-from intelligence.action_proposal import ActionProposal
+﻿from intelligence.action_proposal import ActionProposal
 from intelligence.decision_memory import DecisionMemory
 from intelligence.decision_outcome_bridge import DecisionOutcomeBridge
 from intelligence.decision_record import DecisionRecord
@@ -47,6 +47,7 @@ from intelligence.reasoning import ReasoningEngine
 from intelligence.risk_analyzer import RiskAnalyzer
 from intelligence.report import MarketReport
 from intelligence.scenario_engine import ScenarioEngine
+from intelligence.trading_strategy import BTCMTFTrendAlignmentV1
 
 from intelligence.strategy_analyzer import StrategyAnalyzer
 from intelligence.strategy_bridge import StrategyBridge
@@ -487,6 +488,20 @@ class IntelligenceFlow:
             trend = consensus.trend
             signal = analysis["signal"]
 
+        operational_strategy_result = None
+
+        if consensus is not None and getattr(consensus, "breakdown", None):
+            operational_strategy = BTCMTFTrendAlignmentV1()
+            timeframe_states = operational_strategy.states_from_breakdown(
+                getattr(consensus, "breakdown", None)
+            )
+
+            if timeframe_states:
+                operational_strategy_result = {
+                    "strategy": operational_strategy.name,
+                    **operational_strategy.evaluate(timeframe_states),
+                }
+
         # ---------------------------------------------------------
         # 5. Market report
         # ---------------------------------------------------------
@@ -523,7 +538,8 @@ class IntelligenceFlow:
                 *risk.reasons,
 
                 *analysis["reasons"]
-            ]
+            ],
+            operational_strategy_result=operational_strategy_result,
         )
 
         report.scenarios = scenarios

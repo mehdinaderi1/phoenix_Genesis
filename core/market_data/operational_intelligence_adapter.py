@@ -20,5 +20,6 @@ class OperationalIntelligenceAdapter:
         return ConsensusResult(
             trend=context.trend,
             signal=context.signal,
-            confidence=context.confidence
+            confidence=context.confidence,
+            breakdown=context.consensus_breakdown
         )

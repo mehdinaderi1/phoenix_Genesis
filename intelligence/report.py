@@ -23,8 +23,8 @@ class MarketReport:
     strategy_consensus: dict | None = None
     strategy_consensus: dict = None
     champion_strategy: dict = None
-    
-    	
+    operational_strategy_result: dict | None = None
+
 
     def __contains__(self, key):
         return hasattr(self, key)

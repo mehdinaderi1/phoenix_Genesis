@@ -1,4 +1,4 @@
-from core.market_data.operational_intelligence_context import OperationalIntelligenceContext
+﻿from core.market_data.operational_intelligence_context import OperationalIntelligenceContext
 
 
 class OperationalIntelligenceContextBuilder:
@@ -10,5 +10,6 @@ class OperationalIntelligenceContextBuilder:
             symbol=market_context.symbol,
             trend=market_context.trend,
             signal=market_context.signal,
-            confidence=market_context.confidence
+            confidence=market_context.confidence,
+            consensus_breakdown=getattr(market_context, "consensus_breakdown", None)
         )
