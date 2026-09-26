@@ -182,3 +182,67 @@ def test_operational_market_context_runtime_reuses_source_health_within_cycle(
     assert source.health_check_calls == 1
 
     database.close()
+
+def test_operational_runtime_keeps_observer_when_legacy_market_data_pipeline_is_none(tmp_path):
+    database = DatabaseManager(db_path=str(tmp_path / "phoenix.db"))
+    database.connect()
+    class FakeObserver:
+        def __init__(self):
+            self.calls = 0
+
+        def observe(self, symbol, _health_cache=None):
+            self.calls += 1
+            return type(
+                "Observation",
+                (),
+                {
+                    "source_status": "LIVE",
+                    "price": 84000.0,
+                    "symbol": symbol,
+                },
+            )()
+
+    class FakeSourceCandlePipeline:
+        def fetch_and_store(
+            self,
+            symbol,
+            timeframe,
+            _health_cache=None,
+        ):
+            return {
+                "stored": True,
+                "source": "xt",
+                "candle": object(),
+            }
+
+    observer = FakeObserver()
+
+    runtime = OperationalMarketContextRuntime(
+        observer=observer,
+        market_data_pipeline=None,
+        database=database,
+        source_candle_pipeline=FakeSourceCandlePipeline(),
+    )
+
+    runtime.context_pipeline.build = (
+        lambda symbol, timeframes=None: OperationalMarketContext(
+            symbol=symbol,
+            trend="NEUTRAL",
+            signal="WAIT",
+            confidence=50.0,
+            timestamp="test",
+        )
+    )
+
+    result = runtime.run_cycle(
+        symbol="BTCUSDT",
+        timeframes=("5m", "15m", "30m", "4H", "1D"),
+    )
+
+    assert observer.calls == 1
+    assert result["observation"] is not None
+    assert result["observation"].price == 84000.0
+    assert result["context"] is not None
+
+
+

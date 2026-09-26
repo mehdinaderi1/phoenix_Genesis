@@ -28,8 +28,9 @@ class OperationalMarketContextRuntime:
         self.observer = None
         self.market_data_bridge = None
 
+        self.observer = observer
+
         if observer is not None and market_data_pipeline is not None:
-            self.observer = observer
             self.market_data_bridge = ObservationMarketDataBridge(
                 observer,
                 market_data_pipeline

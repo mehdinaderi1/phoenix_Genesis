@@ -170,9 +170,34 @@ class DecisionEngine:
             report
         )
 
-        can_long = self.rules.can_long(report)
-        can_short = self.rules.can_short(report)
+        operational_strategy = getattr(
+            report,
+            "operational_strategy_result",
+            None
+        )
 
+        strategy_allows_long = True
+        strategy_allows_short = True
+
+        if operational_strategy is not None:
+            matched = operational_strategy.get("matched", False)
+            strategy_signal = operational_strategy.get("signal")
+
+            if not matched:
+                strategy_allows_long = False
+                strategy_allows_short = False
+            else:
+                strategy_allows_long = strategy_signal == "BUY"
+                strategy_allows_short = strategy_signal == "SELL"
+
+        can_long = (
+            strategy_allows_long
+            and self.rules.can_long(report)
+        )
+        can_short = (
+            strategy_allows_short
+            and self.rules.can_short(report)
+        )
         
         print(
             "CAN SHORT:",

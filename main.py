@@ -42,7 +42,7 @@ def print_cycle(result):
     decision = result["decision"]
     action_proposal = result["action_proposal"]
     translated = result["translated_action_proposal"]
-    paper_result = result["paper_result"]
+    paper_result = result.get("paper_result") or {}
 
     cycle_number = result["cycle_number"]
 
@@ -118,8 +118,8 @@ def print_cycle(result):
 
     print(
         f"Cycle {cycle_number} | "
-        f"Price={observation.price} | "
-        f"Source={observation.source} | "
+        f"Price={observation.price if observation is not None else None} | "
+        f"Source={observation.source if observation is not None else None} | "
         f"Trend={market_context.trend} | "
         f"Signal={market_context.signal} | "
         f"ContextConfidence={market_context.confidence:.2f}% | "
@@ -130,8 +130,8 @@ def print_cycle(result):
         f"ShortGate={'OPEN' if short_gate else 'BLOCKED'} | "
         f"Proposal={getattr(action_proposal, 'action', None)} | "
         f"Translated={getattr(translated, 'action', None)} | "
-        f"Paper={paper_result['action']} | "
-        f"PnL={paper_result['realized_pnl']}"
+        f"Paper={paper_result.get('action')} | "
+        f"PnL={paper_result.get('realized_pnl')}"
     )
 
     if breakdown:
@@ -235,17 +235,7 @@ def main():
 
     # Candle pipeline remains deterministic for the current OBSERVE/PAPER prototype.
     # Real exchange/aggregator price observation is handled by the source manager below.
-    exchange_manager = ExchangeManager()
-    exchange = MockExchange()
-    exchange_manager.set_exchange(exchange)
-    exchange_manager.connect()
-
-    configure_market(exchange)
-
-    market_data_pipeline = MarketDataPipeline(
-        exchange_manager,
-        engine.database,
-    )
+    market_data_pipeline = None
 
     source_manager = build_real_source_manager()
     print("DEBUG SOURCE HEALTH:", source_manager.get_healthy_sources())
