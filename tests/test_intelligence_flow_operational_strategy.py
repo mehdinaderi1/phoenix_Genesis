@@ -26,6 +26,7 @@ def test_operational_strategy_result_is_exposed_in_report():
         "direction": "LONG",
         "matched": True,
     }
+    assert report.decision.action == "PREPARE_LONG"
 
 
 def test_operational_strategy_short_result_is_exposed_in_report():
@@ -52,6 +53,7 @@ def test_operational_strategy_short_result_is_exposed_in_report():
         "direction": "SHORT",
         "matched": True,
     }
+    assert report.decision.action == "PREPARE_SHORT"
 
 
 def test_operational_strategy_conflict_returns_wait_in_report():
@@ -78,3 +80,4 @@ def test_operational_strategy_conflict_returns_wait_in_report():
         "direction": None,
         "matched": False,
     }
+    assert report.decision.action == "WAIT"
