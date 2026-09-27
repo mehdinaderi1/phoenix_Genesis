@@ -47,3 +47,18 @@ def test_timeframe_analyzer():
     assert result.trend == "BULLISH"
     assert result.signal == "BUY"
     assert result.confidence > 0
+
+
+def test_timeframe_analyzer_bearish_with_positive_momentum_returns_wait():
+
+    prices = [100 + i for i in range(25)] + [90]
+
+    analyzer = TimeframeAnalyzer()
+
+    result = analyzer.analyze(
+        prices,
+        "30m"
+    )
+
+    assert result.trend == "BEARISH"
+    assert result.signal == "WAIT"
