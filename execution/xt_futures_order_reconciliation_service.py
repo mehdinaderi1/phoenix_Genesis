@@ -8,16 +8,6 @@ from execution.xt_futures_reconciler import XTFuturesReconciler
 
 
 class XTFuturesOrderReconciliationService:
-    """
-    Orchestrates XT Futures order-detail reconciliation.
-
-    This service does not:
-    - create orders
-    - retry order creation
-    - perform HTTP directly
-    - mutate positions
-    """
-
     def __init__(
         self,
         detail_client,
@@ -30,9 +20,19 @@ class XTFuturesOrderReconciliationService:
             query_builder or XTFuturesOrderDetailQueryBuilder()
         )
         self.interpreter = (
-            interpreter or XTFuturesOrderConfirmationInterpreter()
+            interpreter
+            or XTFuturesOrderConfirmationInterpreter()
         )
         self.reconciler = reconciler or XTFuturesReconciler()
+
+    def _fetch_confirmation(self, order_id):
+        if self.detail_client is None:
+            raise ValueError("detail_client is required")
+
+        request = self.query_builder.build(order_id)
+        response = self.detail_client.fetch(request.order_id)
+
+        return self.interpreter.interpret(response)
 
     def reconcile(self, idempotency_key, order_id):
         if not idempotency_key:
@@ -41,17 +41,32 @@ class XTFuturesOrderReconciliationService:
         if order_id is None:
             raise ValueError("order_id is required")
 
-        request = self.query_builder.build(order_id)
-
-        confirmation = self.detail_client.fetch(
-            request.order_id
-        )
-
-        interpreted = self.interpreter.interpret(
-            confirmation
-        )
+        confirmation = self._fetch_confirmation(order_id)
 
         return self.reconciler.reconcile(
             idempotency_key=idempotency_key,
-            confirmation=interpreted,
+            confirmation=confirmation,
         )
+
+    def reconcile_with_confirmation(
+        self,
+        idempotency_key,
+        order_id,
+    ):
+        if not idempotency_key:
+            raise ValueError("idempotency_key is required")
+
+        if order_id is None:
+            raise ValueError("order_id is required")
+
+        confirmation = self._fetch_confirmation(order_id)
+
+        result = self.reconciler.reconcile(
+            idempotency_key=idempotency_key,
+            confirmation=confirmation,
+        )
+
+        return {
+            "result": result,
+            "confirmation": confirmation,
+        }

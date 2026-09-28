@@ -168,3 +168,40 @@ def test_http_failure_remains_unknown():
     assert result.state == (
         XTFuturesOrderConfirmationState.UNKNOWN
     )
+
+def test_filled_order_preserves_execution_evidence():
+    response = make_response("FILLED")
+
+    response.body["result"]["executedQty"] = "0.001"
+    response.body["result"]["avgPrice"] = "67123.45"
+
+    confirmation = XTFuturesOrderConfirmationInterpreter().interpret(response)
+
+    assert confirmation.state == XTFuturesOrderConfirmationState.CONFIRMED
+    assert confirmation.order_id == "123"
+    assert confirmation.executed_quantity == 0.001
+    assert confirmation.average_price == 67123.45
+
+
+def test_filled_order_remains_confirmed_without_execution_evidence():
+    response = make_response("FILLED")
+
+    confirmation = XTFuturesOrderConfirmationInterpreter().interpret(response)
+
+    assert confirmation.state == XTFuturesOrderConfirmationState.CONFIRMED
+    assert confirmation.order_id == "123"
+    assert confirmation.executed_quantity is None
+    assert confirmation.average_price is None
+
+
+def test_invalid_execution_evidence_is_preserved_as_missing():
+    response = make_response("FILLED")
+
+    response.body["result"]["executedQty"] = "invalid"
+    response.body["result"]["avgPrice"] = "not-a-price"
+
+    confirmation = XTFuturesOrderConfirmationInterpreter().interpret(response)
+
+    assert confirmation.state == XTFuturesOrderConfirmationState.CONFIRMED
+    assert confirmation.executed_quantity is None
+    assert confirmation.average_price is None

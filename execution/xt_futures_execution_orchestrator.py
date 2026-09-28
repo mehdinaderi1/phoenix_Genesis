@@ -1,6 +1,9 @@
 from execution.xt_futures_attempt_state import (
     XTFuturesAttemptState,
 )
+from execution.xt_futures_execution_result_bridge import (
+    XTFuturesExecutionResultBridge,
+)
 from execution.xt_futures_idempotency import (
     XTFuturesIdempotencyKeyBuilder,
 )
@@ -12,6 +15,9 @@ from execution.xt_futures_order_payload import (
 )
 from execution.xt_futures_order_reconciliation_service import (
     XTFuturesOrderReconciliationService,
+)
+from execution.xt_futures_position_bridge import (
+    XTFuturesPositionBridge,
 )
 from execution.xt_futures_retry_executor import (
     XTFuturesRetryExecutor,
@@ -27,6 +33,9 @@ class XTFuturesExecutionOrchestrator:
 
     Confirmation is performed only by the explicit
     execute_and_reconcile() lifecycle.
+
+    A confirmed execution may be bridged into the existing
+    Phoenix PositionManager through XTFuturesPositionBridge.
     """
 
     def __init__(
@@ -36,6 +45,8 @@ class XTFuturesExecutionOrchestrator:
         idempotency_builder=None,
         retry_executor=None,
         reconciliation_service=None,
+        execution_result_bridge=None,
+        position_bridge=None,
     ):
         self.order_mapper = (
             order_mapper or XTFuturesOrderMapper()
@@ -55,6 +66,14 @@ class XTFuturesExecutionOrchestrator:
             or XTFuturesOrderReconciliationService(
                 detail_client=None
             )
+        )
+        self.execution_result_bridge = (
+            execution_result_bridge
+            or XTFuturesExecutionResultBridge()
+        )
+        self.position_bridge = (
+            position_bridge
+            or XTFuturesPositionBridge()
         )
 
     def prepare(
@@ -165,6 +184,8 @@ class XTFuturesExecutionOrchestrator:
         order_id = execution.get("order_id")
 
         result["reconciliation"] = None
+        result["execution_result"] = None
+        result["position"] = None
 
         if (
             execution.get("state")
@@ -175,13 +196,31 @@ class XTFuturesExecutionOrchestrator:
 
         numeric_order_id = int(order_id)
 
-        result["reconciliation"] = (
-            self.reconciliation_service.reconcile(
+        reconciliation = (
+            self.reconciliation_service
+            .reconcile_with_confirmation(
                 idempotency_key=(
                     result["idempotency_key"].value
                 ),
                 order_id=numeric_order_id,
             )
         )
+
+        result["reconciliation"] = reconciliation["result"]
+
+        confirmation = reconciliation["confirmation"]
+
+        result["execution_result"] = (
+            self.execution_result_bridge.build(
+                confirmation=confirmation,
+                action=result["request"].order_side,
+                symbol=result["request"].symbol,
+            )
+        )
+
+        if result["execution_result"] is not None:
+            result["position"] = self.position_bridge.apply(
+                result["execution_result"]
+            )
 
         return result

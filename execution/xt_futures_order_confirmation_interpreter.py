@@ -5,19 +5,18 @@ from execution.xt_futures_order_confirmation import (
 
 
 class XTFuturesOrderConfirmationInterpreter:
-    """
-    Interprets a normalized XT Futures order-detail response.
-
-    Only a verified FILLED state is treated as CONFIRMED.
-    """
-
     FILLED = "FILLED"
+    REJECTED_STATES = {"CANCELED", "REJECTED", "EXPIRED"}
 
-    REJECTED_STATES = {
-        "CANCELED",
-        "REJECTED",
-        "EXPIRED",
-    }
+    @staticmethod
+    def _optional_float(value):
+        if value is None:
+            return None
+
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
 
     def interpret(self, response):
         if response is None:
@@ -54,10 +53,19 @@ class XTFuturesOrderConfirmationInterpreter:
                 error="Order confirmation data is incomplete",
             )
 
+        executed_quantity = self._optional_float(
+            result.get("executedQty")
+        )
+        average_price = self._optional_float(
+            result.get("avgPrice")
+        )
+
         if state == self.FILLED:
             return XTFuturesOrderConfirmation(
                 state=XTFuturesOrderConfirmationState.CONFIRMED,
                 order_id=str(order_id),
+                executed_quantity=executed_quantity,
+                average_price=average_price,
             )
 
         if state in self.REJECTED_STATES:
@@ -65,10 +73,14 @@ class XTFuturesOrderConfirmationInterpreter:
                 state=XTFuturesOrderConfirmationState.REJECTED,
                 order_id=str(order_id),
                 error=f"Order state: {state}",
+                executed_quantity=executed_quantity,
+                average_price=average_price,
             )
 
         return XTFuturesOrderConfirmation(
             state=XTFuturesOrderConfirmationState.UNKNOWN,
             order_id=str(order_id),
             error=f"Order state: {state}",
+            executed_quantity=executed_quantity,
+            average_price=average_price,
         )
