@@ -1,3 +1,6 @@
+from execution.xt_futures_attempt_state import (
+    XTFuturesAttemptState,
+)
 from execution.xt_futures_idempotency import (
     XTFuturesIdempotencyKeyBuilder,
 )
@@ -6,6 +9,9 @@ from execution.xt_futures_order_mapper import (
 )
 from execution.xt_futures_order_payload import (
     XTFuturesOrderPayloadBuilder,
+)
+from execution.xt_futures_order_reconciliation_service import (
+    XTFuturesOrderReconciliationService,
 )
 from execution.xt_futures_retry_executor import (
     XTFuturesRetryExecutor,
@@ -18,6 +24,9 @@ class XTFuturesExecutionOrchestrator:
 
     This layer does not send real HTTP requests directly.
     Transport is injected into the retry executor.
+
+    Confirmation is performed only by the explicit
+    execute_and_reconcile() lifecycle.
     """
 
     def __init__(
@@ -26,6 +35,7 @@ class XTFuturesExecutionOrchestrator:
         payload_builder=None,
         idempotency_builder=None,
         retry_executor=None,
+        reconciliation_service=None,
     ):
         self.order_mapper = (
             order_mapper or XTFuturesOrderMapper()
@@ -39,6 +49,12 @@ class XTFuturesExecutionOrchestrator:
         )
         self.retry_executor = (
             retry_executor or XTFuturesRetryExecutor()
+        )
+        self.reconciliation_service = (
+            reconciliation_service
+            or XTFuturesOrderReconciliationService(
+                detail_client=None
+            )
         )
 
     def prepare(
@@ -121,3 +137,51 @@ class XTFuturesExecutionOrchestrator:
             "idempotency_key": prepared["idempotency_key"],
             "execution": result,
         }
+
+    def execute_and_reconcile(
+        self,
+        action_proposal,
+        transport,
+        position=None,
+        quantity=None,
+        order_type="MARKET",
+        price=None,
+        max_attempts=3,
+    ):
+        result = self.execute(
+            action_proposal=action_proposal,
+            transport=transport,
+            position=position,
+            quantity=quantity,
+            order_type=order_type,
+            price=price,
+            max_attempts=max_attempts,
+        )
+
+        if result is None:
+            return None
+
+        execution = result["execution"]
+        order_id = execution.get("order_id")
+
+        result["reconciliation"] = None
+
+        if (
+            execution.get("state")
+            != XTFuturesAttemptState.SENT
+            or order_id is None
+        ):
+            return result
+
+        numeric_order_id = int(order_id)
+
+        result["reconciliation"] = (
+            self.reconciliation_service.reconcile(
+                idempotency_key=(
+                    result["idempotency_key"].value
+                ),
+                order_id=numeric_order_id,
+            )
+        )
+
+        return result
