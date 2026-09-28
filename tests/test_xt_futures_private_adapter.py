@@ -49,3 +49,64 @@ def test_build_query_string_preserves_parameter_values():
     )
 
     assert query_string == "side=BUY&symbol=BTC+USDT"
+from exchanges.xt_futures_private_adapter import (
+    XTFuturesPrivateAdapter
+)
+
+
+def test_generate_signature_for_request_body():
+    adapter = XTFuturesPrivateAdapter(
+        appkey="APPKEY",
+        secret_key="SECRET"
+    )
+
+    signature = adapter.generate_body_signature(
+        timestamp="1234567890",
+        endpoint="/future/trade/v1/order/create",
+        request_body='{"symbol":"btc_usdt","origQty":1}'
+    )
+
+    assert isinstance(signature, str)
+    assert len(signature) == 64
+
+
+def test_body_signature_is_deterministic():
+    adapter = XTFuturesPrivateAdapter(
+        appkey="APPKEY",
+        secret_key="SECRET"
+    )
+
+    first = adapter.generate_body_signature(
+        timestamp="1234567890",
+        endpoint="/future/trade/v1/order/create",
+        request_body='{"symbol":"btc_usdt","origQty":1}'
+    )
+
+    second = adapter.generate_body_signature(
+        timestamp="1234567890",
+        endpoint="/future/trade/v1/order/create",
+        request_body='{"symbol":"btc_usdt","origQty":1}'
+    )
+
+    assert first == second
+
+
+def test_body_signature_changes_when_body_changes():
+    adapter = XTFuturesPrivateAdapter(
+        appkey="APPKEY",
+        secret_key="SECRET"
+    )
+
+    first = adapter.generate_body_signature(
+        timestamp="1234567890",
+        endpoint="/future/trade/v1/order/create",
+        request_body='{"symbol":"btc_usdt","origQty":1}'
+    )
+
+    second = adapter.generate_body_signature(
+        timestamp="1234567890",
+        endpoint="/future/trade/v1/order/create",
+        request_body='{"symbol":"btc_usdt","origQty":2}'
+    )
+
+    assert first != second
