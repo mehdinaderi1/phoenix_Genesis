@@ -1,4 +1,4 @@
-﻿from execution.xt_futures_attempt_state import XTFuturesAttemptState
+from execution.xt_futures_attempt_state import XTFuturesAttemptState
 from execution.xt_futures_attempt_state_resolver import (
     XTFuturesAttemptStateResolver,
 )
@@ -65,6 +65,7 @@ class XTFuturesRetryExecutor:
             )
 
         attempts = []
+        response = None
 
         for attempt_number in range(
             1,
@@ -99,6 +100,7 @@ class XTFuturesRetryExecutor:
                 })
 
             except (TimeoutError, OSError) as exc:
+                response = None
                 error_type = (
                     self.classifier.classify_exception(
                         exc
@@ -130,9 +132,11 @@ class XTFuturesRetryExecutor:
             return {
                 "state": attempts[-1]["state"],
                 "attempts": attempts,
+                "response": response,
             }
 
         return {
             "state": XTFuturesAttemptState.UNKNOWN,
             "attempts": attempts,
+            "response": response,
         }

@@ -162,3 +162,60 @@ def test_invalid_max_attempts_is_rejected():
             idempotency_key="abc123",
             max_attempts=0,
         )
+
+def test_500_then_200_preserves_final_response():
+    transport = FakeTransport([
+        HttpResponse(500, '{"error":"temporary"}'),
+        HttpResponse(
+            200,
+            '{"rc":0,"result":{"orderId":"123"}}',
+        ),
+    ])
+
+    result = XTFuturesRetryExecutor().execute(
+        transport=transport,
+        idempotency_key="abc123",
+        max_attempts=3,
+    )
+
+    assert result["state"] == XTFuturesAttemptState.SENT
+    assert transport.calls == 2
+
+    response = result["response"]
+
+    assert response.status_code == 200
+    assert response.ok is True
+    assert response.body["result"]["orderId"] == "123"
+
+
+def test_final_response_is_preserved_for_success():
+    transport = FakeTransport([
+        HttpResponse(
+            200,
+            '{"rc":0,"result":{"orderId":"456"}}',
+        ),
+    ])
+
+    result = XTFuturesRetryExecutor().execute(
+        transport=transport,
+        idempotency_key="abc123",
+        max_attempts=3,
+    )
+
+    assert result["state"] == XTFuturesAttemptState.SENT
+    assert result["response"].body["result"]["orderId"] == "456"
+
+
+def test_unknown_timeout_has_no_response():
+    transport = FakeTransport([
+        TimeoutError("timeout"),
+    ])
+
+    result = XTFuturesRetryExecutor().execute(
+        transport=transport,
+        idempotency_key="abc123",
+        max_attempts=1,
+    )
+
+    assert result["state"] == XTFuturesAttemptState.UNKNOWN
+    assert result["response"] is None

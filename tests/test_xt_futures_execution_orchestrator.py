@@ -100,3 +100,76 @@ def test_execute_returns_none_for_non_execution_action():
 
     assert result is None
     assert transport.calls == 0
+
+
+def test_execute_extracts_order_id_from_create_response():
+    proposal = ActionProposal(
+        action="BUY",
+        symbol="BTCUSDT",
+    )
+
+    transport = FakeTransport([
+        HttpResponse(
+            200,
+            '{"rc":0,"result":{"orderId":"123"}}',
+        ),
+    ])
+
+    result = XTFuturesExecutionOrchestrator().execute(
+        action_proposal=proposal,
+        transport=transport,
+        quantity=0.001,
+    )
+
+    assert result["execution"]["state"] == (
+        XTFuturesAttemptState.SENT
+    )
+    assert result["execution"]["order_id"] == "123"
+
+
+def test_execute_has_no_order_id_when_create_response_has_none():
+    proposal = ActionProposal(
+        action="BUY",
+        symbol="BTCUSDT",
+    )
+
+    transport = FakeTransport([
+        HttpResponse(
+            200,
+            '{"rc":0,"result":{}}',
+        ),
+    ])
+
+    result = XTFuturesExecutionOrchestrator().execute(
+        action_proposal=proposal,
+        transport=transport,
+        quantity=0.001,
+    )
+
+    assert result["execution"]["state"] == (
+        XTFuturesAttemptState.SENT
+    )
+    assert result["execution"]["order_id"] is None
+
+
+def test_execute_has_no_order_id_after_timeout():
+    proposal = ActionProposal(
+        action="BUY",
+        symbol="BTCUSDT",
+    )
+
+    class TimeoutTransport:
+        def __call__(self):
+            raise TimeoutError("timeout")
+
+    result = XTFuturesExecutionOrchestrator().execute(
+        action_proposal=proposal,
+        transport=TimeoutTransport(),
+        quantity=0.001,
+        max_attempts=1,
+    )
+
+    assert result["execution"]["state"] == (
+        XTFuturesAttemptState.UNKNOWN
+    )
+    assert result["execution"]["order_id"] is None

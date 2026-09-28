@@ -104,6 +104,17 @@ class XTFuturesExecutionOrchestrator:
             max_attempts=max_attempts,
         )
 
+        response = result.get("response")
+        order_id = None
+
+        if response is not None and isinstance(response.body, dict):
+            response_result = response.body.get("result")
+
+            if isinstance(response_result, dict):
+                order_id = response_result.get("orderId")
+
+        result["order_id"] = order_id
+
         return {
             "request": prepared["request"],
             "payload": prepared["payload"],
