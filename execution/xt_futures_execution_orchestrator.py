@@ -78,8 +78,7 @@ class XTFuturesExecutionOrchestrator:
             or XTFuturesExecutionResultBridge()
         )
         self.position_bridge = (
-            position_bridge
-            or XTFuturesPositionBridge()
+            position_bridge or XTFuturesPositionBridge()
         )
         self.position_close_bridge = position_close_bridge
 
@@ -91,6 +90,9 @@ class XTFuturesExecutionOrchestrator:
         order_type="MARKET",
         price=None,
     ):
+        if getattr(action_proposal, "status", None) != "APPROVED":
+            return None
+
         effective_quantity = quantity
 
         if position is not None:

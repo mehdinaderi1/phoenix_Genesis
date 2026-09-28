@@ -63,6 +63,7 @@ class FakeReconciliationService:
 def make_proposal():
     return ActionProposal(
         action="BUY",
+        status="APPROVED",
         symbol="BTCUSDT",
     )
 

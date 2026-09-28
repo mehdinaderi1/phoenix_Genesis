@@ -19,9 +19,10 @@ class FakeTransport:
         return response
 
 
-def test_prepare_maps_action_to_xt_order():
+def test_prepare_maps_approved_action_to_xt_order():
     proposal = ActionProposal(
         action="BUY",
+        status="APPROVED",
         symbol="BTCUSDT",
     )
 
@@ -44,9 +45,10 @@ def test_prepare_maps_action_to_xt_order():
     assert result["idempotency_key"].value
 
 
-def test_prepare_maps_sell_to_short_when_flat():
+def test_prepare_maps_approved_sell_to_short_when_flat():
     proposal = ActionProposal(
         action="SELL",
+        status="APPROVED",
         symbol="BTCUSDT",
     )
 
@@ -55,13 +57,60 @@ def test_prepare_maps_sell_to_short_when_flat():
         quantity=0.001,
     )
 
+    assert result is not None
     assert result["request"].order_side == "SELL"
     assert result["request"].position_side == "SHORT"
+
+
+def test_prepare_blocks_rejected_action_proposal():
+    proposal = ActionProposal(
+        action="BUY",
+        status="REJECTED",
+        symbol="BTCUSDT",
+    )
+
+    result = XTFuturesExecutionOrchestrator().prepare(
+        action_proposal=proposal,
+        quantity=0.001,
+    )
+
+    assert result is None
+
+
+def test_prepare_blocks_pending_action_proposal():
+    proposal = ActionProposal(
+        action="BUY",
+        status="PENDING",
+        symbol="BTCUSDT",
+    )
+
+    result = XTFuturesExecutionOrchestrator().prepare(
+        action_proposal=proposal,
+        quantity=0.001,
+    )
+
+    assert result is None
+
+
+def test_prepare_blocks_wait_action_even_when_approved():
+    proposal = ActionProposal(
+        action="WAIT",
+        status="APPROVED",
+        symbol="BTCUSDT",
+    )
+
+    result = XTFuturesExecutionOrchestrator().prepare(
+        action_proposal=proposal,
+        quantity=0.001,
+    )
+
+    assert result is None
 
 
 def test_execute_retries_and_preserves_idempotency():
     proposal = ActionProposal(
         action="BUY",
+        status="APPROVED",
         symbol="BTCUSDT",
     )
 
@@ -87,6 +136,7 @@ def test_execute_retries_and_preserves_idempotency():
 def test_execute_returns_none_for_non_execution_action():
     proposal = ActionProposal(
         action="WAIT",
+        status="APPROVED",
         symbol="BTCUSDT",
     )
 
@@ -105,6 +155,7 @@ def test_execute_returns_none_for_non_execution_action():
 def test_execute_extracts_order_id_from_create_response():
     proposal = ActionProposal(
         action="BUY",
+        status="APPROVED",
         symbol="BTCUSDT",
     )
 
@@ -130,6 +181,7 @@ def test_execute_extracts_order_id_from_create_response():
 def test_execute_has_no_order_id_when_create_response_has_none():
     proposal = ActionProposal(
         action="BUY",
+        status="APPROVED",
         symbol="BTCUSDT",
     )
 
@@ -155,6 +207,7 @@ def test_execute_has_no_order_id_when_create_response_has_none():
 def test_execute_has_no_order_id_after_timeout():
     proposal = ActionProposal(
         action="BUY",
+        status="APPROVED",
         symbol="BTCUSDT",
     )
 
