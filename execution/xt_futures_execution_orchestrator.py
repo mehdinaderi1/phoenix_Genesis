@@ -19,6 +19,9 @@ from execution.xt_futures_order_reconciliation_service import (
 from execution.xt_futures_position_bridge import (
     XTFuturesPositionBridge,
 )
+from execution.xt_futures_position_close_bridge import (
+    XTFuturesPositionCloseBridge,
+)
 from execution.xt_futures_retry_executor import (
     XTFuturesRetryExecutor,
 )
@@ -34,8 +37,10 @@ class XTFuturesExecutionOrchestrator:
     Confirmation is performed only by the explicit
     execute_and_reconcile() lifecycle.
 
-    A confirmed execution may be bridged into the existing
-    Phoenix PositionManager through XTFuturesPositionBridge.
+    A confirmed execution is bridged into the appropriate
+    Phoenix position lifecycle:
+    - OPEN -> XTFuturesPositionBridge
+    - CLOSE -> XTFuturesPositionCloseBridge
     """
 
     def __init__(
@@ -47,6 +52,7 @@ class XTFuturesExecutionOrchestrator:
         reconciliation_service=None,
         execution_result_bridge=None,
         position_bridge=None,
+        position_close_bridge=None,
     ):
         self.order_mapper = (
             order_mapper or XTFuturesOrderMapper()
@@ -75,6 +81,7 @@ class XTFuturesExecutionOrchestrator:
             position_bridge
             or XTFuturesPositionBridge()
         )
+        self.position_close_bridge = position_close_bridge
 
     def prepare(
         self,
@@ -84,10 +91,15 @@ class XTFuturesExecutionOrchestrator:
         order_type="MARKET",
         price=None,
     ):
+        effective_quantity = quantity
+
+        if position is not None:
+            effective_quantity = position.quantity
+
         request = self.order_mapper.build(
             action_proposal=action_proposal,
             position=position,
-            quantity=quantity,
+            quantity=effective_quantity,
             order_type=order_type,
             price=price,
         )
@@ -186,6 +198,7 @@ class XTFuturesExecutionOrchestrator:
         result["reconciliation"] = None
         result["execution_result"] = None
         result["position"] = None
+        result["close"] = None
 
         if (
             execution.get("state")
@@ -218,9 +231,22 @@ class XTFuturesExecutionOrchestrator:
             )
         )
 
-        if result["execution_result"] is not None:
-            result["position"] = self.position_bridge.apply(
-                result["execution_result"]
+        if result["execution_result"] is None:
+            return result
+
+        if (
+            position is not None
+            and self.position_close_bridge is not None
+        ):
+            result["close"] = (
+                self.position_close_bridge.apply(
+                    result["execution_result"]
+                )
             )
+            return result
+
+        result["position"] = self.position_bridge.apply(
+            result["execution_result"]
+        )
 
         return result
