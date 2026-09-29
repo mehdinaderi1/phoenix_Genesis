@@ -189,3 +189,41 @@ def test_operational_paper_runtime_rejects_missing_dependencies():
         assert str(exc) == "paper_trading_runtime must not be None"
     else:
         raise AssertionError("Expected ValueError")
+
+
+class FakeExecutionRuntime:
+    def __init__(self):
+        self.cycles = []
+
+    def run(self, cycles, symbol="BTCUSDT"):
+        self.cycles.extend(cycles)
+
+        return [{
+            "action": "EXECUTION_BOUNDARY",
+            "position": None,
+            "realized_pnl": 0.0,
+            "learning_result": None
+        }]
+
+
+def test_operational_paper_runtime_uses_injected_execution_runtime():
+    market_runtime = FakeMarketContextRuntime()
+    intelligence = FakeIntelligenceFlow()
+    paper_runtime = FakePaperTradingRuntime()
+    execution_runtime = FakeExecutionRuntime()
+
+    runtime = OperationalPaperRuntime(
+        market_runtime,
+        intelligence,
+        paper_runtime,
+        execution_runtime=execution_runtime
+    )
+
+    results = runtime.run(cycles=2)
+
+    assert len(execution_runtime.cycles) == 2
+    assert len(paper_runtime.cycles) == 0
+
+    assert results[0]["paper_result"]["action"] == (
+        "EXECUTION_BOUNDARY"
+    )

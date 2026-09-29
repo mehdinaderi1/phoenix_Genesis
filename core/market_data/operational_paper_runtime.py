@@ -12,14 +12,15 @@ from core.market_data.operational_intelligence_context_builder import (
 
 
 class OperationalPaperRuntime:
-    """Runs operational market data through intelligence and paper execution."""
+    """Runs operational market data through intelligence and execution."""
 
     def __init__(
         self,
         market_context_runtime,
         intelligence_flow,
         paper_trading_runtime,
-        session_archive=None
+        session_archive=None,
+        execution_runtime=None
     ):
         if market_context_runtime is None:
             raise ValueError(
@@ -39,6 +40,11 @@ class OperationalPaperRuntime:
         self.market_context_runtime = market_context_runtime
         self.intelligence_flow = intelligence_flow
         self.paper_trading_runtime = paper_trading_runtime
+        self.execution_runtime = (
+            execution_runtime
+            if execution_runtime is not None
+            else paper_trading_runtime
+        )
         self.session_archive = session_archive
 
         self.context_builder = (
@@ -123,14 +129,14 @@ class OperationalPaperRuntime:
                     "decision": report.decision
                 }
 
-                paper_results = (
-                    self.paper_trading_runtime.run(
+                execution_results = (
+                    self.execution_runtime.run(
                         cycles=[paper_input],
                         symbol=symbol
                     )
                 )
 
-                paper_result = paper_results[0]
+                paper_result = execution_results[0]
 
                 results.append({
                     "cycle_number": cycle_number,
@@ -396,5 +402,4 @@ class OperationalPaperRuntime:
         summary["error_cycles"] = error_cycles
 
         return summary
-
 
