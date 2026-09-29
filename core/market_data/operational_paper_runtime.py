@@ -20,7 +20,8 @@ class OperationalPaperRuntime:
         intelligence_flow,
         paper_trading_runtime,
         session_archive=None,
-        execution_runtime=None
+        execution_runtime=None,
+        shadow_execution_runtime=None
     ):
         if market_context_runtime is None:
             raise ValueError(
@@ -44,6 +45,9 @@ class OperationalPaperRuntime:
             execution_runtime
             if execution_runtime is not None
             else paper_trading_runtime
+        )
+        self.shadow_execution_runtime = (
+            shadow_execution_runtime
         )
         self.session_archive = session_archive
 
@@ -80,7 +84,11 @@ class OperationalPaperRuntime:
                         timeframes=timeframes
                     )
 
-                candle_boundaries = cycle.get("candle_boundaries", {})
+                candle_boundaries = cycle.get(
+                    "candle_boundaries",
+                    {}
+                )
+
                 observation = cycle["observation"]
                 market_context = cycle["context"]
 
@@ -95,6 +103,7 @@ class OperationalPaperRuntime:
                         "action_proposal": None,
                         "translated_action_proposal": None,
                         "paper_result": None,
+                        "shadow_result": None,
                         "candle_boundaries": candle_boundaries,
                         "error": None
                     })
@@ -138,6 +147,18 @@ class OperationalPaperRuntime:
 
                 paper_result = execution_results[0]
 
+                shadow_result = None
+
+                if self.shadow_execution_runtime is not None:
+                    shadow_results = (
+                        self.shadow_execution_runtime.run(
+                            cycles=[paper_input],
+                            symbol=symbol
+                        )
+                    )
+
+                    shadow_result = shadow_results[0]
+
                 results.append({
                     "cycle_number": cycle_number,
                     "observation": observation,
@@ -150,6 +171,7 @@ class OperationalPaperRuntime:
                         translated_action_proposal
                     ),
                     "paper_result": paper_result,
+                    "shadow_result": shadow_result,
                     "candle_boundaries": candle_boundaries,
                     "error": None
                 })
@@ -168,6 +190,7 @@ class OperationalPaperRuntime:
                     "action_proposal": None,
                     "translated_action_proposal": None,
                     "paper_result": None,
+                    "shadow_result": None,
                     "candle_boundaries": {},
                     "error": exc
                 })
@@ -402,4 +425,3 @@ class OperationalPaperRuntime:
         summary["error_cycles"] = error_cycles
 
         return summary
-
