@@ -14,6 +14,9 @@ from exchanges.mock_exchange import MockExchange
 from execution.paper_session_archive import PaperSessionArchive
 from execution.paper_trading_runtime import PaperTradingRuntime
 from execution.paper_trading_session import PaperTradingSession
+from execution.xt_futures_shadow_execution_runtime import (
+    XTFuturesShadowExecutionRuntime
+)
 from intelligence.decision_rules import DecisionRules
 from intelligence.flow import IntelligenceFlow
 
@@ -278,6 +281,11 @@ def main():
         session=paper_session
     )
 
+    shadow_runtime = XTFuturesShadowExecutionRuntime(
+        balance=paper_session.initial_balance,
+        position_size_percent=paper_session.position_size_percent,
+    )
+
     session_archive = PaperSessionArchive(
         root_path="data/paper_sessions"
     )
@@ -287,6 +295,7 @@ def main():
         intelligence_flow=intelligence_flow,
         paper_trading_runtime=paper_runtime,
         session_archive=session_archive,
+        shadow_execution_runtime=shadow_runtime,
     )
 
     print()
