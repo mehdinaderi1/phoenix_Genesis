@@ -1,6 +1,10 @@
 from execution.xt_futures_attempt_state import (
     XTFuturesAttemptState,
 )
+from execution.xt_futures_execution_idempotency_guard import (
+    XTFuturesExecutionIdempotencyGuard,
+    XTFuturesIdempotencyState,
+)
 from execution.xt_futures_execution_result_bridge import (
     XTFuturesExecutionResultBridge,
 )
@@ -48,6 +52,7 @@ class XTFuturesExecutionOrchestrator:
         order_mapper=None,
         payload_builder=None,
         idempotency_builder=None,
+        idempotency_guard=None,
         retry_executor=None,
         reconciliation_service=None,
         execution_result_bridge=None,
@@ -63,6 +68,10 @@ class XTFuturesExecutionOrchestrator:
         self.idempotency_builder = (
             idempotency_builder
             or XTFuturesIdempotencyKeyBuilder()
+        )
+        self.idempotency_guard = (
+            idempotency_guard
+            or XTFuturesExecutionIdempotencyGuard()
         )
         self.retry_executor = (
             retry_executor or XTFuturesRetryExecutor()
@@ -147,11 +156,40 @@ class XTFuturesExecutionOrchestrator:
         if prepared is None:
             return None
 
+        idempotency_key = prepared["idempotency_key"].value
+
+        if not self.idempotency_guard.can_submit(
+            idempotency_key
+        ):
+            state = self.idempotency_guard.get_state(
+                idempotency_key
+            )
+            raise PermissionError(
+                "Duplicate execution is blocked for idempotency key "
+                f"{idempotency_key} (state={state.value})"
+            )
+
+        self.idempotency_guard.register(
+            idempotency_key,
+            XTFuturesIdempotencyState.SUBMITTED,
+        )
+
         result = self.retry_executor.execute(
             transport=transport,
-            idempotency_key=prepared["idempotency_key"].value,
+            idempotency_key=idempotency_key,
             max_attempts=max_attempts,
         )
+
+        if result["state"] == XTFuturesAttemptState.REJECTED:
+            self.idempotency_guard.update(
+                idempotency_key,
+                XTFuturesIdempotencyState.REJECTED,
+            )
+        elif result["state"] == XTFuturesAttemptState.UNKNOWN:
+            self.idempotency_guard.update(
+                idempotency_key,
+                XTFuturesIdempotencyState.UNKNOWN,
+            )
 
         response = result.get("response")
         order_id = None
@@ -235,6 +273,12 @@ class XTFuturesExecutionOrchestrator:
 
         if result["execution_result"] is None:
             return result
+
+        if result["execution_result"].status == "EXECUTED":
+            self.idempotency_guard.update(
+                result["idempotency_key"].value,
+                XTFuturesIdempotencyState.CONFIRMED,
+            )
 
         if (
             position is not None
