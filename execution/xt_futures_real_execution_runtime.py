@@ -97,8 +97,10 @@ class XTFuturesRealExecutionRuntime:
                 order_type="MARKET",
             )
 
+            execution_status = execution["execution"]["state"]
+
             results.append({
-                "status": "EXECUTED",
+                "status": execution_status,
                 "prepared": prepared,
                 "request": prepared["request"],
                 "payload": prepared["payload"],

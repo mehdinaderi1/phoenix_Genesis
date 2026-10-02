@@ -27,9 +27,10 @@ class FakeTransport:
 
 
 class FakeOrchestrator:
-    def __init__(self):
+    def __init__(self, execution_state="SENT"):
         self.calls = []
         self.execute_calls = []
+        self.execution_state = execution_state
 
     def prepare(
         self,
@@ -78,7 +79,7 @@ class FakeOrchestrator:
 
         return {
             "execution": {
-                "state": "SENT",
+                "state": self.execution_state,
                 "order_id": "123",
                 "response": response,
             }
@@ -100,6 +101,23 @@ def make_cycle():
     }
 
 
+def make_runtime(
+    gate,
+    builder,
+    transport,
+    orchestrator,
+):
+    return XTFuturesRealExecutionRuntime(
+        balance=1000,
+        position_size_percent=1.0,
+        gate=gate,
+        orchestrator=orchestrator,
+        request_builder=builder,
+        transport=transport,
+        timestamp="123456",
+    )
+
+
 def test_real_execution_is_blocked_before_builder_and_transport():
     gate = XTFuturesRealExecutionGate(
         demo_mode=True,
@@ -109,14 +127,11 @@ def test_real_execution_is_blocked_before_builder_and_transport():
     transport = FakeTransport()
     orchestrator = FakeOrchestrator()
 
-    runtime = XTFuturesRealExecutionRuntime(
-        balance=1000,
-        position_size_percent=1.0,
+    runtime = make_runtime(
         gate=gate,
-        orchestrator=orchestrator,
-        request_builder=builder,
+        builder=builder,
         transport=transport,
-        timestamp="123456",
+        orchestrator=orchestrator,
     )
 
     try:
@@ -130,29 +145,28 @@ def test_real_execution_is_blocked_before_builder_and_transport():
     assert len(transport.calls) == 0
 
 
-def test_authorized_real_execution_reaches_existing_builder_and_transport():
+def test_authorized_real_execution_reports_sent_state():
     gate = XTFuturesRealExecutionGate(
         demo_mode=False,
         real_execution_enabled=True,
     )
     builder = FakeBuilder()
     transport = FakeTransport()
-    orchestrator = FakeOrchestrator()
+    orchestrator = FakeOrchestrator(
+        execution_state="SENT",
+    )
 
-    runtime = XTFuturesRealExecutionRuntime(
-        balance=1000,
-        position_size_percent=1.0,
+    runtime = make_runtime(
         gate=gate,
-        orchestrator=orchestrator,
-        request_builder=builder,
+        builder=builder,
         transport=transport,
-        timestamp="123456",
+        orchestrator=orchestrator,
     )
 
     results = runtime.run([make_cycle()])
 
     assert len(results) == 1
-    assert results[0]["status"] == "EXECUTED"
+    assert results[0]["status"] == "SENT"
     assert results[0]["execution"] is not None
 
     assert len(orchestrator.calls) == 1
@@ -160,6 +174,56 @@ def test_authorized_real_execution_reaches_existing_builder_and_transport():
     assert len(builder.calls) == 1
     assert len(transport.calls) == 1
     assert transport.calls[0] == "TRANSPORT_REQUEST"
+
+
+def test_real_execution_reports_rejected_state():
+    gate = XTFuturesRealExecutionGate(
+        demo_mode=False,
+        real_execution_enabled=True,
+    )
+    builder = FakeBuilder()
+    transport = FakeTransport()
+    orchestrator = FakeOrchestrator(
+        execution_state="REJECTED",
+    )
+
+    runtime = make_runtime(
+        gate=gate,
+        builder=builder,
+        transport=transport,
+        orchestrator=orchestrator,
+    )
+
+    results = runtime.run([make_cycle()])
+
+    assert len(results) == 1
+    assert results[0]["status"] == "REJECTED"
+    assert results[0]["execution"] is not None
+
+
+def test_real_execution_reports_unknown_state():
+    gate = XTFuturesRealExecutionGate(
+        demo_mode=False,
+        real_execution_enabled=True,
+    )
+    builder = FakeBuilder()
+    transport = FakeTransport()
+    orchestrator = FakeOrchestrator(
+        execution_state="UNKNOWN",
+    )
+
+    runtime = make_runtime(
+        gate=gate,
+        builder=builder,
+        transport=transport,
+        orchestrator=orchestrator,
+    )
+
+    results = runtime.run([make_cycle()])
+
+    assert len(results) == 1
+    assert results[0]["status"] == "UNKNOWN"
+    assert results[0]["execution"] is not None
 
 
 def test_real_execution_enabled_is_not_enough_in_demo_mode():
@@ -171,14 +235,11 @@ def test_real_execution_enabled_is_not_enough_in_demo_mode():
     transport = FakeTransport()
     orchestrator = FakeOrchestrator()
 
-    runtime = XTFuturesRealExecutionRuntime(
-        balance=1000,
-        position_size_percent=1.0,
+    runtime = make_runtime(
         gate=gate,
-        orchestrator=orchestrator,
-        request_builder=builder,
+        builder=builder,
         transport=transport,
-        timestamp="123456",
+        orchestrator=orchestrator,
     )
 
     try:
