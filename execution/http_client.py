@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -17,6 +17,14 @@ class HttpClient:
         endpoint,
         headers,
         body,
+        timeout=10
+    ):
+        raise NotImplementedError
+
+    def get(
+        self,
+        endpoint,
+        headers,
         timeout=10
     ):
         raise NotImplementedError
