@@ -78,14 +78,29 @@ class XTFuturesShadowExecutionRuntime:
                     timestamp=self.timestamp,
                 )
 
-                execution = self.orchestrator.execute(
-                    action_proposal=proposal,
-                    transport=lambda: self.transport.send(
-                        transport_request
-                    ),
-                    quantity=quantity,
-                    order_type="MARKET",
+                transport_callable = lambda: self.transport.send(
+                    transport_request
                 )
+
+                if (
+                    self.orchestrator.reconciliation_service is not None
+                    and self.orchestrator.reconciliation_service.detail_client is not None
+                ):
+                    execution = (
+                        self.orchestrator.execute_and_reconcile(
+                            action_proposal=proposal,
+                            transport=transport_callable,
+                            quantity=quantity,
+                            order_type="MARKET",
+                        )
+                    )
+                else:
+                    execution = self.orchestrator.execute(
+                        action_proposal=proposal,
+                        transport=transport_callable,
+                        quantity=quantity,
+                        order_type="MARKET",
+                    )
 
             results.append({
                 "status": (
