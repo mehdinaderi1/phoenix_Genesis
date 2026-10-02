@@ -1,5 +1,5 @@
 class Settings:
-    """تنظیمات اصلی پروژه ققنوس"""
+    """??????? ???? ????? ?????"""
 
     APP_NAME = "Phoenix Genesis"
     VERSION = "0.1.0"
@@ -13,5 +13,4 @@ class Settings:
     DEFAULT_EXCHANGE = "XT"
 
     DEMO_MODE = True
-
-
+    REAL_EXECUTION_ENABLED = False
