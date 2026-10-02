@@ -1,6 +1,10 @@
 ﻿from execution.paper_position_sizer import PaperPositionSizer
-from execution.xt_futures_execution_orchestrator import XTFuturesExecutionOrchestrator
-from execution.xt_futures_real_execution_gate import XTFuturesRealExecutionGate
+from execution.xt_futures_execution_orchestrator import (
+    XTFuturesExecutionOrchestrator,
+)
+from execution.xt_futures_real_execution_gate import (
+    XTFuturesRealExecutionGate,
+)
 
 
 class XTFuturesRealExecutionRuntime:
@@ -88,7 +92,7 @@ class XTFuturesRealExecutionRuntime:
                 timestamp=self.timestamp,
             )
 
-            execution = self.orchestrator.execute(
+            execution = self.orchestrator.execute_and_reconcile(
                 action_proposal=proposal,
                 transport=lambda: self.transport.send(
                     transport_request
@@ -97,7 +101,36 @@ class XTFuturesRealExecutionRuntime:
                 order_type="MARKET",
             )
 
-            execution_status = execution["execution"]["state"]
+            if execution is None:
+                results.append({
+                    "status": "NOT_EXECUTED",
+                    "prepared": prepared,
+                    "request": prepared["request"],
+                    "payload": prepared["payload"],
+                    "idempotency_key": prepared["idempotency_key"],
+                    "execution": None,
+                })
+                continue
+
+            execution_result = execution.get(
+                "execution_result"
+            )
+
+            reconciliation = execution.get(
+                "reconciliation"
+            )
+
+            execution_state = execution["execution"]["state"]
+
+            if (
+                execution_result is not None
+                and execution_result.status == "EXECUTED"
+            ):
+                execution_status = "EXECUTED"
+            elif reconciliation == "REJECTED":
+                execution_status = "REJECTED"
+            else:
+                execution_status = execution_state
 
             results.append({
                 "status": execution_status,

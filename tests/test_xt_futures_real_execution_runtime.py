@@ -1,8 +1,12 @@
 ﻿from execution.http_client import HttpResponse
-from execution.xt_futures_real_execution_gate import XTFuturesRealExecutionGate
+from execution.xt_futures_real_execution_gate import (
+    XTFuturesRealExecutionGate,
+)
 from execution.xt_futures_order_request import XTFuturesOrderRequest
 from intelligence.action_proposal import ActionProposal
-from execution.xt_futures_real_execution_runtime import XTFuturesRealExecutionRuntime
+from execution.xt_futures_real_execution_runtime import (
+    XTFuturesRealExecutionRuntime,
+)
 
 
 class FakeBuilder:
@@ -26,11 +30,22 @@ class FakeTransport:
         )
 
 
+class FakeExecutionResult:
+    def __init__(self, status):
+        self.status = status
+
+
 class FakeOrchestrator:
-    def __init__(self, execution_state="SENT"):
+    def __init__(
+        self,
+        execution_state="SENT",
+        execution_result=None,
+    ):
         self.calls = []
         self.execute_calls = []
+        self.execute_and_reconcile_calls = []
         self.execution_state = execution_state
+        self.execution_result = execution_result
 
     def prepare(
         self,
@@ -83,6 +98,31 @@ class FakeOrchestrator:
                 "order_id": "123",
                 "response": response,
             }
+        }
+
+    def execute_and_reconcile(
+        self,
+        action_proposal,
+        transport,
+        quantity,
+        order_type,
+    ):
+        self.execute_and_reconcile_calls.append({
+            "action_proposal": action_proposal,
+            "quantity": quantity,
+            "order_type": order_type,
+        })
+
+        response = transport()
+
+        return {
+            "execution": {
+                "state": self.execution_state,
+                "order_id": "123",
+                "response": response,
+            },
+            "reconciliation": "CONFIRMED",
+            "execution_result": self.execution_result,
         }
 
 
@@ -170,7 +210,8 @@ def test_authorized_real_execution_reports_sent_state():
     assert results[0]["execution"] is not None
 
     assert len(orchestrator.calls) == 1
-    assert len(orchestrator.execute_calls) == 1
+    assert len(orchestrator.execute_calls) == 0
+    assert len(orchestrator.execute_and_reconcile_calls) == 1
     assert len(builder.calls) == 1
     assert len(transport.calls) == 1
     assert transport.calls[0] == "TRANSPORT_REQUEST"
@@ -251,3 +292,63 @@ def test_real_execution_enabled_is_not_enough_in_demo_mode():
     assert len(orchestrator.calls) == 0
     assert len(builder.calls) == 0
     assert len(transport.calls) == 0
+
+
+def test_real_execution_runtime_confirms_filled_order():
+    gate = XTFuturesRealExecutionGate(
+        demo_mode=False,
+        real_execution_enabled=True,
+    )
+    builder = FakeBuilder()
+    transport = FakeTransport()
+    orchestrator = FakeOrchestrator(
+        execution_state="SENT",
+        execution_result=FakeExecutionResult(
+            status="EXECUTED",
+        ),
+    )
+
+    runtime = make_runtime(
+        gate=gate,
+        builder=builder,
+        transport=transport,
+        orchestrator=orchestrator,
+    )
+
+    results = runtime.run([make_cycle()])
+
+    assert len(results) == 1
+    assert results[0]["status"] == "EXECUTED"
+    assert results[0]["execution"]["execution"]["state"] == "SENT"
+
+    assert len(orchestrator.execute_calls) == 0
+    assert len(orchestrator.execute_and_reconcile_calls) == 1
+
+
+def test_real_execution_runtime_does_not_claim_execution_without_fill_evidence():
+    gate = XTFuturesRealExecutionGate(
+        demo_mode=False,
+        real_execution_enabled=True,
+    )
+    builder = FakeBuilder()
+    transport = FakeTransport()
+    orchestrator = FakeOrchestrator(
+        execution_state="SENT",
+        execution_result=None,
+    )
+
+    runtime = make_runtime(
+        gate=gate,
+        builder=builder,
+        transport=transport,
+        orchestrator=orchestrator,
+    )
+
+    results = runtime.run([make_cycle()])
+
+    assert len(results) == 1
+    assert results[0]["status"] == "SENT"
+    assert results[0]["execution"]["execution"]["state"] == "SENT"
+
+    assert len(orchestrator.execute_calls) == 0
+    assert len(orchestrator.execute_and_reconcile_calls) == 1
