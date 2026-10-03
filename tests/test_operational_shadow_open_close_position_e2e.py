@@ -167,8 +167,10 @@ class FakeCreateHttpClient:
 
 
 class FakeDetailHttpClient:
-    def __init__(self):
+    def __init__(self, rejected_on_call=None, unknown_on_call=None):
         self.calls = []
+        self.rejected_on_call = rejected_on_call
+        self.unknown_on_call = unknown_on_call
 
     def get(self, endpoint, headers, timeout=10):
         self.calls.append(
@@ -179,9 +181,48 @@ class FakeDetailHttpClient:
             }
         )
 
-        order_id = str(100 + len(self.calls))
+        call_number = len(self.calls)
+        order_id = str(100 + call_number)
 
-        price = "50000" if len(self.calls) == 1 else "68000"
+        if (
+            self.rejected_on_call is not None
+            and call_number == self.rejected_on_call
+        ):
+            return HttpResponse(
+                200,
+                json.dumps(
+                    {
+                        "rc": 0,
+                        "result": {
+                            "orderId": order_id,
+                            "state": "REJECTED",
+                            "executedQty": "0",
+                            "avgPrice": "68000",
+                        },
+                    }
+                ),
+            )
+
+        if (
+            self.unknown_on_call is not None
+            and call_number == self.unknown_on_call
+        ):
+            return HttpResponse(
+                200,
+                json.dumps(
+                    {
+                        "rc": 0,
+                        "result": {
+                            "orderId": order_id,
+                            "state": "PARTIALLY_FILLED",
+                            "executedQty": "0.0001",
+                            "avgPrice": "68000",
+                        },
+                    }
+                ),
+            )
+
+        price = "50000" if call_number == 1 else "68000"
 
         return HttpResponse(
             200,
@@ -203,6 +244,70 @@ class FakeArchive:
     def save(self, session_id, record):
         self.session_id = session_id
         self.record = record
+
+
+def build_shadow_runtime(detail_client):
+    session = PaperTradingSession(
+        initial_balance=1000.0,
+        position_size_percent=1.0,
+    )
+
+    position_bridge = XTFuturesPositionBridge(
+        position_manager=session.position_manager,
+    )
+
+    position_close_bridge = XTFuturesPositionCloseBridge(
+        session=session,
+    )
+
+    create_client = FakeCreateHttpClient()
+
+    create_transport = XTFuturesTransport(
+        http_client=create_client,
+        timeout=15,
+    )
+
+    create_builder = XTFuturesTransportRequestBuilder(
+        appkey="APPKEY",
+        secret_key="SECRET",
+    )
+
+    detail_transport = XTFuturesOrderDetailTransport(
+        http_client=detail_client,
+        timeout=15,
+    )
+
+    detail_builder = XTFuturesOrderDetailTransportRequestBuilder(
+        appkey="APPKEY",
+        secret_key="SECRET",
+        timestamp="1234567890",
+    )
+
+    order_detail_client = XTFuturesOrderDetailClient(
+        transport=detail_transport,
+        request_builder=detail_builder,
+    )
+
+    reconciliation_service = XTFuturesOrderReconciliationService(
+        detail_client=order_detail_client,
+    )
+
+    orchestrator = XTFuturesExecutionOrchestrator(
+        reconciliation_service=reconciliation_service,
+        position_bridge=position_bridge,
+        position_close_bridge=position_close_bridge,
+    )
+
+    shadow_runtime = XTFuturesShadowExecutionRuntime(
+        balance=1000,
+        position_size_percent=1,
+        orchestrator=orchestrator,
+        transport=create_transport,
+        request_builder=create_builder,
+        timestamp="1234567890",
+    )
+
+    return session, shadow_runtime, orchestrator, create_client
 
 
 def test_operational_runtime_shadow_open_then_close_position_e2e():
@@ -359,3 +464,221 @@ def test_operational_runtime_shadow_open_then_close_position_e2e():
     assert len(create_client.calls) == 2
     assert len(detail_client.calls) == 2
     assert len(paper_runtime.cycles) == 2
+
+
+def test_operational_runtime_shadow_rejected_close_preserves_position_and_finalizes_idempotency():
+    market_runtime = FakeMarketContextRuntime()
+    intelligence = FakeIntelligenceFlow()
+    paper_runtime = FakePaperTradingRuntime()
+    archive = FakeArchive()
+
+    detail_client = FakeDetailHttpClient(
+        rejected_on_call=2,
+    )
+
+    session, shadow_runtime, orchestrator, create_client = (
+        build_shadow_runtime(detail_client)
+    )
+
+    runtime = OperationalPaperRuntime(
+        market_context_runtime=market_runtime,
+        intelligence_flow=intelligence,
+        paper_trading_runtime=paper_runtime,
+        session_archive=archive,
+        shadow_execution_runtime=shadow_runtime,
+    )
+
+    results = runtime.run(
+        symbol="BTCUSDT",
+        cycles=2,
+    )
+
+    assert len(results) == 2
+
+    # =========================================================
+    # Cycle 1: BUY -> FILLED -> Position OPEN
+    # =========================================================
+
+    first = results[0]
+
+    assert first["paper_result"]["action"] == "BUY"
+
+    first_shadow = first["shadow_result"]
+
+    assert first_shadow["status"] == "EXECUTED"
+
+    first_execution = first_shadow["execution"]
+
+    assert first_execution["reconciliation"].state.value == "CONFIRMED"
+
+    first_result = first_execution["execution_result"]
+
+    assert first_result is not None
+    assert first_result.status == "EXECUTED"
+
+    first_position = session.get_position()
+
+    assert first_position is not None
+    assert first_position.symbol == "BTCUSDT"
+    assert first_position.side == "BUY"
+    assert first_position.entry_price == 50000.0
+    assert first_position.quantity == 0.0002
+
+    # =========================================================
+    # Cycle 2: SELL -> REJECTED -> Position must remain OPEN
+    # =========================================================
+
+    second = results[1]
+
+    assert second["paper_result"]["action"] == "SELL"
+
+    second_shadow = second["shadow_result"]
+
+    assert second_shadow["status"] == "EXECUTED"
+
+    second_execution = second_shadow["execution"]
+
+    assert second_execution["execution"]["state"] == "SENT"
+    assert second_execution["execution"]["order_id"] == "102"
+
+    assert second_execution["reconciliation"].state.value == "REJECTED"
+
+    second_result = second_execution["execution_result"]
+
+    assert second_result is None
+
+    # A rejected close must never mutate the live paper position.
+    remaining_position = session.get_position()
+
+    assert remaining_position is not None
+    assert remaining_position.symbol == "BTCUSDT"
+    assert remaining_position.side == "BUY"
+    assert remaining_position.entry_price == 50000.0
+    assert remaining_position.quantity == 0.0002
+
+    # No close means no realized trade/PnL.
+    assert session.get_trade_count() == 0
+    assert session.get_balance() == 1000.0
+
+    # Both orders reached XT detail reconciliation.
+    assert len(create_client.calls) == 2
+    assert len(detail_client.calls) == 2
+
+    # The reconciled failure must finalize the execution attempt.
+    second_idempotency_key = second_execution["idempotency_key"].value
+
+    assert (
+        orchestrator.idempotency_guard.get_state(
+            second_idempotency_key
+        ).value
+        == "REJECTED"
+    )
+
+
+def test_operational_runtime_shadow_unknown_close_preserves_position_and_finalizes_idempotency():
+    market_runtime = FakeMarketContextRuntime()
+    intelligence = FakeIntelligenceFlow()
+    paper_runtime = FakePaperTradingRuntime()
+    archive = FakeArchive()
+
+    detail_client = FakeDetailHttpClient(
+        unknown_on_call=2,
+    )
+
+    session, shadow_runtime, orchestrator, create_client = (
+        build_shadow_runtime(detail_client)
+    )
+
+    runtime = OperationalPaperRuntime(
+        market_context_runtime=market_runtime,
+        intelligence_flow=intelligence,
+        paper_trading_runtime=paper_runtime,
+        session_archive=archive,
+        shadow_execution_runtime=shadow_runtime,
+    )
+
+    results = runtime.run(
+        symbol="BTCUSDT",
+        cycles=2,
+    )
+
+    assert len(results) == 2
+
+    # =========================================================
+    # Cycle 1: BUY -> FILLED -> Position OPEN
+    # =========================================================
+
+    first = results[0]
+
+    assert first["paper_result"]["action"] == "BUY"
+
+    first_shadow = first["shadow_result"]
+
+    assert first_shadow["status"] == "EXECUTED"
+
+    first_execution = first_shadow["execution"]
+
+    assert first_execution["reconciliation"].state.value == "CONFIRMED"
+
+    first_result = first_execution["execution_result"]
+
+    assert first_result is not None
+    assert first_result.status == "EXECUTED"
+
+    first_position = session.get_position()
+
+    assert first_position is not None
+    assert first_position.symbol == "BTCUSDT"
+    assert first_position.side == "BUY"
+    assert first_position.entry_price == 50000.0
+    assert first_position.quantity == 0.0002
+
+    # =========================================================
+    # Cycle 2: SELL -> UNKNOWN -> Position must remain OPEN
+    # =========================================================
+
+    second = results[1]
+
+    assert second["paper_result"]["action"] == "SELL"
+
+    second_shadow = second["shadow_result"]
+
+    assert second_shadow["status"] == "EXECUTED"
+
+    second_execution = second_shadow["execution"]
+
+    assert second_execution["execution"]["state"] == "SENT"
+    assert second_execution["execution"]["order_id"] == "102"
+
+    assert second_execution["reconciliation"].state.value == "UNKNOWN"
+
+    second_result = second_execution["execution_result"]
+
+    assert second_result is None
+
+    # An unknown close must never mutate the live paper position.
+    remaining_position = session.get_position()
+
+    assert remaining_position is not None
+    assert remaining_position.symbol == "BTCUSDT"
+    assert remaining_position.side == "BUY"
+    assert remaining_position.entry_price == 50000.0
+    assert remaining_position.quantity == 0.0002
+
+    # No confirmed close means no realized trade/PnL.
+    assert session.get_trade_count() == 0
+    assert session.get_balance() == 1000.0
+
+    # Both orders reached XT detail reconciliation.
+    assert len(create_client.calls) == 2
+    assert len(detail_client.calls) == 2
+
+    # UNKNOWN must finalize the execution attempt as UNKNOWN.
+    second_idempotency_key = second_execution["idempotency_key"].value
+
+    assert (
+        orchestrator.idempotency_guard.get_state(
+            second_idempotency_key
+        ).value
+        == "UNKNOWN"
+    )

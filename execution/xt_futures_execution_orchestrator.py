@@ -261,6 +261,32 @@ class XTFuturesExecutionOrchestrator:
 
         result["reconciliation"] = reconciliation["result"]
 
+        reconciliation_result = result["reconciliation"]
+
+        if isinstance(
+            reconciliation_result,
+            XTFuturesAttemptState,
+        ):
+            reconciliation_state = reconciliation_result
+        else:
+            reconciliation_state = reconciliation_result.state
+
+        if reconciliation_state == XTFuturesAttemptState.CONFIRMED:
+            self.idempotency_guard.update(
+                result["idempotency_key"].value,
+                XTFuturesIdempotencyState.CONFIRMED,
+            )
+        elif reconciliation_state == XTFuturesAttemptState.REJECTED:
+            self.idempotency_guard.update(
+                result["idempotency_key"].value,
+                XTFuturesIdempotencyState.REJECTED,
+            )
+        elif reconciliation_state == XTFuturesAttemptState.UNKNOWN:
+            self.idempotency_guard.update(
+                result["idempotency_key"].value,
+                XTFuturesIdempotencyState.UNKNOWN,
+            )
+
         confirmation = reconciliation["confirmation"]
 
         result["execution_result"] = (
