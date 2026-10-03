@@ -46,6 +46,7 @@ def print_cycle(result):
     action_proposal = result["action_proposal"]
     translated = result["translated_action_proposal"]
     paper_result = result.get("paper_result") or {}
+    shadow_result = result.get("shadow_result") or {}
 
     cycle_number = result["cycle_number"]
 
@@ -134,6 +135,7 @@ def print_cycle(result):
         f"Proposal={getattr(action_proposal, 'action', None)} | "
         f"Translated={getattr(translated, 'action', None)} | "
         f"Paper={paper_result.get('action')} | "
+        f"Shadow={shadow_result.get('status', 'SKIPPED')} | "
         f"PnL={paper_result.get('realized_pnl')}"
     )
 
