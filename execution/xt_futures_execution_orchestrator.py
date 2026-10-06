@@ -98,6 +98,7 @@ class XTFuturesExecutionOrchestrator:
         quantity=None,
         order_type="MARKET",
         price=None,
+        attempt_identity=None,
     ):
         if getattr(action_proposal, "status", None) != "APPROVED":
             return None
@@ -127,6 +128,7 @@ class XTFuturesExecutionOrchestrator:
             order_type=request.order_type,
             quantity=request.quantity,
             price=request.price,
+            attempt_identity=attempt_identity,
         )
 
         return {
@@ -144,6 +146,7 @@ class XTFuturesExecutionOrchestrator:
         order_type="MARKET",
         price=None,
         max_attempts=3,
+        attempt_identity=None,
     ):
         prepared = self.prepare(
             action_proposal=action_proposal,
@@ -151,6 +154,7 @@ class XTFuturesExecutionOrchestrator:
             quantity=quantity,
             order_type=order_type,
             price=price,
+            attempt_identity=attempt_identity,
         )
 
         if prepared is None:
@@ -194,7 +198,10 @@ class XTFuturesExecutionOrchestrator:
         response = result.get("response")
         order_id = None
 
-        if response is not None and isinstance(response.body, dict):
+        if response is not None and isinstance(
+            response.body,
+            dict,
+        ):
             response_result = response.body.get("result")
 
             if isinstance(response_result, dict):
@@ -218,6 +225,7 @@ class XTFuturesExecutionOrchestrator:
         order_type="MARKET",
         price=None,
         max_attempts=3,
+        attempt_identity=None,
     ):
         result = self.execute(
             action_proposal=action_proposal,
@@ -227,6 +235,7 @@ class XTFuturesExecutionOrchestrator:
             order_type=order_type,
             price=price,
             max_attempts=max_attempts,
+            attempt_identity=attempt_identity,
         )
 
         if result is None:
