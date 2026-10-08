@@ -250,6 +250,7 @@ class OperationalPaperRuntime:
         for result in results:
             paper_result = result.get("paper_result")
             observation = result.get("observation")
+            market_context = result.get("market_context")
             report = result.get("report")
             action_proposal = result.get("action_proposal")
 
@@ -264,6 +265,28 @@ class OperationalPaperRuntime:
                     observation,
                     "price",
                     None
+                ),
+                "timestamp": getattr(
+                    observation,
+                    "timestamp",
+                    None
+                ),
+                "source_status": getattr(
+                    observation,
+                    "source_status",
+                    None
+                ),
+                "fallback_used": getattr(
+                    observation,
+                    "fallback_used",
+                    None
+                ),
+                "consensus_breakdown": self._serialize_value(
+                    getattr(
+                        market_context,
+                        "consensus_breakdown",
+                        None
+                    )
                 ),
                 "signal": getattr(
                     report,

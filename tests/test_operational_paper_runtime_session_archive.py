@@ -21,7 +21,8 @@ class ControlledMarketRuntime:
             price=price,
             source="mock",
             fallback_used=False,
-            source_status="HEALTHY"
+            source_status="HEALTHY",
+            timestamp="2026-09-14T00:00:00+00:00"
         )
 
         context = OperationalMarketContext(
@@ -29,7 +30,13 @@ class ControlledMarketRuntime:
             trend="BULLISH",
             signal="BUY",
             confidence=85.0,
-            timestamp="2026-09-14T00:00:00+00:00"
+            timestamp="2026-09-14T00:00:00+00:00",
+            consensus_breakdown={
+                "weighted_confidence": 82.5,
+                "conflict": False,
+                "penalty": 1.0,
+                "final_confidence": 82.5
+            }
         )
 
         return {
@@ -162,6 +169,18 @@ def test_operational_paper_runtime_persists_session_archive(tmp_path):
     assert saved["summary"]["trade_count"] == 1
     assert saved["summary"]["total_pnl"] > 0
     assert len(saved["cycles"]) == 3
+
+    first_cycle = saved["cycles"][0]
+
+    assert first_cycle["timestamp"] == "2026-09-14T00:00:00+00:00"
+    assert first_cycle["source_status"] == "HEALTHY"
+    assert first_cycle["fallback_used"] is False
+    assert first_cycle["consensus_breakdown"] == {
+        "weighted_confidence": 82.5,
+        "conflict": False,
+        "penalty": 1.0,
+        "final_confidence": 82.5
+    }
 
 
 def test_operational_paper_runtime_archives_session_after_error_cycle(tmp_path):
