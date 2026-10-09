@@ -57,7 +57,6 @@ class PaperSessionArchive:
     ):
         return sorted(
             path.stem
-            for path in self.root_path.glob(
-                "*.json"
-            )
+            for path in self.root_path.glob("*.json")
+            if not path.name.endswith(".checkpoint.json")
         )

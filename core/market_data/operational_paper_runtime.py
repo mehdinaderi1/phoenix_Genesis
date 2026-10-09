@@ -442,9 +442,25 @@ class OperationalPaperRuntime:
             if result.get("error") is not None
         )
 
+        no_data_cycles = sum(
+            1
+            for result in results
+            if (
+                result.get("error") is None
+                and not (
+                    result.get("observation") is not None
+                    and result.get("observation").source_status == "BLIND"
+                )
+                and (
+                    result.get("observation") is None
+                    or result.get("market_context") is None
+                )
+            )
+        )
         summary["cycles_processed"] = len(results)
         summary["successful_cycles"] = len(paper_results)
         summary["blind_cycles"] = blind_cycles
+        summary["no_data_cycles"] = no_data_cycles
         summary["error_cycles"] = error_cycles
 
         return summary

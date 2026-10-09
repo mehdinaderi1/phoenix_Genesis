@@ -3,8 +3,11 @@ from uuid import uuid4
 
 from execution.paper_execution_engine import PaperExecutionEngine
 from execution.paper_position_manager import PaperPositionManager
+from execution.paper_position import PaperPosition
 from execution.paper_portfolio import PaperPortfolio
 from execution.paper_trade_history import PaperTradeHistory
+from execution.paper_trade_record import PaperTradeRecord
+from intelligence.decision import DecisionResult
 
 
 class PaperTradingSession:
@@ -24,28 +27,12 @@ class PaperTradingSession:
         self.initial_balance = initial_balance
         self.position_size_percent = position_size_percent
         self.outcome_bridge = outcome_bridge
-
-        self.execution_engine = (
-            execution_engine
-            or PaperExecutionEngine()
+        self.execution_engine = execution_engine or PaperExecutionEngine()
+        self.position_manager = position_manager or PaperPositionManager()
+        self.portfolio = portfolio or PaperPortfolio.create(
+            initial_balance=initial_balance
         )
-
-        self.position_manager = (
-            position_manager
-            or PaperPositionManager()
-        )
-
-        self.portfolio = (
-            portfolio
-            or PaperPortfolio.create(
-                initial_balance=initial_balance
-            )
-        )
-
-        self.trade_history = (
-            trade_history
-            or PaperTradeHistory()
-        )
+        self.trade_history = trade_history or PaperTradeHistory()
 
     def process_action(
         self,
@@ -54,21 +41,17 @@ class PaperTradingSession:
         symbol="BTCUSDT",
         decision=None
     ):
-        execution_result = (
-            self.execution_engine.execute(
-                action_proposal=action_proposal,
-                price=price,
-                symbol=symbol,
-                balance=self.portfolio.get_balance(),
-                position_size_percent=self.position_size_percent
-            )
+        execution_result = self.execution_engine.execute(
+            action_proposal=action_proposal,
+            price=price,
+            symbol=symbol,
+            balance=self.portfolio.get_balance(),
+            position_size_percent=self.position_size_percent
         )
 
-        position = (
-            self.position_manager.open_position(
-                execution_result,
-                decision=decision
-            )
+        position = self.position_manager.open_position(
+            execution_result,
+            decision=decision
         )
 
         return {
@@ -79,20 +62,15 @@ class PaperTradingSession:
         }
 
     def close_position(self, exit_price):
-        closed = (
-            self.position_manager.close_position_with_pnl(
-                current_price=exit_price
-            )
+        closed = self.position_manager.close_position_with_pnl(
+            current_price=exit_price
         )
 
         if closed is None:
             return None
 
         realized_pnl = closed["realized_pnl"]
-
-        self.portfolio.apply_realized_pnl(
-            realized_pnl
-        )
+        self.portfolio.apply_realized_pnl(realized_pnl)
 
         trade = self.trade_history.add_trade(
             position=closed["position"],
@@ -101,7 +79,6 @@ class PaperTradingSession:
         )
 
         learning_result = None
-
         position = closed["position"]
         decision = getattr(position, "decision", None)
 
@@ -133,6 +110,74 @@ class PaperTradingSession:
 
     def get_trade_count(self):
         return self.trade_history.get_trade_count()
+
+    def build_checkpoint(self):
+        position = self.get_position()
+
+        return {
+            "session_id": self.session_id,
+            "initial_balance": self.initial_balance,
+            "position_size_percent": self.position_size_percent,
+            "balance": self.get_balance(),
+            "position": (
+                {
+                    "symbol": position.symbol,
+                    "side": position.side,
+                    "entry_price": position.entry_price,
+                    "quantity": position.quantity,
+                    "decision": (
+                        position.decision.to_dict()
+                        if position.decision is not None
+                        and hasattr(position.decision, "to_dict")
+                        else None
+                    )
+                }
+                if position is not None
+                else None
+            ),
+            "trades": [
+                asdict(trade)
+                for trade in self.trade_history.get_trades()
+            ]
+        }
+
+    @classmethod
+    def from_checkpoint(cls, checkpoint):
+        portfolio = PaperPortfolio(
+            initial_balance=checkpoint["initial_balance"],
+            balance=checkpoint["balance"]
+        )
+
+        position_manager = PaperPositionManager()
+        position_data = checkpoint.get("position")
+
+        if position_data is not None:
+            position_manager.position = PaperPosition(
+                symbol=position_data["symbol"],
+                side=position_data["side"],
+                entry_price=position_data["entry_price"],
+                quantity=position_data["quantity"],
+                decision=(
+                    DecisionResult(**position_data["decision"])
+                    if position_data.get("decision") is not None
+                    else None
+                )
+            )
+
+        trade_history = PaperTradeHistory()
+        trade_history.trades = [
+            PaperTradeRecord(**trade)
+            for trade in checkpoint.get("trades", [])
+        ]
+
+        return cls(
+            initial_balance=checkpoint["initial_balance"],
+            position_size_percent=checkpoint["position_size_percent"],
+            position_manager=position_manager,
+            portfolio=portfolio,
+            trade_history=trade_history,
+            session_id=checkpoint["session_id"]
+        )
 
     def get_session_record(self):
         return {

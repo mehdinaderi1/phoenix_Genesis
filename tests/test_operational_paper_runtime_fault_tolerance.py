@@ -115,3 +115,35 @@ def test_operational_paper_runtime_stops_on_error_by_default():
         raise AssertionError("RuntimeError was expected")
 
     assert market_runtime.calls == 2
+
+
+class NoDataMarketRuntime:
+    def run_cycle(self, symbol="BTCUSDT"):
+        observation = SimpleNamespace(
+            symbol=symbol,
+            price=None,
+            source=None,
+            fallback_used=False,
+            source_status="UNAVAILABLE"
+        )
+        return {
+            "observation": observation,
+            "context": None
+        }
+
+
+def test_summary_counts_no_data_cycles():
+    runtime = OperationalPaperRuntime(
+        NoDataMarketRuntime(),
+        StableIntelligenceFlow(),
+        PaperTradingRuntime(PaperTradingSession())
+    )
+
+    results = runtime.run(cycles=1, continue_on_error=True)
+    summary = runtime.build_summary(results)
+
+    assert len(results) == 1
+    assert results[0]["market_context"] is None
+    assert results[0]["paper_result"] is None
+    assert results[0]["error"] is None
+    assert summary["no_data_cycles"] == 1

@@ -181,6 +181,7 @@ def print_session_summary(summary):
     print("Cycles Processed:", summary["cycles_processed"])
     print("Successful Cycles:", summary.get("successful_cycles", 0))
     print("BLIND Cycles:", summary.get("blind_cycles", 0))
+    print("No-Data Cycles:", summary.get("no_data_cycles", 0))
     print("Error Cycles:", summary.get("error_cycles", 0))
     print("OPEN:", summary["open_count"])
     print("HOLD:", summary["hold_count"])

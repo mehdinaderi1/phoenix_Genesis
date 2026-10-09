@@ -87,3 +87,34 @@ def test_xt_historical_candles_are_chronological():
         candles = exchange.get_historical_candles("BTCUSDT", timeframe="5m", limit=3)
 
     assert [candle["timestamp"] for candle in candles] == [1, 2, 3]
+
+
+def test_xt_request_raises_after_all_retries_fail():
+    exchange = XTExchange(timeout=5)
+    attempts = []
+    delays = []
+
+    def fake_urlopen(request, timeout):
+        attempts.append(timeout)
+        raise OSError("simulated network disconnect")
+
+    def fake_sleep(seconds):
+        delays.append(seconds)
+
+    with patch(
+        "exchanges.xt_exchange.urllib.request.urlopen",
+        side_effect=fake_urlopen,
+    ):
+        with patch(
+            "exchanges.xt_exchange.time.sleep",
+            side_effect=fake_sleep,
+        ):
+            try:
+                exchange._request("/test")
+            except OSError as exc:
+                assert str(exc) == "simulated network disconnect"
+            else:
+                raise AssertionError("Expected OSError after retries")
+
+    assert attempts == [5, 5, 5]
+    assert delays == [1, 2]
