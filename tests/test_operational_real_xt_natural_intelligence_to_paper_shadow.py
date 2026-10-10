@@ -38,6 +38,7 @@ from execution.xt_futures_execution_orchestrator import (
 )
 from exchanges.xt_exchange import XTExchange
 from intelligence.flow import IntelligenceFlow
+from intelligence.observation.opportunity_observer import OpportunityObserver
 
 
 class ControlledXTExchange(XTExchange):
@@ -287,6 +288,7 @@ def test_real_xt_market_to_paper_and_shadow_lifecycle(tmp_path):
         paper_trading_runtime=paper_runtime,
         session_archive=archive,
         shadow_execution_runtime=shadow_runtime,
+        opportunity_observer=OpportunityObserver(),
     )
 
     for timeframe in ("5m", "15m", "30m", "4H"):
@@ -307,7 +309,15 @@ def test_real_xt_market_to_paper_and_shadow_lifecycle(tmp_path):
 
     first = results[0]
     second = results[1]
+    assert first["opportunity"] is not None
+    assert first["opportunity"]["symbol"] == "BTCUSDT"
+    assert first["opportunity"]["execution_attempted"] is False
+    assert first["opportunity_observation_error"] is None
 
+    assert second["opportunity"] is not None
+    assert second["opportunity"]["symbol"] == "BTCUSDT"
+    assert second["opportunity"]["execution_attempted"] is False
+    assert second["opportunity_observation_error"] is None
     assert first["translated_action_proposal"].action == "BUY"
     assert first["paper_result"]["action"] == "OPEN"
 

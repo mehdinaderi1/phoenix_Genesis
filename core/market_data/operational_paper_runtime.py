@@ -1,4 +1,5 @@
-from dataclasses import asdict, is_dataclass
+﻿from dataclasses import asdict, is_dataclass
+from datetime import datetime, timezone
 
 from core.market_data.operational_action_translator import (
     OperationalActionTranslator
@@ -21,7 +22,10 @@ class OperationalPaperRuntime:
         paper_trading_runtime,
         session_archive=None,
         execution_runtime=None,
-        shadow_execution_runtime=None
+        shadow_execution_runtime=None,
+        signal_publisher=None,
+        opportunity_observer=None,
+        opportunity_journal=None
     ):
         if market_context_runtime is None:
             raise ValueError(
@@ -50,6 +54,9 @@ class OperationalPaperRuntime:
             shadow_execution_runtime
         )
         self.session_archive = session_archive
+        self.signal_publisher = signal_publisher
+        self.opportunity_observer = opportunity_observer
+        self.opportunity_journal = opportunity_journal
 
         self.context_builder = (
             OperationalIntelligenceContextBuilder()
@@ -128,6 +135,53 @@ class OperationalPaperRuntime:
                         report.action_proposal
                     )
                 )
+                opportunity = None
+                opportunity_observation_error = None
+                opportunity_journal_error = None
+
+                if self.opportunity_observer is not None:
+                    try:
+                        opportunity = self.opportunity_observer.observe(
+                            report,
+                            decision=report.decision,
+                            reference_price=observation.price,
+                            symbol=observation.symbol,
+                            observation_timestamp=getattr(
+                                observation,
+                                "timestamp",
+                                None,
+                            ),
+                        )
+                    except Exception as exc:
+                        opportunity_observation_error = (
+                            f"{type(exc).__name__}: {exc}"
+                        )
+
+                if (
+                    opportunity is not None
+                    and self.opportunity_journal is not None
+                ):
+                    try:
+                        self.opportunity_journal.append(
+                            self._serialize_value(opportunity)
+                        )
+                    except Exception as exc:
+                        opportunity_journal_error = (
+                            f"{type(exc).__name__}: {exc}"
+                        )
+                notification_error = None
+                if self.signal_publisher is not None:
+                    try:
+                        self.signal_publisher.publish(
+                            translated_action_proposal,
+                            observation,
+                            candle_boundaries,
+                            generated_at=datetime.now(timezone.utc).isoformat(),
+                        )
+                    except Exception as exc:
+                        notification_error = (
+                            f"{type(exc).__name__}: {exc}"
+                        )
 
                 paper_input = {
                     "action_proposal": (
@@ -173,6 +227,14 @@ class OperationalPaperRuntime:
                     "paper_result": paper_result,
                     "shadow_result": shadow_result,
                     "candle_boundaries": candle_boundaries,
+                    "notification_error": notification_error,
+                    "opportunity": opportunity,
+                    "opportunity_observation_error": (
+                        opportunity_observation_error
+                    ),
+                    "opportunity_journal_error": (
+                        opportunity_journal_error
+                    ),
                     "error": None
                 })
 
@@ -372,6 +434,13 @@ class OperationalPaperRuntime:
                     else None,
                     "quantity",
                     None
+                ),
+
+                "opportunity": self._serialize_value(
+                    result.get("opportunity")
+                ),
+                "opportunity_observation_error": (
+                    result.get("opportunity_observation_error")
                 ),
                 "error": (
                     str(result["error"])

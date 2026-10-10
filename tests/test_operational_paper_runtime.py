@@ -227,3 +227,75 @@ def test_operational_paper_runtime_uses_injected_execution_runtime():
     assert results[0]["paper_result"]["action"] == (
         "EXECUTION_BOUNDARY"
     )
+
+
+class FakeOpportunityObserver:
+    def __init__(self, should_fail=False):
+        self.calls = []
+        self.should_fail = should_fail
+
+    def observe(self, report, decision=None, **kwargs):
+        self.calls.append((report, decision))
+
+        if self.should_fail:
+            raise RuntimeError("observer failure")
+
+        return {
+            "symbol": (
+                getattr(report, "symbol", None)
+                or kwargs.get("symbol")
+            ),
+            "decision": decision.action,
+            "execution_attempted": False,
+        }
+
+
+def test_runtime_records_opportunity_from_existing_decision():
+    market_runtime = FakeMarketContextRuntime()
+    intelligence = FakeIntelligenceFlow()
+    paper_runtime = FakePaperTradingRuntime()
+    observer = FakeOpportunityObserver()
+
+    runtime = OperationalPaperRuntime(
+        market_runtime,
+        intelligence,
+        paper_runtime,
+        opportunity_observer=observer,
+    )
+
+    results = runtime.run(cycles=1)
+
+    assert len(observer.calls) == 1
+    report, decision = observer.calls[0]
+    assert decision is report.decision
+    assert results[0]["opportunity_observation_error"] is None, (
+        results[0]["opportunity_observation_error"]
+    )
+
+    assert results[0]["opportunity"]["symbol"] == "BTCUSDT"
+    assert results[0]["opportunity"]["decision"] == "BUY"
+    assert results[0]["opportunity"]["execution_attempted"] is False
+    assert results[0]["paper_result"]["action"] == "OPEN"
+
+
+def test_runtime_continues_paper_when_opportunity_observer_fails():
+    market_runtime = FakeMarketContextRuntime()
+    intelligence = FakeIntelligenceFlow()
+    paper_runtime = FakePaperTradingRuntime()
+    observer = FakeOpportunityObserver(should_fail=True)
+
+    runtime = OperationalPaperRuntime(
+        market_runtime,
+        intelligence,
+        paper_runtime,
+        opportunity_observer=observer,
+    )
+
+    results = runtime.run(cycles=1)
+
+    assert len(paper_runtime.cycles) == 1
+    assert results[0]["paper_result"]["action"] == "OPEN"
+    assert results[0]["opportunity"] is None
+    assert results[0]["opportunity_observation_error"] == (
+        "RuntimeError: observer failure"
+    )

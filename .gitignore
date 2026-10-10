@@ -24,3 +24,5 @@ data/paper_sessions/*.json
 .DS_Store
 Thumbs.db
 PHOENIX_GENESIS_PROJECT_SNAPSHOT.txt
+
+data/opportunities.jsonl

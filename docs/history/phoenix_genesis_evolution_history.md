@@ -639,3 +639,50 @@ Memory.
 Learning.
 Reasoning.
 Evolution.
+
+---
+
+# 17. Telegram Signal Publishing Integration
+
+## Objective
+
+Integrate outbound-only Telegram notification into the operational OBSERVE / PAPER runtime without enabling real order execution or changing trading decisions.
+
+## Architecture
+
+Operational Paper Runtime
+-> SignalPublisher
+-> SQLite Signal Journal / Notification Outbox
+-> NotificationDispatcher
+-> TelegramSender
+
+## Delivered Scope
+
+- Publish only APPROVED BUY/SELL proposals backed by operational observations.
+- Persist signal identity, generation timestamp, reference price, timeframe, reason, confidence, and risk status.
+- Persist outgoing notifications and retry delivery after failures.
+- Mark messages SENT only after Telegram API success.
+- Keep Telegram transport outbound-only; no command receiver or trade execution.
+- Keep dispatch disabled by default.
+
+## Verification
+
+- Full test suite: 1335 passed in 29.07 seconds.
+- Manual Telegram transport test succeeded.
+- End-to-end genuine runtime-generated signal publication has not yet been confirmed.
+
+## Safety and Limitations
+
+- Runtime remains OBSERVE / PAPER; real orders are disabled.
+- WAIT decisions do not generate synthetic trading signals.
+- Duplicate delivery remains possible if Telegram accepts a message but its response is lost.
+- Dispatcher is currently designed for a single active instance.
+- Signal outcome evaluation at a one-hour horizon and on an opposite valid signal must be tracked separately from notification delivery.
+
+## Milestone Status
+
+Implementation: Present in working tree
+Tests: 1335 passed
+Commit: PENDING
+Push: NOT PERFORMED
+Operational signal publication: Pending genuine runtime signal verification

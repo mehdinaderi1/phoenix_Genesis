@@ -252,3 +252,50 @@ def test_operational_paper_runtime_builds_session_report(tmp_path):
     assert report["loss_count"] == 0
     assert report["win_rate"] == 100.0
     assert report["total_pnl"] > 0
+
+def test_operational_paper_runtime_archives_opportunity(tmp_path):
+    class FakeOpportunityObserver:
+        def observe(self, report, decision=None, **kwargs):
+            return {
+                "symbol": kwargs.get("symbol"),
+                "decision": decision.action,
+                "reference_price": kwargs.get("reference_price"),
+                "execution_attempted": False,
+                "filters": {
+                    "signal": {
+                        "passed": True,
+                        "reason": "Directional candidate observed."
+                    }
+                },
+                "blocked_reasons": []
+            }
+
+    market_runtime = ControlledMarketRuntime()
+    intelligence = ControlledIntelligenceFlow()
+    session = PaperTradingSession(
+        initial_balance=1000.0,
+        position_size_percent=1.0
+    )
+    paper_runtime = PaperTradingRuntime(session)
+    archive = PaperSessionArchive(tmp_path / "paper_sessions")
+
+    runtime = OperationalPaperRuntime(
+        market_runtime,
+        intelligence,
+        paper_runtime,
+        session_archive=archive,
+        opportunity_observer=FakeOpportunityObserver()
+    )
+
+    results = runtime.run(cycles=1)
+
+    assert results[0]["opportunity"] is not None
+    assert results[0]["opportunity"]["symbol"] == "BTCUSDT"
+    assert results[0]["opportunity_observation_error"] is None
+
+    saved = archive.load(session.session_id)
+
+    assert len(saved["cycles"]) == 1
+    assert saved["cycles"][0]["opportunity"]["symbol"] == "BTCUSDT"
+    assert saved["cycles"][0]["opportunity"]["reference_price"] == 65000.0
+    assert saved["cycles"][0]["opportunity"]["execution_attempted"] is False

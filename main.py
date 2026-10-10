@@ -1,3 +1,10 @@
+import os
+from notifications.dispatcher import NotificationDispatcher
+from notifications.signal_outbox import SignalOutbox
+from notifications.signal_publisher import SignalPublisher
+from notifications.telegram_sender import TelegramSender
+from intelligence.observation.opportunity_observer import OpportunityObserver
+from intelligence.observation.opportunity_journal import OpportunityJournal
 from core.engine import PhoenixEngine
 from core.market_data.observer import RealMarketObserver
 from core.market_data.operational_market_context_runtime import OperationalMarketContextRuntime
@@ -132,8 +139,12 @@ def print_cycle(result):
         f"Strategy={decision_strategy} | "
         f"LongGate={'OPEN' if long_gate else 'BLOCKED'} | "
         f"ShortGate={'OPEN' if short_gate else 'BLOCKED'} | "
-        f"Proposal={getattr(action_proposal, 'action', None)} | "
-        f"Translated={getattr(translated, 'action', None)} | "
+        f"Proposal={getattr(action_proposal, 'action', None)}/"
+        f"{getattr(action_proposal, 'status', None)} | "
+        f"ProposalReason={getattr(action_proposal, 'reason', None)} | "
+        f"Translated={getattr(translated, 'action', None)}/"
+        f"{getattr(translated, 'status', None)} | "
+        f"TranslatedReason={getattr(translated, 'reason', None)} | "
         f"Paper={paper_result.get('action')} | "
         f"Shadow={shadow_result.get('status', 'SKIPPED')} | "
         f"PnL={paper_result.get('realized_pnl')}"
@@ -155,6 +166,12 @@ def print_cycle(result):
                 f"Confidence={item['confidence']:.2f} | "
                 f"Weight={item['weight']}"
             )
+
+    print(
+        f"  NotificationError={result.get('notification_error')} | "
+        f"Primary5mBoundaryPresent="
+        f"{isinstance(result.get('candle_boundaries', {}).get('5m'), dict)}"
+    )
 
     candle_boundaries = result.get("candle_boundaries", {})
 
@@ -293,12 +310,28 @@ def main():
         root_path="data/paper_sessions"
     )
 
+    notification_outbox = SignalOutbox(
+        "data/phoenix_notifications.db"
+    )
+    signal_publisher = SignalPublisher(
+        notification_outbox,
+        primary_timeframe="5m",
+    )
+
+    opportunity_observer = OpportunityObserver()
+    opportunity_journal = OpportunityJournal(
+        "data/opportunities.jsonl"
+    )
+
     operational_runtime = OperationalPaperRuntime(
         market_context_runtime=market_context_runtime,
         intelligence_flow=intelligence_flow,
         paper_trading_runtime=paper_runtime,
         session_archive=session_archive,
         shadow_execution_runtime=shadow_runtime,
+        signal_publisher=signal_publisher,
+        opportunity_observer=opportunity_observer,
+        opportunity_journal=opportunity_journal,
     )
 
     print()
@@ -332,6 +365,29 @@ def main():
             continue
 
         print_cycle(result)
+
+    print()
+    print("=" * 60)
+    print("TELEGRAM SIGNAL OUTBOX")
+    print("=" * 60)
+
+    if os.environ.get("PHOENIX_TELEGRAM_ENABLED", "0").strip() == "1":
+        try:
+            dispatcher = NotificationDispatcher(
+                outbox=notification_outbox,
+                sender=TelegramSender(),
+            )
+            dispatch_result = dispatcher.dispatch_due_messages()
+            print("Telegram dispatch:", dispatch_result)
+        except ValueError as exc:
+            print("Telegram dispatch skipped:", str(exc))
+        except Exception as exc:
+            print(
+                "Telegram dispatch error:",
+                f"{type(exc).__name__}: {exc}",
+            )
+    else:
+        print("Telegram dispatch disabled; pending messages preserved.")
 
     summary = operational_runtime.build_summary(results)
 
