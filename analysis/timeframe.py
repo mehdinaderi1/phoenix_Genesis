@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 
 
 @dataclass
@@ -7,6 +7,7 @@ class TimeframeAnalysis:
     trend: str
     signal: str
     confidence: float
+    reasons: tuple[str, ...] = ()
 
     def summary(self):
         return {

@@ -1,21 +1,18 @@
-from intelligence.consensus import ConsensusResult
+﻿from intelligence.consensus import ConsensusResult
 
 
 class MultiTimeframeAnalyzer:
 
     def get_weight(self, timeframe):
-
         weights = {
             "30m": 1,
             "4H": 2,
             "1D": 3,
             "Daily": 3
         }
-
         return weights.get(timeframe, 1)
 
     def analyze(self, analyses):
-
         if not analyses:
             return ConsensusResult(
                 trend="UNKNOWN",
@@ -23,11 +20,7 @@ class MultiTimeframeAnalyzer:
                 confidence=0
             )
 
-        signals = [
-            item.signal
-            for item in analyses
-        ]
-
+        signals = [item.signal for item in analyses]
         weighted_sum = 0
         total_weight = 0
         timeframe_breakdown = []
@@ -43,7 +36,8 @@ class MultiTimeframeAnalyzer:
                 "confidence": item.confidence,
                 "weight": weight,
                 "signal": item.signal,
-                "trend": item.trend
+                "trend": item.trend,
+                "reasons": list(getattr(item, "reasons", ()))
             })
 
         average_confidence = weighted_sum / total_weight
@@ -53,20 +47,12 @@ class MultiTimeframeAnalyzer:
         if signal_conflict:
             final_signal = "WAIT"
             final_confidence = average_confidence * conflict_penalty
-
         else:
             final_signal = signals[0]
             final_confidence = average_confidence
 
-        trends = [
-            item.trend
-            for item in analyses
-        ]
-
-        final_trend = max(
-            set(trends),
-            key=trends.count
-        )
+        trends = [item.trend for item in analyses]
+        final_trend = max(set(trends), key=trends.count)
 
         breakdown = {
             "timeframes": timeframe_breakdown,

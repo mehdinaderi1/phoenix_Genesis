@@ -1,4 +1,4 @@
-from intelligence.decision import DecisionResult
+﻿from intelligence.decision import DecisionResult
 from intelligence.decision_rules import DecisionRules
 from intelligence.decision_trace import DecisionTrace
 from intelligence.strategy_consensus_explanation_builder import (
@@ -217,7 +217,7 @@ class DecisionEngine:
         
         print(
             "CAN LONG:",
-            self.rules.can_long(report)
+            can_long
         )
 
         print(

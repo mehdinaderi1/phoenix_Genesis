@@ -83,8 +83,50 @@ def print_cycle(result):
 
     report = result.get("report")
     rules = DecisionRules()
-    long_gate = rules.can_long(report) if report is not None else False
-    short_gate = rules.can_short(report) if report is not None else False
+    operational_strategy = (
+        getattr(report, "operational_strategy_result", None)
+        if report is not None
+        else None
+    )
+
+    strategy_allows_long = True
+    strategy_allows_short = True
+
+    if operational_strategy is not None:
+        strategy_matched = operational_strategy.get("matched", False)
+        strategy_signal = operational_strategy.get("signal")
+        strategy_allows_long = strategy_matched and strategy_signal == "BUY"
+        strategy_allows_short = strategy_matched and strategy_signal == "SELL"
+
+    rules_long = rules.can_long(report) if report is not None else False
+    rules_short = rules.can_short(report) if report is not None else False
+
+    long_gate = strategy_allows_long and rules_long
+    short_gate = strategy_allows_short and rules_short
+
+    strategy_matched = (
+        operational_strategy.get("matched")
+        if operational_strategy is not None
+        else None
+    )
+    strategy_signal = (
+        operational_strategy.get("signal")
+        if operational_strategy is not None
+        else None
+    )
+
+    print(
+        "  GateDetail | "
+        f"Signal={getattr(report, 'signal', None)} | "
+        f"Risk={getattr(report, 'risk', None)} | "
+        f"Confidence={getattr(report, 'confidence', None)} | "
+        f"StrategyMatched={strategy_matched} | "
+        f"StrategySignal={strategy_signal} | "
+        f"RulesLong={rules_long} | "
+        f"RulesShort={rules_short} | "
+        f"FinalLong={long_gate} | "
+        f"FinalShort={short_gate}"
+    )
 
     decision_confidence = (
         getattr(decision, "confidence", None)
@@ -160,11 +202,15 @@ def print_cycle(result):
         )
 
         for item in breakdown["timeframes"]:
+            reasons = item.get("reasons", [])
+            reason_text = ", ".join(reasons) if reasons else "Not available"
+
             print(
                 f"  MTF {item['timeframe']} | "
                 f"Signal={item['signal']} | "
                 f"Confidence={item['confidence']:.2f} | "
-                f"Weight={item['weight']}"
+                f"Weight={item['weight']} | "
+                f"Reasons={reason_text}"
             )
 
     print(

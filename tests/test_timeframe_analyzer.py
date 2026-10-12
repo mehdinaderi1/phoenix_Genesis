@@ -62,3 +62,14 @@ def test_timeframe_analyzer_bearish_with_positive_momentum_returns_wait():
 
     assert result.trend == "BEARISH"
     assert result.signal == "WAIT"
+
+def test_timeframe_analyzer_preserves_signal_reasons():
+    prices = [100 + i for i in range(25)] + [90]
+
+    analyzer = TimeframeAnalyzer()
+    result = analyzer.analyze(prices, "5m")
+
+    assert result.trend == "BEARISH"
+    assert result.signal == "WAIT"
+    assert "Positive Momentum" in result.reasons
+    assert "Negative Momentum" not in result.reasons
