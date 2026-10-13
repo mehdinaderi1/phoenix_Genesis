@@ -21,3 +21,10 @@ def test_confidence_engine():
     assert result["factors"]["Bullish Trend"] == 15
     assert result["factors"]["Positive Momentum"] == 15
     assert result["factors"]["Overbought"] == -10
+def test_confidence_engine_oversold_factor():
+    engine = ConfidenceEngine()
+
+    result = engine.calculate(["Oversold"])
+
+    assert result["factors"]["Oversold"] == 10
+    assert result["confidence"] == 60

@@ -19,6 +19,10 @@ class ConfidenceEngine:
                 score -= 10
                 factors[signal] = -10
 
+            elif signal == "Oversold":
+                score += 10
+                factors[signal] = 10
+
             elif signal == "Bearish Trend":
                 score -= 15
                 factors[signal] = -15
@@ -27,11 +31,7 @@ class ConfidenceEngine:
                 score -= 15
                 factors[signal] = -15
 
-        if score > 100:
-            score = 100
-
-        if score < 0:
-            score = 0
+        score = max(0, min(100, score))
 
         return {
             "confidence": score,
