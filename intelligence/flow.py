@@ -1,4 +1,4 @@
-﻿from intelligence.action_proposal import ActionProposal
+from intelligence.action_proposal import ActionProposal
 from intelligence.decision_memory import DecisionMemory
 from intelligence.decision_outcome_bridge import DecisionOutcomeBridge
 from intelligence.decision_record import DecisionRecord
@@ -775,6 +775,35 @@ class IntelligenceFlow:
             )
 
         # ---------------------------------------------------------
+        # Meta confidence from historical records, before decision
+        # ---------------------------------------------------------
+
+        report.meta_insight = (
+            self.meta_intelligence.analyze(
+                self.decision_memory.records,
+                self.meta_memory.get_records()
+            )
+        )
+
+        report.meta_learning = (
+            self.meta_learning_engine.learn(
+                report.meta_insight
+            )
+        )
+
+        confidence_before = report.confidence
+
+        report.confidence = (
+            self.meta_confidence_adapter.adjust(
+                report.confidence,
+                report.meta_learning
+            )
+        )
+
+        adjustment = (
+            report.confidence - confidence_before
+        )
+
         # 13. Decision
         # ---------------------------------------------------------
 
@@ -1061,37 +1090,6 @@ class IntelligenceFlow:
         # ---------------------------------------------------------
         # 24. Meta intelligence
         # ---------------------------------------------------------
-
-        report.meta_insight = (
-            self.meta_intelligence.analyze(
-
-                self.decision_memory.records,
-
-                self.meta_memory.get_records()
-            )
-        )
-
-        report.meta_learning = (
-            self.meta_learning_engine.learn(
-                report.meta_insight
-            )
-        )
-
-        confidence_before = report.confidence
-
-        report.confidence = (
-            self.meta_confidence_adapter.adjust(
-
-                report.confidence,
-
-                report.meta_learning
-            )
-        )
-
-        adjustment = (
-            report.confidence
-            - confidence_before
-        )
 
         meta_feedback = None
 
