@@ -199,35 +199,54 @@ class DecisionEngine:
             and self.rules.can_short(report)
         )
         
-        print(
-            "CAN SHORT:",
-            can_short
+        strategy_valid = self.rules.strategy_is_valid(report)
+        consensus_valid = self.rules.consensus_is_valid(report)
+        report_signal = getattr(report, "signal", None)
+        report_risk = getattr(report, "risk", None)
+        report_confidence = getattr(report, "confidence", 0)
+
+        operational_matched = (
+            operational_strategy.get("matched", False)
+            if operational_strategy is not None
+            else None
+        )
+        operational_signal = (
+            operational_strategy.get("signal")
+            if operational_strategy is not None
+            else None
         )
 
+        print("CAN SHORT:", can_short)
         print(
             "SHORT CHECK:",
             {
-                "strategy_valid": self.rules.strategy_is_valid(report),
-                "consensus_valid": self.rules.consensus_is_valid(report),
-                "signal": report.signal,
-                "risk": report.risk,
-                "confidence": report.confidence,
+                "strategy_valid": strategy_valid,
+                "consensus_valid": consensus_valid,
+                "operational_strategy_matched": operational_matched,
+                "operational_strategy_signal": operational_signal,
+                "signal": report_signal,
+                "signal_is_sell": report_signal == "SELL",
+                "risk": report_risk,
+                "risk_is_low": report_risk == "LOW",
+                "confidence": report_confidence,
+                "confidence_at_least_70": report_confidence >= 70,
             }
         )
-        
-        print(
-            "CAN LONG:",
-            can_long
-        )
 
+        print("CAN LONG:", can_long)
         print(
             "LONG CHECK:",
             {
-                "strategy_valid": self.rules.strategy_is_valid(report),
-                "consensus_valid": self.rules.consensus_is_valid(report),
-                "signal": report.signal,
-                "risk": report.risk,
-                "confidence": report.confidence,
+                "strategy_valid": strategy_valid,
+                "consensus_valid": consensus_valid,
+                "operational_strategy_matched": operational_matched,
+                "operational_strategy_signal": operational_signal,
+                "signal": report_signal,
+                "signal_is_buy": report_signal == "BUY",
+                "risk": report_risk,
+                "risk_is_low": report_risk == "LOW",
+                "confidence": report_confidence,
+                "confidence_at_least_80": report_confidence >= 80,
             }
         )
 
