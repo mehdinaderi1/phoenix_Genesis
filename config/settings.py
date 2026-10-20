@@ -51,3 +51,11 @@ class Settings:
     EMA_LOOKBACK = 250
     # ─── Leverage ───
     LEVERAGE = 1                    # 1 = بدون اهرم، 3/5/10 = اهرم واقعی
+    # ─── Trailing / BE / Partial TP ───
+    PARTIAL_TP_ENABLED = True
+    PARTIAL_TP_FRACTION = 0.5        # 50% در 1R
+    PARTIAL_TP_AT_R = 1.0            # در 1R
+    BE_ENABLED = True                # Break-even در 1R
+    TRAILING_ENABLED = True
+    TRAILING_START_R = 2.0           # شروع trail در 2R
+    TRAILING_DISTANCE_R = 0.5        # فاصله 0.5R از best price

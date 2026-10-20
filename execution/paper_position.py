@@ -1,6 +1,7 @@
-from dataclasses import dataclass, field
 import os
+from dataclasses import dataclass
 from datetime import datetime, timezone
+
 from config.settings import Settings
 
 
@@ -21,21 +22,96 @@ class PaperPosition:
     sl: float | None = None
     tp: float | None = None
     opened_at: str | None = None
-    leverage: float = 1.0      # ← اضافه شد
+    leverage: float = 1.0
+    # ─── Trailing/BE/Partial state ───
+    initial_sl: float | None = None
+    partial_closed: bool = False
+    be_moved: bool = False
+    best_price_seen: float | None = None
+    realized_partial_pnl: float = 0.0
 
-    def notional(self) -> float:
-        return self.entry_price * self.quantity
+    def __post_init__(self):
+        if self.initial_sl is None and self.sl is not None:
+            self.initial_sl = self.sl
+        if self.best_price_seen is None:
+            self.best_price_seen = self.entry_price
 
-    def margin(self) -> float:
-        lev = max(self.leverage, 1.0)
-        return self.notional() / lev
+    # ─── محاسبات ───
+    def _risk_distance(self) -> float:
+        if self.initial_sl is None or self.initial_sl == 0:
+            return self.entry_price * 0.01
+        return abs(self.entry_price - self.initial_sl)
 
+    def _profit_in_R(self, current_price: float) -> float:
+        risk = self._risk_distance()
+        if risk <= 0:
+            return 0.0
+        if self.side == "BUY":
+            return (current_price - self.entry_price) / risk
+        return (self.entry_price - current_price) / risk
+
+    # ─── Trailing state ───
+    def update_best_price(self, current_price: float):
+        if self.best_price_seen is None:
+            self.best_price_seen = current_price
+            return
+        if self.side == "BUY" and current_price > self.best_price_seen:
+            self.best_price_seen = current_price
+        elif self.side == "SELL" and current_price < self.best_price_seen:
+            self.best_price_seen = current_price
+
+    # ─── Partial ───
+    def should_partial_close(self, current_price: float):
+        if not getattr(Settings, "PARTIAL_TP_ENABLED", False):
+            return None
+        if self.partial_closed:
+            return None
+        threshold = float(getattr(Settings, "PARTIAL_TP_AT_R", 1.0))
+        if self._profit_in_R(current_price) >= threshold:
+            return float(getattr(Settings, "PARTIAL_TP_FRACTION", 0.5))
+        return None
+
+    # ─── BE + Trailing ───
+    def should_move_sl(self, current_price: float):
+        if self.sl is None:
+            return None
+        profit_R = self._profit_in_R(current_price)
+
+        # BE after 1R
+        if getattr(Settings, "BE_ENABLED", False) and not self.be_moved:
+            be_at = float(getattr(Settings, "PARTIAL_TP_AT_R", 1.0))
+            if profit_R >= be_at:
+                if self.side == "BUY" and self.sl < self.entry_price:
+                    return self.entry_price
+                if self.side == "SELL" and self.sl > self.entry_price:
+                    return self.entry_price
+
+        # Trailing after 2R
+        if getattr(Settings, "TRAILING_ENABLED", False):
+            start_R = float(getattr(Settings, "TRAILING_START_R", 2.0))
+            if profit_R >= start_R and self.best_price_seen is not None:
+                risk = self._risk_distance()
+                dist = float(getattr(Settings, "TRAILING_DISTANCE_R", 0.5))
+                if self.side == "BUY":
+                    candidate = self.best_price_seen - risk * dist
+                    if candidate > self.sl and candidate > self.entry_price:
+                        return candidate
+                else:
+                    candidate = self.best_price_seen + risk * dist
+                    if candidate < self.sl and candidate < self.entry_price:
+                        return candidate
+        return None
+
+    # ─── PnL ───
     def unrealized_pnl(self, current_price):
         if self.side == "BUY":
             return (current_price - self.entry_price) * self.quantity
         if self.side == "SELL":
             return (self.entry_price - current_price) * self.quantity
         return 0.0
+
+    def total_pnl(self, current_price):
+        return self.unrealized_pnl(current_price) + self.realized_partial_pnl
 
     def fee_breakdown(self, exit_price):
         rate = _fee_rate()
