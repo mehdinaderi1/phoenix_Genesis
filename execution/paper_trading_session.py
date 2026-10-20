@@ -125,6 +125,9 @@ class PaperTradingSession:
                     "side": position.side,
                     "entry_price": position.entry_price,
                     "quantity": position.quantity,
+                    "sl": getattr(position, "sl", None),
+                    "tp": getattr(position, "tp", None),
+                    "opened_at": getattr(position, "opened_at", None),
                     "decision": (
                         position.decision.to_dict()
                         if position.decision is not None
@@ -135,6 +138,7 @@ class PaperTradingSession:
                 if position is not None
                 else None
             ),
+                
             "trades": [
                 asdict(trade)
                 for trade in self.trade_history.get_trades()
@@ -157,6 +161,9 @@ class PaperTradingSession:
                 side=position_data["side"],
                 entry_price=position_data["entry_price"],
                 quantity=position_data["quantity"],
+                sl=position_data.get("sl"),
+                tp=position_data.get("tp"),
+                opened_at=position_data.get("opened_at"),
                 decision=(
                     DecisionResult(**position_data["decision"])
                     if position_data.get("decision") is not None

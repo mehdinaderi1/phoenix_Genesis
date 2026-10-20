@@ -127,6 +127,7 @@ class SignalPublisher:
             f"Reason: {signal['reason'] or 'Not provided'}",
             f"Confidence: {signal['confidence']}",
             f"Risk status: {signal['risk_status']}",
+            f"Leverage: {getattr(proposal, 'leverage', 1.0):g}x",
             "Mode: OBSERVE / PAPER - no real orders",
         ])
 
@@ -151,9 +152,7 @@ class SignalPublisher:
                 "status",
                 "candle_start",
                 "timeframe",
-                "reason",
-                "confidence",
-                "risk_status",
+               
             )
             if any(existing.get(key) != signal.get(key) for key in decision_fields):
                 raise

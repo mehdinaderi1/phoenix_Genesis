@@ -126,8 +126,22 @@ class OperationalPaperRuntime:
                     intelligence_context
                 )
 
+                candles = self._fetch_best_candles(symbol=symbol)
+
                 report = self.intelligence_flow.create_report(
-                    consensus
+                    consensus,
+                    candles=candles,
+                )
+
+                
+                signal = str(
+                    getattr(report, "signal", "") or ""
+                ).upper()
+
+                report.signal_timestamp = (
+                    datetime.now(timezone.utc).isoformat()
+                    if signal in {"BUY", "SELL"}
+                    else None
                 )
 
                 translated_action_proposal = (
@@ -257,9 +271,91 @@ class OperationalPaperRuntime:
                     "error": exc
                 })
 
-        self._archive_session(results)
-
         return results
+
+    def _fetch_candles(self, symbol, timeframe="30m", limit=250):
+        """یک تایم‌فریم را از repository می‌خواند و به فرمت [ts,o,h,l,c,v] می‌دهد."""
+        repo = getattr(self.market_context_runtime, "repository", None)
+        if repo is None:
+            return None
+
+        rows = None
+
+        # تلاش برای متدهای bulk رایج
+        for name in ("get_candles", "get_recent_candles",
+                     "fetch_candles", "list_candles",
+                     "get_candles_range"):
+            method = getattr(repo, name, None)
+            if method is None:
+                continue
+            try:
+                rows = method(symbol, timeframe, limit=limit)
+            except TypeError:
+                try:
+                    rows = method(symbol, timeframe)
+                except Exception:
+                    continue
+            except Exception as e:
+                print(f"[CANDLES] {name} error: {e}")
+                continue
+            if rows:
+                break
+
+        # Fallback: SQL مستقیم
+        if not rows:
+            db = (getattr(repo, "database", None)
+                  or getattr(repo, "db", None))
+            if db is not None:
+                try:
+                    conn = (getattr(db, "connection", None)
+                            or getattr(db, "conn", None)
+                            or db)
+                    cur = conn.execute(
+                        "SELECT timestamp, open, high, low, close, volume "
+                        "FROM market_candles "
+                        "WHERE symbol=? AND timeframe=? "
+                        "ORDER BY timestamp DESC LIMIT ?",
+                        (symbol, timeframe, limit),
+                    )
+                    rows = list(cur.fetchall())[::-1]
+                except Exception as e:
+                    print(f"[CANDLES] sql fallback error: {e}")
+                    return None
+
+        if not rows:
+            return None
+
+        # یکسان‌سازی به [ts, o, h, l, c, v]
+        result = []
+        for r in rows:
+            if isinstance(r, dict):
+                result.append([
+                    r.get("timestamp"), r.get("open"), r.get("high"),
+                    r.get("low"), r.get("close"), r.get("volume"),
+                ])
+            elif isinstance(r, (list, tuple)):
+                if len(r) >= 9:  # full DB row
+                    result.append([r[3], r[4], r[5], r[6], r[7], r[8]])
+                elif len(r) >= 6:
+                    result.append([r[0], r[1], r[2], r[3], r[4], r[5]])
+
+        if not result:
+            return None
+        print(f"[CANDLES] {len(result)} candles for {symbol} {timeframe}")
+        return result
+
+    def _fetch_best_candles(self, symbol, limit=250):
+        """اولین تایم‌فریمی که ≥۲۰۰ کندل دارد را برمی‌گرداند."""
+        for tf in ("30m", "15m", "5m", "4H", "1D"):
+            candles = self._fetch_candles(symbol, tf, limit)
+            if candles and len(candles) >= 200:
+                return candles
+        # fallback: هرچه داشت
+        for tf in ("30m", "15m", "5m"):
+            candles = self._fetch_candles(symbol, tf, limit)
+            if candles:
+                return candles
+        return None
 
     @staticmethod
     def _serialize_value(value):
@@ -436,6 +532,8 @@ class OperationalPaperRuntime:
                     None
                 ),
 
+                "leverage": float(getattr(position, "leverage", 1.0)),
+
                 "opportunity": self._serialize_value(
                     result.get("opportunity")
                 ),
@@ -495,6 +593,15 @@ class OperationalPaperRuntime:
         summary = self.paper_trading_runtime.build_summary(
             paper_results
         )
+         # SL/TP closes not counted in results → use trade_history
+        trade_history_closes = (
+            self.paper_trading_runtime.session.get_trade_count()
+            - summary.get("trade_count", 0)
+        )
+        if trade_history_closes > 0:
+            summary["close_count"] = summary.get("close_count", 0) + trade_history_closes
+
+        ...
 
         blind_cycles = sum(
             1
@@ -533,3 +640,4 @@ class OperationalPaperRuntime:
         summary["error_cycles"] = error_cycles
 
         return summary
+

@@ -3,85 +3,37 @@ from dataclasses import dataclass, field
 
 @dataclass
 class DecisionResult:
-
     action: str
-
     reason: str
-
     confidence: float
-
     consensus_confidence: float = 0.0
-
     supporting_strategies: int = 0
-
     opposing_strategies: int = 0
-
     top_strategy: str | None = None
-
     champion_strategy: dict | None = None
-
-    explanation: dict = field(
-        default_factory=dict
-    )
-
-    metadata: dict = field(
-        default_factory=dict
-    )
-
+    explanation: dict = field(default_factory=dict)
+    metadata: dict = field(default_factory=dict)
     regime: str | None = None
-
     signal: str | None = None
-
     risk: str | None = None
-
     trace: dict | None = None
+    reason_code: str | None = None
 
-
-    def to_dict(
-        self
-    ):
-
+    def to_dict(self):
         return {
-
-            "action":
-                self.action,
-
-            "reason":
-                self.reason,
-
-            "confidence":
-                self.confidence,
-
-            "consensus_confidence":
-                self.consensus_confidence,
-
-            "supporting_strategies":
-                self.supporting_strategies,
-
-            "opposing_strategies":
-                self.opposing_strategies,
-
-            "top_strategy":
-                self.top_strategy,
-
-            "champion_strategy":
-                self.champion_strategy,
-
-            "explanation":
-                self.explanation,
-
-            "metadata":
-                self.metadata,
-
-            "regime":
-                self.regime,
-
-            "signal":
-                self.signal,
-
-            "risk":
-                self.risk,
-
-            "trace":
-                self.trace
+            "action": self.action,
+            "reason": self.reason,
+            "confidence": self.confidence,
+            "consensus_confidence": self.consensus_confidence,
+            "supporting_strategies": self.supporting_strategies,
+            "opposing_strategies": self.opposing_strategies,
+            "top_strategy": self.top_strategy,
+            "champion_strategy": self.champion_strategy,
+            "explanation": self.explanation,
+            "metadata": self.metadata,
+            "regime": self.regime,
+            "signal": self.signal,
+            "risk": self.risk,
+            "trace": self.trace,
+            "reason_code": self.reason_code,
         }

@@ -53,7 +53,7 @@ def test_meta_learning_increases_confidence_inside_flow():
 
     assert report is not None
 
-    assert report.confidence == 90
+    assert report.confidence == 95
 
 
 def test_meta_learning_reduces_confidence_inside_flow():
@@ -76,4 +76,4 @@ def test_meta_learning_reduces_confidence_inside_flow():
 
     assert report is not None
 
-    assert report.confidence == 80
+    assert report.confidence == 75

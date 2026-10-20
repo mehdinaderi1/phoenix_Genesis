@@ -1,4 +1,4 @@
-﻿from intelligence.action_proposal import ActionProposal
+from intelligence.action_proposal import ActionProposal
 from intelligence.decision_memory import DecisionMemory
 from intelligence.decision_outcome_bridge import DecisionOutcomeBridge
 from intelligence.decision_record import DecisionRecord
@@ -374,7 +374,7 @@ class IntelligenceFlow:
     # REPORT CREATION
     # =============================================================
 
-    def create_report(self, consensus):
+    def create_report(self, consensus, candles=None):
 
         # ---------------------------------------------------------
         # 1. Historical learning
@@ -539,8 +539,10 @@ class IntelligenceFlow:
 
                 *analysis["reasons"]
             ],
-            operational_strategy_result=operational_strategy_result,
+        operational_strategy_result=operational_strategy_result,
         )
+
+        reason_code=getattr(consensus, "reason_code", None),
 
         report.scenarios = scenarios
         report.learning_insight = learning_insight
@@ -775,6 +777,80 @@ class IntelligenceFlow:
             )
 
         # ---------------------------------------------------------
+        # ---------------------------------------------------------
+        # Meta confidence from historical records, before decision
+        # ---------------------------------------------------------
+
+        report.meta_insight = (
+            self.meta_intelligence.analyze(
+                self.decision_memory.records,
+                self.meta_memory.get_records()
+            )
+        )
+
+        report.meta_learning = (
+            self.meta_learning_engine.learn(
+                report.meta_insight
+            )
+        )
+
+        confidence_before = report.confidence
+
+        report.confidence = (
+            self.meta_confidence_adapter.adjust(
+                report.confidence,
+                report.meta_learning
+            )
+        )
+
+        adjustment = (
+            report.confidence - confidence_before
+        )
+        # ---------------------------------------------------------
+        # Meta confidence from historical records, before decision
+        # ---------------------------------------------------------
+
+        report.meta_insight = (
+            self.meta_intelligence.analyze(
+                self.decision_memory.records,
+                self.meta_memory.get_records()
+            )
+        )
+
+        report.meta_learning = (
+            self.meta_learning_engine.learn(
+                report.meta_insight
+            )
+        )
+
+        confidence_before = report.confidence
+
+        report.confidence = (
+            self.meta_confidence_adapter.adjust(
+                report.confidence,
+                report.meta_learning
+            )
+        )
+
+        # ─── Confidence floor (جلوگیری از صفر شدن) ───
+        if report.confidence < 20.0:
+            report.confidence = 20.0
+
+        # ─── Attach candles for EMA trend filter ───
+        if candles:
+            report.candles = candles
+        else:
+            for attr in ("candles", "candle_data", "ohlcv", "data"):
+                v = getattr(consensus, attr, None) if consensus else None
+                if v:
+                    report.candles = v
+                    break
+        # ──────────────────────────────────────────
+
+        decision = self.decision_engine.decide(
+            report
+        )
+            
         # 13. Decision
         # ---------------------------------------------------------
 
@@ -783,6 +859,11 @@ class IntelligenceFlow:
         )
 
         report.decision = decision
+
+        report.reason_code = (
+            getattr(decision, "reason_code", None)
+            or report.reason_code
+        )
 
         report.strategy_insight = (
             self.strategy_analyzer.analyze(
@@ -1061,37 +1142,6 @@ class IntelligenceFlow:
         # ---------------------------------------------------------
         # 24. Meta intelligence
         # ---------------------------------------------------------
-
-        report.meta_insight = (
-            self.meta_intelligence.analyze(
-
-                self.decision_memory.records,
-
-                self.meta_memory.get_records()
-            )
-        )
-
-        report.meta_learning = (
-            self.meta_learning_engine.learn(
-                report.meta_insight
-            )
-        )
-
-        confidence_before = report.confidence
-
-        report.confidence = (
-            self.meta_confidence_adapter.adjust(
-
-                report.confidence,
-
-                report.meta_learning
-            )
-        )
-
-        adjustment = (
-            report.confidence
-            - confidence_before
-        )
 
         meta_feedback = None
 

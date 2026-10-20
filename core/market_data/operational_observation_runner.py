@@ -46,13 +46,5 @@ class OperationalObservationRunner:
             if cycle_number < cycles and interval_seconds > 0:
                 self.sleep_fn(interval_seconds)
 
-        archive_results = getattr(
-            self.runtime,
-            "archive_results",
-            None
-        )
-
-        if archive_results is not None:
-            archive_results(results)
-
+       
         return results

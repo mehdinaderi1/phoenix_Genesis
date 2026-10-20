@@ -48,18 +48,28 @@ class PaperMarketCycleRunner:
         self.market_data_pipeline = market_data_pipeline
 
         self.last_cycle_inputs = []
+        self._last_market_data = None
 
     def refresh_market_data(self, symbol="BTCUSDT"):
         if self.market_data_pipeline is None:
+            self._last_market_data = None
             return None
-        return self.market_data_pipeline.fetch_multi_timeframes(
+        data = self.market_data_pipeline.fetch_multi_timeframes(
             symbol=symbol
         )
+        self._last_market_data = data
+        return data
 
     def build_cycle_input(self, symbol="BTCUSDT"):
         price = self.exchange_manager.get_price(symbol)
         consensus = self.multi_timeframe_pipeline.analyze(symbol)
-        report = self.intelligence_flow.create_report(consensus)
+
+        candles = self._extract_candles(symbol=symbol)
+
+        report = self.intelligence_flow.create_report(
+            consensus,
+            candles=candles                              # ← پاس داده شد
+        )
         return {
             "action_proposal": report.action_proposal,
             "report": report,
@@ -68,6 +78,51 @@ class PaperMarketCycleRunner:
             "signal": getattr(consensus, "signal", None),
             "decision": getattr(report, "decision", None)
         }
+
+    def _extract_candles(self, symbol="BTCUSDT", timeframe="15m", limit=250):
+        """
+        کندل‌ها را برای EMA بگیر.
+        اولویت: market_data_pipeline → multi_timeframe_pipeline
+        """
+        data = self._last_market_data
+
+        # اگر در refresh_market_data کش نشده، یک بار fetch کن
+        if data is None and self.market_data_pipeline is not None:
+            try:
+                data = self.market_data_pipeline.fetch_multi_timeframes(
+                    symbol=symbol
+                )
+                self._last_market_data = data
+            except Exception as e:
+                print(f"[CANDLES] fetch failed: {e}")
+                data = None
+
+        # حالت ۱: dict {timeframe: candles}
+        if isinstance(data, dict):
+            tf_data = data.get(timeframe)
+            if not tf_data:
+                tf_data = next(
+                    (v for v in data.values()
+                     if isinstance(v, (list, tuple)) and len(v) > 0),
+                    None,
+                )
+            if tf_data:
+                return tf_data[-limit:] if len(tf_data) > limit else tf_data
+
+        # حالت ۲: خود داده یک لیست است
+        if isinstance(data, (list, tuple)) and data:
+            return data[-limit:] if len(data) > limit else data
+
+        # حالت ۳: از multi_timeframe_pipeline
+        for attr in ("last_candles", "candles", "market_data"):
+            v = getattr(self.multi_timeframe_pipeline, attr, None)
+            if isinstance(v, (list, tuple)) and v:
+                return v[-limit:] if len(v) > limit else v
+            if isinstance(v, dict) and v.get(timeframe):
+                arr = v[timeframe]
+                return arr[-limit:] if len(arr) > limit else arr
+
+        return None
 
     def run(self, cycle_count=1, symbol="BTCUSDT"):
         cycles = []
@@ -79,6 +134,7 @@ class PaperMarketCycleRunner:
         )
 
         self.last_cycle_inputs = []
+        self._last_market_data = None
 
         for _ in range(cycle_count):
             self.refresh_market_data(symbol=symbol)

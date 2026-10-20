@@ -1,8 +1,16 @@
-import os
+﻿import os
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv(override=True)      # ← override
+except ImportError:
+    pass
+
 from notifications.dispatcher import NotificationDispatcher
 from notifications.signal_outbox import SignalOutbox
 from notifications.signal_publisher import SignalPublisher
 from notifications.telegram_sender import TelegramSender
+from notifications.position_notifier import PositionNotifier
 from intelligence.observation.opportunity_observer import OpportunityObserver
 from intelligence.observation.opportunity_journal import OpportunityJournal
 from core.engine import PhoenixEngine
@@ -46,20 +54,28 @@ def configure_market(exchange):
         )
 
 
-def print_cycle(result):
+def print_cycle(result, total_cycles=None):
     observation = result["observation"]
     market_context = result["market_context"]
     decision = result["decision"]
     action_proposal = result["action_proposal"]
     translated = result["translated_action_proposal"]
     paper_result = result.get("paper_result") or {}
+    position = paper_result.get("position")
     shadow_result = result.get("shadow_result") or {}
 
     cycle_number = result["cycle_number"]
 
+    # Progress display (e.g., 45/100)
+    if total_cycles:
+        progress = cycle_number / total_cycles * 100
+        cycle_label = f"Cycle {cycle_number}/{total_cycles} ({progress:.0f}%)"
+    else:
+        cycle_label = f"Cycle {cycle_number}"
+
     if observation is not None and observation.source_status == "BLIND":
         print(
-            f"Cycle {cycle_number} | "
+            f"{cycle_label} | "
             "Price=None | "
             "Source=None | "
             "Status=BLIND | "
@@ -71,7 +87,7 @@ def print_cycle(result):
 
     if market_context is None:
         print(
-            f"Cycle {cycle_number} | "
+            f"{cycle_label} | "
             f"Price={observation.price if observation is not None else None} | "
             f"Source={observation.source if observation is not None else None} | "
             f"Status={observation.source_status if observation is not None else 'UNKNOWN'} | "
@@ -128,6 +144,22 @@ def print_cycle(result):
         f"FinalShort={short_gate}"
     )
 
+    if position is not None:
+        pos_side = getattr(position, "side", None)
+        pos_entry = getattr(position, "entry_price", None)
+        pos_sl = getattr(position, "sl", None)
+        pos_tp = getattr(position, "tp", None)
+        pos_lev = float(getattr(position, "leverage", 1.0))
+        pos_qty = getattr(position, "quantity", 0) or 0
+        pos_notional = (pos_entry or 0) * pos_qty
+        pos_margin = pos_notional / max(pos_lev, 1.0)
+        print(
+            f"  Position | Side={pos_side} | "
+            f"Entry={pos_entry} | SL={pos_sl} | TP={pos_tp} | "
+            f"Lev={pos_lev:g}x | Notional={pos_notional:.2f} | "
+            f"Margin={pos_margin:.2f}"
+        )
+
     decision_confidence = (
         getattr(decision, "confidence", None)
         if decision is not None
@@ -163,6 +195,9 @@ def print_cycle(result):
     if isinstance(decision_strategy, dict):
         decision_strategy = decision_strategy.get("name")
 
+    signal_code = getattr(market_context, "reason_code", None) or ""
+    decision_code = getattr(decision, "reason_code", None) or ""
+
     breakdown = getattr(
         market_context,
         "consensus_breakdown",
@@ -170,13 +205,15 @@ def print_cycle(result):
     )
 
     print(
-        f"Cycle {cycle_number} | "
+        f"{cycle_label} | "
         f"Price={observation.price if observation is not None else None} | "
         f"Source={observation.source if observation is not None else None} | "
         f"Trend={market_context.trend} | "
-        f"Signal={market_context.signal} | "
+        f"Signal={market_context.signal}"
+        f"{' (' + signal_code + ')' if signal_code else ''} | "
         f"ContextConfidence={market_context.confidence:.2f}% | "
-        f"Decision={getattr(decision, 'action', None)} | "
+        f"Decision={getattr(decision, 'action', None)}"
+        f"{' (' + decision_code + ')' if decision_code else ''} | "
         f"DecisionConfidence={decision_confidence} | "
         f"Strategy={decision_strategy} | "
         f"LongGate={'OPEN' if long_gate else 'BLOCKED'} | "
@@ -229,10 +266,10 @@ def print_cycle(result):
 
             print(
                 f"  {timeframe} | "
-                f"CandleStart={boundary["candle_start"]} | "
-                f"NextBoundary={boundary["next_boundary"]} | "
-                f"Age={boundary["age_seconds"]} | "
-                f"Closed={boundary["is_closed"]}"
+                f"CandleStart={boundary['candle_start']} | "
+                f"NextBoundary={boundary['next_boundary']} | "
+                f"Age={boundary['age_seconds']} | "
+                f"Closed={boundary['is_closed']}"
             )
 
 
@@ -252,12 +289,18 @@ def print_session_summary(summary):
     print("Balance:", summary["balance"])
     print("Total PnL:", summary["total_pnl"])
     print("Trades:", summary["trade_count"])
-    print(
-        "Final Position:",
-        "NONE"
-        if summary["current_position"] is None
-        else summary["current_position"]
-    )
+    current = summary["current_position"]
+    if current is None:
+        print("Final Position: NONE")
+    else:
+        side = getattr(current, "side", None)
+        entry = getattr(current, "entry_price", None)
+        sl = getattr(current, "sl", None)
+        tp = getattr(current, "tp", None)
+        print(
+            f"Final Position: {side} @ {entry} | "
+            f"SL={sl} | TP={tp}"
+        )
 
 
 def print_learning_summary(intelligence_flow):
@@ -291,6 +334,60 @@ def build_real_source_manager():
     return manager
 
 
+def check_position_sl_tp(paper_session, source_manager, resilience):
+    position = paper_session.get_position()
+    if position is None:
+        return None
+    try:
+        price_data = source_manager.get_price("BTCUSDT")
+    except Exception:
+        return None
+    if price_data is None or price_data.price is None:
+        return None
+
+    reason, exit_price = resilience.recover_position(
+        paper_session, price_data.price
+    )
+    if not reason:
+        return None
+
+    # ─── اطلاعات اهرم قبل از بستن ───
+    lev = float(getattr(position, "leverage", 1.0))
+    qty = float(getattr(position, "quantity", 0.0))
+    entry = float(getattr(position, "entry_price", 0.0))
+    notional = qty * entry
+    margin = notional / max(lev, 1.0)
+    # ─────────────────────────────────
+
+    print(
+        f"RECOVERY: closing position at {reason} "
+        f"(price={price_data.price}, "
+        f"source={price_data.source}) | "
+        f"Side={position.side} Entry={entry:.2f} | "
+        f"Lev={lev:g}x | Notional={notional:.2f} | Margin={margin:.2f}"
+    )
+
+    closed = paper_session.close_position(exit_price)
+    if closed is None:
+        return None
+
+    pnl = closed.get("realized_pnl", 0.0)
+    pnl_pct_on_margin = (pnl / margin * 100) if margin > 0 else 0.0
+    # ─── گزارش PnL نسبت به مارجین (اثر واقعی اهرم) ───
+    print(
+        f"RECOVERY: position closed | "
+        f"PnL={pnl:+.4f} USDT ({pnl_pct_on_margin:+.2f}% on margin) | "
+        f"Reason={reason}"
+    )
+
+    return {
+        "position": closed.get("position"),
+        "exit_price": closed.get("exit_price"),
+        "realized_pnl": pnl,
+        "close_reason": reason,
+    }
+
+
 def main():
     print("PHOENIX GENESIS - OPERATIONAL PROTOTYPE")
     print("=" * 60)
@@ -302,8 +399,6 @@ def main():
     engine = PhoenixEngine()
     engine.start()
 
-    # Candle pipeline remains deterministic for the current OBSERVE/PAPER prototype.
-    # Real exchange/aggregator price observation is handled by the source manager below.
     market_data_pipeline = None
 
     source_manager = build_real_source_manager()
@@ -342,6 +437,34 @@ def main():
         position_size_percent=1.0,
         outcome_bridge=intelligence_flow.decision_outcome_bridge,
     )
+
+    from core.resilience import ResilienceManager
+
+    resilience = ResilienceManager()
+    notifier = PositionNotifier()
+    saved = resilience.load_state()
+
+    start_cycle = 1
+    if saved:
+        print(f"RESUME: state found from cycle {saved['last_cycle']}")
+        try:
+            paper_session = PaperTradingSession.from_checkpoint(
+                saved["session"]
+            )
+            paper_session.outcome_bridge = (
+                intelligence_flow.decision_outcome_bridge
+            )
+            start_cycle = saved["last_cycle"] + 1
+            print(f"RESUME: continuing from cycle {start_cycle}")
+        except Exception as e:
+            print(f"WARNING: resume failed: {e}")
+            print("Falling back to fresh start")
+            start_cycle = 1
+            paper_session = PaperTradingSession(
+                initial_balance=1000.0,
+                position_size_percent=1.0,
+                outcome_bridge=intelligence_flow.decision_outcome_bridge,
+            )
 
     paper_runtime = PaperTradingRuntime(
         session=paper_session
@@ -387,30 +510,155 @@ def main():
         runtime=operational_runtime
     )
 
-    timeframes = ("5m", "15m", "30m", "4H", "1D")
-
-    results = observation_runner.run(
-        symbol="BTCUSDT",
-        cycles=20,
-        interval_seconds=0,
-        continue_on_error=True,
-        timeframes=timeframes,
+    observation_cycles = int(
+        os.environ.get("PHOENIX_OBSERVATION_CYCLES", "20")
     )
+    observation_interval_seconds = float(
+        os.environ.get("PHOENIX_OBSERVATION_INTERVAL_SECONDS", "0")
+    )
+
+    results = []
+
+    # Recovery check: if a position was open before, verify SL/TP
+    if paper_session.get_position() is not None:
+        try:
+            price_data = source_manager.get_price("BTCUSDT")
+            if price_data and price_data.price:
+                reason, exit_price = resilience.recover_position(
+                    paper_session, price_data.price
+                )
+                if reason:
+                    print(f"RECOVERY: closing position at {reason}")
+                    paper_session.close_position(exit_price)
+        except Exception as e:
+            print(f"WARNING: recovery check failed: {e}")
 
     print()
     print("=" * 60)
     print("OPERATIONAL CYCLES")
     print("=" * 60)
 
-    for result in results:
-        if result.get("error") is not None:
-            print(
-                f"Cycle {result.get('cycle_number')} | "
-                f"ERROR={result['error']}"
+    for cycle in range(start_cycle, observation_cycles + 1):
+        # ALWAYS check SL/TP, even during partial outages
+        try:
+            sl_tp_result = check_position_sl_tp(
+                paper_session,
+                source_manager,
+                resilience,
             )
+            if sl_tp_result:
+                notifier.notify_close(
+                    sl_tp_result["position"],
+                    sl_tp_result["exit_price"],
+                    sl_tp_result["realized_pnl"],
+                    sl_tp_result["close_reason"],
+                )
+        except Exception as e:
+            print(f"WARNING: SL/TP check failed: {e}")
+
+        try:
+            cycle_results = observation_runner.run(
+                symbol="BTCUSDT",
+                cycles=1,
+                interval_seconds=0,
+                continue_on_error=True,
+                timeframes=timeframes,
+            )
+
+            for result in cycle_results:
+                result["cycle_number"] = cycle
+                results.append(result)
+
+                if result.get("error") is not None:
+                    print(
+                        f"Cycle {cycle} | "
+                        f"ERROR={result['error']}"
+                    )
+                    continue
+
+                print_cycle(result, total_cycles=observation_cycles)
+
+                paper_result = result.get("paper_result") or {}
+                action = paper_result.get("action")
+
+                if action == "OPEN":
+                    notifier.notify_open(
+                        paper_result.get("position")
+                    )
+                elif action == "CLOSE":
+                    close_pos = paper_result.get("position")
+                    lev = float(getattr(close_pos, "leverage", 1.0)) if close_pos else 1.0
+                    notional = (close_pos.quantity * close_pos.entry_price) if close_pos else 0.0
+                    margin = notional / max(lev, 1.0)
+                    pnl = paper_result.get("realized_pnl", 0)
+                    pnl_pct = (pnl / margin * 100) if margin > 0 else 0.0
+                    print(
+                        f"CLOSE | {paper_result.get('close_reason', 'UNKNOWN')} | "
+                        f"Lev={lev:g}x | Notional={notional:.2f} | Margin={margin:.2f} | "
+                        f"PnL={pnl:+.4f} USDT ({pnl_pct:+.2f}% on margin)"
+                    )
+                    notifier.notify_close(
+                        close_pos,
+                        paper_result.get("exit_price", 0),
+                        pnl,
+                        paper_result.get("close_reason", "UNKNOWN"),
+                    )
+
+            # Save state every 10 cycles
+            if cycle % 10 == 0:
+                try:
+                    resilience.save_state(cycle, paper_session)
+                    print(f"STATE: saved at cycle {cycle}")
+                except Exception as e:
+                    print(f"WARNING: state save failed: {e}")
+
+            if observation_interval_seconds > 0:
+                import time
+                time.sleep(observation_interval_seconds)
+
+        except KeyboardInterrupt:
+            print("\nINTERRUPTED: saving state before exit...")
+            try:
+                resilience.save_state(cycle, paper_session)
+                print(f"STATE: saved at cycle {cycle}")
+            except Exception:
+                pass
+            print("EXIT: goodbye.")
+            break
+        except Exception as e:
+            print(f"ERROR at cycle {cycle}: {e}")
+            try:
+                resilience.save_state(cycle, paper_session)
+            except Exception:
+                pass
+            import time
+            time.sleep(60)
             continue
 
-        print_cycle(result)
+    # Clear state on successful completion
+    if paper_session.get_position() is None:
+        resilience.clear_state()
+        print("STATE: cleared (run completed successfully)")
+    else:
+        print(
+            "STATE: preserved (position still open: "
+            f"{paper_session.get_position().side} @ "
+            f"{paper_session.get_position().entry_price})"
+        )
+
+    # ─── Archive the full session ONCE after all cycles ───
+    if session_archive is not None:
+        try:
+            if hasattr(operational_runtime, "_build_session_record"):
+                full_record = operational_runtime._build_session_record(results)
+                session_archive.save(
+                    paper_session.session_id,
+                    full_record,
+                )
+                print(f"ARCHIVE: saved {len(results)} cycles")
+        except Exception as e:
+            print(f"WARNING: archive save failed: {e}")
+    # ──────────────────────────────────────────────────────
 
     print()
     print("=" * 60)

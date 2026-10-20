@@ -31,5 +31,6 @@ class PaperTradingCycle:
             "exit_price": result.get("exit_price"),
             "realized_pnl": result.get("realized_pnl", 0.0),
             "trade": result.get("trade"),
-            "learning_result": result.get("learning_result")
+            "learning_result": result.get("learning_result"),
+            "close_reason": result.get("close_reason"),
         }

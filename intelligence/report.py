@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
 
@@ -18,13 +18,12 @@ class MarketReport:
     intelligence_context: object | None = None
     evolution: dict | None = None
     champion_strategy: dict | None = None
+    candles: list = field(default_factory=list)
     strategy_ranking: object | None = None
     strategy_intelligence: object | None = None
     strategy_consensus: dict | None = None
-    strategy_consensus: dict = None
-    champion_strategy: dict = None
     operational_strategy_result: dict | None = None
-
+    reason_code: str | None = None
 
     def __contains__(self, key):
         return hasattr(self, key)
@@ -32,14 +31,11 @@ class MarketReport:
     def __getitem__(self, key):
         return getattr(self, key)
 
-
     def keys(self):
         return self.__dict__.keys()
 
-
     def get(self, key, default=None):
         return getattr(self, key, default)
-
 
     def summary(self):
         return {
@@ -50,5 +46,6 @@ class MarketReport:
             "signal": self.signal,
             "confidence": self.confidence,
             "risk": self.risk,
-            "reasons": self.reasons
+            "reasons": self.reasons,
+            "reason_code": self.reason_code,
         }

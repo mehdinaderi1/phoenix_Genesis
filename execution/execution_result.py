@@ -9,3 +9,5 @@ class ExecutionResult:
     price: float | None = None
     quantity: float | None = None
     reason: str | None = None
+    sl: float | None = None
+    tp: float | None = None
