@@ -69,17 +69,22 @@ class PaperTradingSession:
         if closed is None:
             return None
 
-        realized_pnl = closed["realized_pnl"]
-        self.portfolio.apply_realized_pnl(realized_pnl)
+        position = closed["position"]
+        remaining_pnl = closed["realized_pnl"]
+        partial_pnl = float(getattr(position, "realized_partial_pnl", 0.0))
+        total_pnl = remaining_pnl + partial_pnl
 
+        # portfolio فقط remaining را می‌گیرد — partial قبلاً اعمال شده
+        self.portfolio.apply_realized_pnl(remaining_pnl)
+
+        # trade record کل PnL را نشان می‌دهد
         trade = self.trade_history.add_trade(
-            position=closed["position"],
+            position=position,
             exit_price=closed["exit_price"],
-            realized_pnl=realized_pnl
+            realized_pnl=total_pnl
         )
 
         learning_result = None
-        position = closed["position"]
         decision = getattr(position, "decision", None)
 
         if self.outcome_bridge is not None and decision is not None:
@@ -92,7 +97,9 @@ class PaperTradingSession:
         return {
             "position": position,
             "exit_price": closed["exit_price"],
-            "realized_pnl": realized_pnl,
+            "realized_pnl": total_pnl,
+            "partial_pnl": partial_pnl,
+            "remaining_pnl": remaining_pnl,
             "trade": trade,
             "portfolio": self.portfolio,
             "trade_history": self.trade_history,
@@ -128,6 +135,12 @@ class PaperTradingSession:
                     "sl": getattr(position, "sl", None),
                     "tp": getattr(position, "tp", None),
                     "opened_at": getattr(position, "opened_at", None),
+                    "leverage": getattr(position, "leverage", 1.0),
+                    "initial_sl": getattr(position, "initial_sl", None),
+                    "partial_closed": getattr(position, "partial_closed", False),
+                    "be_moved": getattr(position, "be_moved", False),
+                    "best_price_seen": getattr(position, "best_price_seen", None),
+                    "realized_partial_pnl": getattr(position, "realized_partial_pnl", 0.0),
                     "decision": (
                         position.decision.to_dict()
                         if position.decision is not None
@@ -138,7 +151,6 @@ class PaperTradingSession:
                 if position is not None
                 else None
             ),
-                
             "trades": [
                 asdict(trade)
                 for trade in self.trade_history.get_trades()
@@ -164,6 +176,12 @@ class PaperTradingSession:
                 sl=position_data.get("sl"),
                 tp=position_data.get("tp"),
                 opened_at=position_data.get("opened_at"),
+                leverage=position_data.get("leverage", 1.0),
+                initial_sl=position_data.get("initial_sl"),
+                partial_closed=position_data.get("partial_closed", False),
+                be_moved=position_data.get("be_moved", False),
+                best_price_seen=position_data.get("best_price_seen"),
+                realized_partial_pnl=position_data.get("realized_partial_pnl", 0.0),
                 decision=(
                     DecisionResult(**position_data["decision"])
                     if position_data.get("decision") is not None
