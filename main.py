@@ -604,6 +604,31 @@ def main():
                         paper_result.get("close_reason", "UNKNOWN"),
                     )
 
+                elif action == "PARTIAL":
+                    pi = paper_result.get("partial_info") or {}
+                    print(
+                        f"  PARTIAL | closed={pi.get('closed_quantity', 0):.6f} "
+                        f"@ {pi.get('exit_price', 0):.2f} | "
+                        f"PnL={pi.get('partial_pnl', 0):+.4f} | "
+                        f"remaining={pi.get('remaining_quantity', 0):.6f}"
+                    )
+                    notifier.notify_partial(
+                        paper_result.get("position"),
+                        pi.get("closed_quantity", 0),
+                        pi.get("partial_pnl", 0),
+                        pi.get("exit_price", 0),
+                    )
+                elif action == "SL_MOVE":
+                    si = paper_result.get("sl_move_info") or {}
+                    print(
+                        f"  SL_MOVE | {si.get('old_sl', 0):.2f} → {si.get('new_sl', 0):.2f}"
+                    )
+                    notifier.notify_sl_move(
+                        paper_result.get("position"),
+                        si.get("old_sl", 0),
+                        si.get("new_sl", 0),
+                    )    
+
             # Save state every 10 cycles
             if cycle % 10 == 0:
                 try:

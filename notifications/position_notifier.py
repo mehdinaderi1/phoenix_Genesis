@@ -82,3 +82,40 @@ class PositionNotifier:
             self._send(text)
         except Exception as e:
             print(f"WARNING: notify_close failed: {e}")
+
+    def notify_partial(self, position, closed_qty, partial_pnl, exit_price):
+        if position is None:
+            return
+        try:
+            sl = getattr(position, "sl", None)
+            tp = getattr(position, "tp", None)
+            remaining = float(getattr(position, "quantity", 0))
+            text = (
+                f"[PARTIAL] Partial close\n"
+                f"Symbol: {position.symbol}\n"
+                f"Side: {position.side}\n"
+                f"Exit: {exit_price:.2f}\n"
+                f"Closed Qty: {closed_qty:.6f}\n"
+                f"Remaining Qty: {remaining:.6f}\n"
+                f"Partial PnL: {partial_pnl:+.4f} USDT\n"
+            )
+            text += f"New SL: {sl:.2f}\n" if sl else "SL: N/A\n"
+            text += f"New TP: {tp:.2f}" if tp else "TP: N/A"
+            self._send(text)
+        except Exception as e:
+            print(f"WARNING: notify_partial failed: {e}")
+
+    def notify_sl_move(self, position, old_sl, new_sl):
+        if position is None:
+            return
+        try:
+            text = (
+                f"[SL_MOVE] Stop-loss moved\n"
+                f"Symbol: {position.symbol}\n"
+                f"Side: {position.side}\n"
+                f"Old SL: {old_sl:.2f}\n"
+                f"New SL: {new_sl:.2f}"
+            )
+            self._send(text)
+        except Exception as e:
+            print(f"WARNING: notify_sl_move failed: {e}")
