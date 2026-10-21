@@ -39,8 +39,8 @@ class Settings:
 
     # ─── TP / SL ───
     AUTO_TP_SL = True
-    TP_PCT = 0.0020    # 0.20%  → حد سود
-    SL_PCT = 0.0010    # 0.10%  → حد ضرر
+    TP_PCT = 0.003    # 0.3%  → حد سود
+    SL_PCT = 0.0015    # 0.15%  → حد ضرر
     MAX_POSITION_HOURS = 4
 
     # ─── Trend filter (EMA) ───
@@ -60,3 +60,5 @@ class Settings:
     TRAILING_START_R = 2.0           # شروع trail در 2R
     TRAILING_DISTANCE_R = 0.5        # فاصله 0.5R از best price
     TP_EXTEND_AFTER_PARTIAL_R = 3.0   # بعد از partial، TP به 3R می‌رود
+    # config/settings.py
+    position_size_percent = 5.0     # یا 10.0

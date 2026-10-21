@@ -485,6 +485,7 @@ def main():
     signal_publisher = SignalPublisher(
         notification_outbox,
         primary_timeframe="5m",
+       
     )
 
     opportunity_observer = OpportunityObserver()
@@ -577,7 +578,7 @@ def main():
                     continue
 
                 print_cycle(result, total_cycles=observation_cycles)
-
+       
                 paper_result = result.get("paper_result") or {}
                 action = paper_result.get("action")
 
@@ -627,7 +628,22 @@ def main():
                         paper_result.get("position"),
                         si.get("old_sl", 0),
                         si.get("new_sl", 0),
-                    )    
+                    )
+            # ─── Dispatch pending Telegram messages every N cycles ───
+            dispatch_every = int(os.environ.get("PHOENIX_DISPATCH_EVERY", "5"))
+            if (cycle % dispatch_every == 0
+                    and os.environ.get("PHOENIX_TELEGRAM_ENABLED", "0").strip() == "1"):
+                try:
+                    dispatcher = NotificationDispatcher(
+                        outbox=notification_outbox,
+                        sender=TelegramSender(),
+                    )
+                    dresult = dispatcher.dispatch_due_messages()
+                    if dresult["sent"] or dresult["failed"]:
+                        print(f"DISPATCH@{cycle}: {dresult}")
+                except Exception as e:
+                    print(f"WARNING: periodic dispatch failed: {e}")
+            # ─────────────────────────────────────────────────────    
 
             # Save state every 10 cycles
             if cycle % 10 == 0:

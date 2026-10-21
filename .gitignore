@@ -79,3 +79,10 @@ clear_flags.ps1
 .DS_Store
 Thumbs.db
 desktop.ini
+
+
+# ─── Manual state backups ───
+data/state_*.json
+data/state_*.bak
+data/state_*.bak2
+*.bundle
