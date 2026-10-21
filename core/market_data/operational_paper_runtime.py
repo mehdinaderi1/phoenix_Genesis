@@ -532,7 +532,11 @@ class OperationalPaperRuntime:
                     None
                 ),
 
-                "leverage": float(getattr(position, "leverage", 1.0)),
+                "leverage": float(getattr(
+                    paper_result.get("position") if paper_result is not None else None,
+                    "leverage",
+                    1.0,
+                )),
 
                 "opportunity": self._serialize_value(
                     result.get("opportunity")
