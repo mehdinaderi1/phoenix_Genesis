@@ -85,4 +85,25 @@ desktop.ini
 data/state_*.json
 data/state_*.bak
 data/state_*.bak2
-*.bundle
+*.bundle# Backups (local only)
+backup_*/
+backup_test_premerge.json
+*.bak
+
+# Runtime state
+data/state.json
+data/state_*.json
+data/*.db
+data/opportunities.jsonl
+
+# Session archives (???? ?? ?????? — ??? ???????? history ?? version ???? ?????? ?? ?????)
+# data/paper_sessions/*.json
+
+# Logs
+run_*.log
+test_*.log
+*.log
+
+# Python
+__pycache__/
+*.pyc
