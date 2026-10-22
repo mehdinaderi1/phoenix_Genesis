@@ -79,6 +79,13 @@ class PaperExecutionEngine:
                 position_size_percent=position_size_percent,
                 entry_price=price,
             )
+            
+        # ─── Apply real leverage (multiplies notional, not margin) ───
+        leverage = float(os.getenv("PHOENIX_LEVERAGE", "1.0"))
+        if leverage < 1.0:
+            leverage = 1.0
+        quantity = quantity * leverage
+        # ─────────────────────────────────────────────────────────────
 
         if quantity <= 0:
             return ExecutionResult(

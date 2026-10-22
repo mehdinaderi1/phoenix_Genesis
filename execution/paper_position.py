@@ -7,7 +7,10 @@ from config.settings import Settings
 
 def _fee_rate() -> float:
     market = getattr(Settings, "FEE_MARKET", "futures")
-    order_type = getattr(Settings, "FEE_ORDER_TYPE", "taker")
+    order_type = os.getenv(
+        "PHOENIX_FEE_TYPE",
+        getattr(Settings, "FEE_ORDER_TYPE", "taker"),
+    )
     table = getattr(Settings, f"FEE_{market.upper()}", None) or {}
     return float(table.get(order_type, 0.0))
 

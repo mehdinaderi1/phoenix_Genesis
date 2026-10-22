@@ -1,3 +1,4 @@
+import os
 from intelligence.action_proposal import ActionProposal
 from intelligence.decision_memory import DecisionMemory
 from intelligence.decision_outcome_bridge import DecisionOutcomeBridge
@@ -833,8 +834,16 @@ class IntelligenceFlow:
         )
 
         # ─── Confidence floor (جلوگیری از صفر شدن) ───
-        if report.confidence < 20.0:
-            report.confidence = 20.0
+        _floor = float(os.getenv("PHOENIX_CONFIDENCE_FLOOR", "20.0"))
+        if report.confidence < _floor:
+            report.confidence = _floor
+
+        if os.getenv("PHOENIX_CONFIDENCE_RECOVERY", "0").strip() == "1":
+            _rc = getattr(self, "_recovery_cycles", 0) + 1
+            self._recovery_cycles = _rc
+            _rate = float(os.getenv("PHOENIX_RECOVERY_RATE", "0.5"))
+            _max = float(os.getenv("PHOENIX_CONFIDENCE_MAX", "80.0"))
+            report.confidence = min(report.confidence + _rc * _rate, _max)
 
         # ─── Attach candles for EMA trend filter ───
         if candles:

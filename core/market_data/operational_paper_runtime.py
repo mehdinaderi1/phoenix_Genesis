@@ -398,15 +398,48 @@ class OperationalPaperRuntime:
 
     def _build_session_record(self, results):
         summary = self.build_summary(results)
-
-        serializable_summary = (
-            self._serialize_value(summary)
-        )
+        serializable_summary = self._serialize_value(summary)
 
         cycles = []
 
         for result in results:
             paper_result = result.get("paper_result")
+            recovery_result = result.get("recovery_result")
+
+            # ✱ NEW: مسیر recovery (خارج از observation cycle)
+            if paper_result is None and recovery_result is not None:
+                rr = recovery_result
+                pos = rr.get("position")
+                cycles.append({
+                    "cycle": result.get("cycle_number"),
+                    "symbol": getattr(pos, "symbol", "BTCUSDT") if pos else "BTCUSDT",
+                    "price": rr.get("exit_price"),
+                    "timestamp": None,
+                    "source_status": None,
+                    "fallback_used": None,
+                    "consensus_breakdown": None,
+                    "signal": None,
+                    "trend": None,
+                    "regime": None,
+                    "confidence": None,
+                    "risk": None,
+                    "proposal_action": None,
+                    "proposal_status": None,
+                    "proposal_reason": None,
+                    "action": "RECOVERY_CLOSE",
+                    "execution_status": "CLOSED",
+                    "realized_pnl": rr.get("realized_pnl", 0.0),
+                    "position_side": getattr(pos, "side", None) if pos else None,
+                    "entry_price": getattr(pos, "entry_price", None) if pos else None,
+                    "quantity": getattr(pos, "quantity", None) if pos else None,
+                    "leverage": float(getattr(pos, "leverage", 1.0)) if pos else 1.0,
+                    "opportunity": None,
+                    "opportunity_observation_error": None,
+                    "error": None,
+                })
+                continue
+
+            # مسیر معمولی (paper_result)
             observation = result.get("observation")
             market_context = result.get("market_context")
             report = result.get("report")
@@ -414,154 +447,61 @@ class OperationalPaperRuntime:
 
             cycles.append({
                 "cycle": result.get("cycle_number"),
-                "symbol": getattr(
-                    observation,
-                    "symbol",
-                    None
-                ),
-                "price": getattr(
-                    observation,
-                    "price",
-                    None
-                ),
-                "timestamp": getattr(
-                    observation,
-                    "timestamp",
-                    None
-                ),
-                "source_status": getattr(
-                    observation,
-                    "source_status",
-                    None
-                ),
-                "fallback_used": getattr(
-                    observation,
-                    "fallback_used",
-                    None
-                ),
+                "symbol": getattr(observation, "symbol", None),
+                "price": getattr(observation, "price", None),
+                "timestamp": getattr(observation, "timestamp", None),
+                "source_status": getattr(observation, "source_status", None),
+                "fallback_used": getattr(observation, "fallback_used", None),
                 "consensus_breakdown": self._serialize_value(
-                    getattr(
-                        market_context,
-                        "consensus_breakdown",
-                        None
-                    )
+                    getattr(market_context, "consensus_breakdown", None)
                 ),
-                "signal": getattr(
-                    report,
-                    "signal",
-                    None
-                ),
-                "trend": getattr(
-                    report,
-                    "trend",
-                    None
-                ),
-                "regime": getattr(
-                    report,
-                    "regime",
-                    None
-                ),
-                "confidence": getattr(
-                    report,
-                    "confidence",
-                    None
-                ),
-                "risk": getattr(
-                    report,
-                    "risk",
-                    None
-                ),
-                "proposal_action": getattr(
-                    action_proposal,
-                    "action",
-                    None
-                ),
-                "proposal_status": getattr(
-                    action_proposal,
-                    "status",
-                    None
-                ),
-                "proposal_reason": getattr(
-                    action_proposal,
-                    "reason",
-                    None
-                ),
-                "action": (
-                    paper_result.get("action")
-                    if paper_result is not None
-                    else None
-                ),
+                "signal": getattr(report, "signal", None),
+                "trend": getattr(report, "trend", None),
+                "regime": getattr(report, "regime", None),
+                "confidence": getattr(report, "confidence", None),
+                "risk": getattr(report, "risk", None),
+                "proposal_action": getattr(action_proposal, "action", None),
+                "proposal_status": getattr(action_proposal, "status", None),
+                "proposal_reason": getattr(action_proposal, "reason", None),
+                "action": paper_result.get("action") if paper_result is not None else None,
                 "execution_status": (
-                    getattr(
-                        paper_result.get(
-                            "execution_result"
-                        ),
-                        "status",
-                        None
-                    )
-                    if paper_result is not None
-                    else None
+                    getattr(paper_result.get("execution_result"), "status", None)
+                    if paper_result is not None else None
                 ),
                 "realized_pnl": (
-                    paper_result.get(
-                        "realized_pnl",
-                        0.0
-                    )
-                    if paper_result is not None
-                    else None
+                    paper_result.get("realized_pnl", 0.0)
+                    if paper_result is not None else None
                 ),
                 "position_side": getattr(
-                    paper_result.get("position")
-                    if paper_result is not None
-                    else None,
-                    "side",
-                    None
+                    paper_result.get("position") if paper_result is not None else None,
+                    "side", None,
                 ),
                 "entry_price": getattr(
-                    paper_result.get("position")
-                    if paper_result is not None
-                    else None,
-                    "entry_price",
-                    None
+                    paper_result.get("position") if paper_result is not None else None,
+                    "entry_price", None,
                 ),
                 "quantity": getattr(
-                    paper_result.get("position")
-                    if paper_result is not None
-                    else None,
-                    "quantity",
-                    None
+                    paper_result.get("position") if paper_result is not None else None,
+                    "quantity", None,
                 ),
-
                 "leverage": float(getattr(
                     paper_result.get("position") if paper_result is not None else None,
-                    "leverage",
-                    1.0,
+                    "leverage", 1.0,
                 )),
-
-                "opportunity": self._serialize_value(
-                    result.get("opportunity")
-                ),
-                "opportunity_observation_error": (
-                    result.get("opportunity_observation_error")
-                ),
+                "opportunity": self._serialize_value(result.get("opportunity")),
+                "opportunity_observation_error": result.get("opportunity_observation_error"),
                 "error": (
                     str(result["error"])
                     if result.get("error") is not None
                     else None
-                )
+                ),
             })
-
+        
         return {
-            "session_id": (
-                self.paper_trading_runtime
-                .session
-                .session_id
-            ),
+            "session_id": self.paper_trading_runtime.session.session_id,
             "cycles": cycles,
             "summary": serializable_summary,
-            "final_position": self._serialize_value(
-                summary.get("current_position")
-            )
+            "final_position": self._serialize_value(summary.get("current_position")),
         }
 
     def _archive_session(self, results):
@@ -602,11 +542,12 @@ class OperationalPaperRuntime:
             self.paper_trading_runtime.session.get_trade_count()
             - summary.get("trade_count", 0)
         )
+
+        
         if trade_history_closes > 0:
             summary["close_count"] = summary.get("close_count", 0) + trade_history_closes
 
-        ...
-
+        
         blind_cycles = sum(
             1
             for result in results

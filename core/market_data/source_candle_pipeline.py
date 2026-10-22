@@ -1,4 +1,5 @@
 from core.market_data.repository import MarketDataRepository
+from time import time
 
 
 class SourceCandlePipeline:
@@ -12,6 +13,32 @@ class SourceCandlePipeline:
 
         self.source_manager = source_manager
         self.repository = MarketDataRepository(database)
+        # TTL cache: skip fetch if recently fetched
+        self._last_fetch = {}
+        self._candle_ttl = {
+            "1m": 20, "5m": 100, "15m": 300, "30m": 600,
+            "1H": 1200, "4H": 4800, "1D": 28800,
+        }
+
+    def _ordered_source_names(self):
+        ordered_names = []
+        if self.source_manager.primary_source:
+            ordered_names.append(self.source_manager.primary_source)
+        ordered_names.extend(
+            name
+            for name in self.source_manager.sources
+            if name != self.source_manager.primary_source
+        )
+        return ordered_names
+
+    def _health(self, name, _health_cache):
+        source = self.source_manager.sources[name]
+        if _health_cache is not None and name in _health_cache:
+            return _health_cache[name]
+        healthy = source.health_check()
+        if _health_cache is not None:
+            _health_cache[name] = healthy
+        return healthy
 
     def fetch_and_store(
         self,
@@ -22,32 +49,38 @@ class SourceCandlePipeline:
         if not symbol:
             raise ValueError("symbol must not be empty")
 
-        ordered_names = []
-        if self.source_manager.primary_source:
-            ordered_names.append(self.source_manager.primary_source)
+        # ─── TTL cache check ───
+        cache_key = (symbol, timeframe)
+        ttl = self._candle_ttl.get(timeframe, 60)
+        now = time()
+        last = self._last_fetch.get(cache_key, 0)
 
-        ordered_names.extend(
-            name
-            for name in self.source_manager.sources
-            if name != self.source_manager.primary_source
-        )
+        if now - last < ttl:
+            latest_row = self.repository.get_latest_candle(symbol, timeframe)
+            if latest_row is not None:
+                return {
+                    "stored": False,
+                    "source": "cache",
+                    "candle": {
+                        "timestamp": latest_row[3],
+                        "open": latest_row[4],
+                        "high": latest_row[5],
+                        "low": latest_row[6],
+                        "close": latest_row[7],
+                        "volume": latest_row[8],
+                    },
+                    "cached": True,
+                    "age_seconds": now - last,
+                }
+        # ─── END cache check ───
 
-        for name in ordered_names:
-            source = self.source_manager.sources[name]
-
+        for name in self._ordered_source_names():
             try:
-                if _health_cache is not None and name in _health_cache:
-                    healthy = _health_cache[name]
-                else:
-                    healthy = source.health_check()
-
-                    if _health_cache is not None:
-                        _health_cache[name] = healthy
-
-                if not healthy:
+                if not self._health(name, _health_cache):
                     continue
-
-                candle = source.get_candle(symbol, timeframe)
+                candle = self.source_manager.sources[name].get_candle(
+                    symbol, timeframe
+                )
             except Exception:
                 continue
 
@@ -62,19 +95,23 @@ class SourceCandlePipeline:
                 candle["low"],
                 candle["close"],
                 candle["volume"],
-                candle["timestamp"]
+                candle["timestamp"],
             )
+
+            self._last_fetch[cache_key] = now
 
             return {
                 "stored": bool(saved),
                 "source": name,
-                "candle": candle
+                "candle": candle,
+                "cached": False,
             }
 
         return {
             "stored": False,
             "source": None,
-            "candle": None
+            "candle": None,
+            "cached": False,
         }
 
     def fetch_and_store_historical(
@@ -94,35 +131,12 @@ class SourceCandlePipeline:
                 "stored": 0
             }
 
-        ordered_names = []
-        if self.source_manager.primary_source:
-            ordered_names.append(self.source_manager.primary_source)
-
-        ordered_names.extend(
-            name
-            for name in self.source_manager.sources
-            if name != self.source_manager.primary_source
-        )
-
-        for name in ordered_names:
-            source = self.source_manager.sources[name]
-
+        for name in self._ordered_source_names():
             try:
-                if _health_cache is not None and name in _health_cache:
-                    healthy = _health_cache[name]
-                else:
-                    healthy = source.health_check()
-
-                    if _health_cache is not None:
-                        _health_cache[name] = healthy
-
-                if not healthy:
+                if not self._health(name, _health_cache):
                     continue
-
-                candles = source.get_historical_candles(
-                    symbol,
-                    timeframe,
-                    limit
+                candles = self.source_manager.sources[name].get_historical_candles(
+                    symbol, timeframe, limit
                 )
             except Exception:
                 continue
@@ -131,7 +145,6 @@ class SourceCandlePipeline:
                 continue
 
             stored_count = 0
-
             for candle in candles:
                 saved = self.repository.save_candle(
                     symbol,
@@ -141,9 +154,8 @@ class SourceCandlePipeline:
                     candle["low"],
                     candle["close"],
                     candle["volume"],
-                    candle["timestamp"]
+                    candle["timestamp"],
                 )
-
                 if saved:
                     stored_count += 1
 

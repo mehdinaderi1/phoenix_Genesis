@@ -2,7 +2,7 @@
 
 try:
     from dotenv import load_dotenv
-    load_dotenv(override=True)      # ← override
+    load_dotenv(override=False)     # ← PowerShell env vars win
 except ImportError:
     pass
 
@@ -197,6 +197,8 @@ def print_cycle(result, total_cycles=None):
 
     signal_code = getattr(market_context, "reason_code", None) or ""
     decision_code = getattr(decision, "reason_code", None) or ""
+    if decision_code == "UNKNOWN":
+        decision_code = ""
 
     breakdown = getattr(
         market_context,
@@ -518,7 +520,18 @@ def main():
         os.environ.get("PHOENIX_OBSERVATION_INTERVAL_SECONDS", "0")
     )
 
+    # ✱ محاسبهٔ بازهٔ مطلق سیکل‌ها
+    end_cycle = start_cycle + observation_cycles - 1
+    total_cycles = end_cycle
+    print(
+        f"CYCLES: planning to run cycle {start_cycle}..{end_cycle} "
+        f"({observation_cycles} cycles this run)"
+    )
+
     results = []
+
+    # ✱ پیگیری interrupt: اگر کاربر Ctrl+C زد، state پاک نشود
+    interrupted = False
 
     # Recovery check: if a position was open before, verify SL/TP
     if paper_session.get_position() is not None:
@@ -530,7 +543,35 @@ def main():
                 )
                 if reason:
                     print(f"RECOVERY: closing position at {reason}")
-                    paper_session.close_position(exit_price)
+                    closed = paper_session.close_position(exit_price)
+                    # ✱ پچ: این close هم باید در results و notification بیاید
+                    if closed is not None:
+                        rec = {
+                            "position": closed.get("position"),
+                            "exit_price": closed.get("exit_price"),
+                            "realized_pnl": closed.get("realized_pnl", 0.0),
+                            "close_reason": reason,
+                        
+                        }
+                        notifier.notify_close(
+                            rec["position"], rec["exit_price"],
+                            rec["realized_pnl"], rec["close_reason"],
+                        )
+                        results.append({
+                            "cycle_number": 0,
+                            "observation": None,
+                            "market_context": None,
+                            "intelligence_context": None,
+                            "report": None,
+                            "decision": None,
+                            "action_proposal": None,
+                            "translated_action_proposal": None,
+                            "paper_result": None,
+                            "shadow_result": None,
+                            "candle_boundaries": {},
+                            "error": None,
+                            "recovery_result": rec,
+                        })
         except Exception as e:
             print(f"WARNING: recovery check failed: {e}")
 
@@ -539,7 +580,7 @@ def main():
     print("OPERATIONAL CYCLES")
     print("=" * 60)
 
-    for cycle in range(start_cycle, observation_cycles + 1):
+    for cycle in range(start_cycle, end_cycle + 1):
         # ALWAYS check SL/TP, even during partial outages
         try:
             sl_tp_result = check_position_sl_tp(
@@ -554,6 +595,23 @@ def main():
                     sl_tp_result["realized_pnl"],
                     sl_tp_result["close_reason"],
                 )
+                # ✱ پچ: این نتیجه را به نتایج اضافه کن
+                results.append({
+                    "cycle_number": cycle,
+                    "observation": None,
+                    "market_context": None,
+                    "intelligence_context": None,
+                    "report": None,
+                    "decision": None,
+                    "action_proposal": None,
+                    "translated_action_proposal": None,
+                    "paper_result": None,
+                    "shadow_result": None,
+                    "candle_boundaries": {},
+                    "error": None,
+                    "recovery_result": sl_tp_result,
+                })
+
         except Exception as e:
             print(f"WARNING: SL/TP check failed: {e}")
 
@@ -577,7 +635,7 @@ def main():
                     )
                     continue
 
-                print_cycle(result, total_cycles=observation_cycles)
+                print_cycle(result, total_cycles=total_cycles)
        
                 paper_result = result.get("paper_result") or {}
                 action = paper_result.get("action")
@@ -659,6 +717,7 @@ def main():
 
         except KeyboardInterrupt:
             print("\nINTERRUPTED: saving state before exit...")
+            interrupted = True
             try:
                 resilience.save_state(cycle, paper_session)
                 print(f"STATE: saved at cycle {cycle}")
@@ -676,8 +735,10 @@ def main():
             time.sleep(60)
             continue
 
-    # Clear state on successful completion
-    if paper_session.get_position() is None:
+    # Clear state on successful completion (but NOT if interrupted)
+    if interrupted:
+        print("STATE: preserved (interrupted by user)")
+    elif paper_session.get_position() is None:
         resilience.clear_state()
         print("STATE: cleared (run completed successfully)")
     else:
@@ -688,6 +749,9 @@ def main():
         )
 
     # ─── Archive the full session ONCE after all cycles ───
+    archive_ok = False
+    archive_path = None
+    archive_size = 0
     if session_archive is not None:
         try:
             if hasattr(operational_runtime, "_build_session_record"):
@@ -696,7 +760,22 @@ def main():
                     paper_session.session_id,
                     full_record,
                 )
-                print(f"ARCHIVE: saved {len(results)} cycles")
+                archive_path = os.path.join(
+                    "data", "paper_sessions",
+                    f"{paper_session.session_id}.json",
+                )
+                if os.path.exists(archive_path) and os.path.getsize(archive_path) > 0:
+                    archive_ok = True
+                    archive_size = os.path.getsize(archive_path)
+                    print(
+                        f"ARCHIVE: saved {len(results)} cycles "
+                        f"({archive_size} bytes)"
+                    )
+                else:
+                    print(
+                        f"WARNING: archive save returned but file missing/empty: "
+                        f"{archive_path}"
+                    )
         except Exception as e:
             print(f"WARNING: archive save failed: {e}")
     # ──────────────────────────────────────────────────────
@@ -735,7 +814,12 @@ def main():
     print("=" * 60)
     print("Session ID:", paper_session.session_id)
     print("Archive Root: data/paper_sessions")
-    print("Session Archived: YES")
+    if archive_ok:
+        print(f"Session Archived: YES ({archive_size} bytes)")
+    elif archive_path is not None:
+        print(f"Session Archived: FAILED (file missing/empty: {archive_path})")
+    else:
+        print("Session Archived: FAILED (archive not attempted)")
 
     print()
     print("=" * 60)

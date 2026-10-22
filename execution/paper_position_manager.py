@@ -47,7 +47,7 @@ class PaperPositionManager:
                 or getattr(Settings, "AUTO_TP_SL", False)):
             opened_at = datetime.now(timezone.utc).isoformat()
 
-        self.position = PaperPosition(
+            self.position = PaperPosition(
             symbol=execution_result.symbol,
             side=execution_result.action,
             entry_price=execution_result.price,
@@ -56,8 +56,12 @@ class PaperPositionManager:
             sl=sl,
             tp=tp,
             opened_at=opened_at,
-            leverage=float(getattr(Settings, "LEVERAGE", 1.0)),
+            leverage=float(os.getenv(
+                "PHOENIX_LEVERAGE",
+                getattr(Settings, "LEVERAGE", 1.0)
+            )),
         )
+        
         return self.position
 
     def get_position(self):

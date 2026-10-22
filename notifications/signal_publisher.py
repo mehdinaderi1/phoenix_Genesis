@@ -1,4 +1,5 @@
 ﻿import hashlib
+import os
 from datetime import datetime, timezone
 
 
@@ -113,6 +114,7 @@ class SignalPublisher:
             "reason": str(getattr(proposal, "reason", "") or ""),
             "confidence": getattr(proposal, "confidence", None),
             "risk_status": getattr(proposal, "risk_status", None),
+            "leverage": float(os.getenv("PHOENIX_LEVERAGE", "1.0")),
         }
 
         message = "\n".join([
@@ -127,7 +129,7 @@ class SignalPublisher:
             f"Reason: {signal['reason'] or 'Not provided'}",
             f"Confidence: {signal['confidence']}",
             f"Risk status: {signal['risk_status']}",
-            f"Leverage: {getattr(proposal, 'leverage', 1.0):g}x",
+            f"Leverage: {float(os.getenv('PHOENIX_LEVERAGE', '1.0')):g}x",
             "Mode: OBSERVE / PAPER - no real orders",
         ])
 

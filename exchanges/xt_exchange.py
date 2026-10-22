@@ -20,7 +20,7 @@ class XTExchange(BaseExchange):
         "1D": "1d",
     }
 
-    def __init__(self, timeout=10):
+    def __init__(self, timeout=3):
         self.timeout = timeout
         self.connected = False
 
