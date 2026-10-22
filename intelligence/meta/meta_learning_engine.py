@@ -87,6 +87,9 @@ class MetaLearningEngine:
 
                     learning_reliability = "LOW"
 
+        # ✱ safety cap: از -10 تا +10 بیشتر نکن
+        adjustment = max(-10, min(10, adjustment))
+
 
         return {
 

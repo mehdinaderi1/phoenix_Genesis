@@ -1,4 +1,5 @@
-﻿from intelligence.decision import DecisionResult
+﻿import os
+from intelligence.decision import DecisionResult
 from intelligence.decision_rules import DecisionRules
 from intelligence.decision_trace import DecisionTrace
 from intelligence.strategy_consensus_explanation_builder import (
@@ -37,7 +38,9 @@ class DecisionEngine:
                 "consensus":  self.rules.consensus_is_valid(report),
                 "signal":     getattr(report, "signal", None) in ["BUY", "SELL"],
                 "risk":       getattr(report, "risk", None) == "LOW",
-                "confidence": getattr(report, "confidence", 0) >= 80,
+                "confidence": getattr(report, "confidence", 0) >= float(
+                os.environ.get("PHOENIX_CONFIDENCE_GATE", "80")
+            ),
                 "trend_long":  trend["long"],
                 "trend_short": trend["short"],
             },
@@ -76,7 +79,10 @@ class DecisionEngine:
         # ─── Bypass: اگر consensus قوی است، استراتژی را دور بزن ───
         _cs = getattr(report, "signal", None)
         _cc = getattr(report, "confidence", 0)
-        if _cs in ("BUY", "SELL") and _cc >= 55:
+        _min_action_conf = float(os.environ.get(
+            "PHOENIX_MIN_ACTION_CONFIDENCE", "50"
+        ))
+        if _cs in ("BUY", "SELL") and _cc >= _min_action_conf:
             if _cs == "BUY":
                 strategy_allows_long = True
             elif _cs == "SELL":

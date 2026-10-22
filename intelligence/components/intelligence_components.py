@@ -287,7 +287,9 @@ class IntelligenceComponents:
 
         self.decision_validator = DecisionValidator()
 
-        self.decision_memory = DecisionMemory()
+        self.decision_memory = DecisionMemory(
+            path="data/memory/decisions.jsonl"
+        )
 
         self.decision_quality = DecisionQualityAnalyzer()
 
@@ -296,14 +298,19 @@ class IntelligenceComponents:
         # Shared Memory
         # ====================================================
 
-        self.experience_memory = ExperienceMemory()
-
-        self.outcome_memory = OutcomeMemory()
-
-        self.meta_memory = MetaMemory()
-
+        self.experience_memory = ExperienceMemory(
+            path="data/memory/experiences.jsonl"
+        )
+        self.outcome_memory = OutcomeMemory(
+            path="data/memory/outcomes.jsonl"
+        )
+        self.meta_memory = MetaMemory(
+            path="data/memory/meta_feedback.jsonl"
+        )
         self.strategy_performance_memory = (
-            StrategyPerformanceMemory()
+            StrategyPerformanceMemory(
+                path="data/memory/strategy_performance.jsonl"
+            )
         )
 
 

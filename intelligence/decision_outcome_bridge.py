@@ -36,7 +36,7 @@ class DecisionOutcomeBridge:
         if name:
             return name
 
-        # 2. decision.strategy (may be dict or str)
+        # 2. decision.strategy
         strategy = getattr(decision, "strategy", None)
         name = self._extract_strategy_name(strategy)
         if name:
@@ -44,12 +44,20 @@ class DecisionOutcomeBridge:
 
         # 3. metadata.champion_strategy
         metadata = getattr(decision, "metadata", {}) or {}
-        champion = metadata.get("champion_strategy")
-        name = self._extract_strategy_name(champion)
+
+        # 3.5. metadata.operational_strategy  ← NEW
+        operational = metadata.get("operational_strategy")
+        if isinstance(operational, dict):
+            op_name = operational.get("strategy") or operational.get("name")
+            if op_name:
+                return op_name
+
+        champion_meta = metadata.get("champion_strategy")
+        name = self._extract_strategy_name(champion_meta)
         if name:
             return name
 
-        # 4. Fallback: regime_signal_risk
+        # 4. Fallback
         regime = getattr(decision, "regime", None)
         signal = getattr(decision, "signal", None)
         risk = getattr(decision, "risk", None)

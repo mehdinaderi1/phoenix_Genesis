@@ -43,6 +43,10 @@ class MetaIntelligence:
             )
         )
 
+        # ✱ samples واقعی = تعداد outcomeها، نه تصمیم‌ها
+        if meta_feedback_records:
+            insight.samples = len(meta_feedback_records)
+
 
         bias = (
             self.bias_analyzer.detect(
