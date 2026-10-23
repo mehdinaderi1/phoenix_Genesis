@@ -124,3 +124,33 @@ class XTPrivateExchange:
         elif isinstance(result, dict):
             return result.get("items", [])
         return []
+
+    def get_order(self, order_id: str) -> dict:
+        """Fetch single order details. Returns empty dict if not found."""
+        try:
+            res = self._request("GET", f"/v4/order/{order_id}")
+            return res.get("result") or {}
+        except RuntimeError as e:
+            if "not found" in str(e).lower() or "404" in str(e):
+                return {}
+            raise
+
+    def get_history_orders(
+        self, symbol: str = None, order_ids: list = None, limit: int = 50
+    ) -> list:
+        """Fetch historical (filled/cancelled) orders."""
+        query = {"limit": str(limit)}
+        if symbol:
+            query["symbol"] = symbol
+        if order_ids:
+            query["orderIds"] = ",".join(str(x) for x in order_ids)
+        try:
+            res = self._request("GET", "/v4/history-order", query=query)
+            result = res.get("result")
+            if isinstance(result, list):
+                return result
+            elif isinstance(result, dict):
+                return result.get("items", [])
+            return []
+        except RuntimeError:
+            return []
