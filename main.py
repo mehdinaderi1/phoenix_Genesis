@@ -483,6 +483,10 @@ def main():
         dry_run = os.environ.get("LIVE_DRY_RUN", "1") == "1"
         live_adapter = LiveExecutionAdapter(dry_run=dry_run)
 
+        if not live_adapter.load_state():
+            print("FATAL: cannot load prior live state, refusing to start")
+            return
+
         if not dry_run:
             if not live_adapter.reconcile_or_refuse():
                 print("FATAL: reconciliation failed. Refusing to start LIVE.")
@@ -860,6 +864,11 @@ def main():
 
     print()
     print("=" * 60)
+    # Persist live positions before exit
+    _exec_mode_final = os.environ.get("EXECUTION_MODE", "PAPER").upper()
+    if _exec_mode_final == "LIVE" and live_adapter is not None:
+        live_adapter.save_state()
+        print(f"[LiveExec] shutdown save: {len(live_adapter.tracker.positions)} position(s)")
     print("PROTOTYPE STATUS")
     print("=" * 60)
     print("Operational Runtime: ACTIVE")
