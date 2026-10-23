@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class LivePosition:
+    # ─── Core ───
     symbol: str
     side: str              # BUY or SELL
     entry_price: float
@@ -23,6 +24,29 @@ class LivePosition:
     realized_pnl: float = 0.0
     fees: float = 0.0
     metadata: dict = field(default_factory=dict)
+
+    # ─── Compat with PaperPosition interface ───
+    leverage: float = 1.0
+    initial_sl: Optional[float] = None
+    partial_closed: bool = False
+    be_moved: bool = False
+    best_price_seen: Optional[float] = None
+    realized_partial_pnl: float = 0.0
+    decision: Optional[object] = None
+
+    def unrealized_pnl(self, current_price: float) -> float:
+        if self.side == "BUY":
+            gross = (current_price - self.entry_price) * self.quantity
+        else:
+            gross = (self.entry_price - current_price) * self.quantity
+        return gross - self.fees
+
+    def unrealized_pnl_pct(self, current_price: float) -> float:
+        if self.entry_price <= 0:
+            return 0.0
+        if self.side == "BUY":
+            return (current_price - self.entry_price) / self.entry_price * 100
+        return (self.entry_price - current_price) / self.entry_price * 100
 
     def unrealized_pnl(self, current_price: float) -> float:
         if self.side == "BUY":

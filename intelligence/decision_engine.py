@@ -96,6 +96,8 @@ class DecisionEngine:
             or getattr(report, "ohlcv", None)
         )
         trend_long, trend_short = passes_trend_filter(candles)
+        if os.environ.get("DISABLE_TREND_FILTER", "0").strip() == "1":
+            trend_long, trend_short = True, True
         trend = {"long": trend_long, "short": trend_short}
         # ──────────────────────────────────────────────
 
