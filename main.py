@@ -472,6 +472,35 @@ def main():
         session=paper_session
     )
 
+    # ─── EXECUTION MODE SELECTOR ───
+    execution_mode = os.environ.get("EXECUTION_MODE", "PAPER").upper()
+    live_adapter = None
+
+    if execution_mode == "LIVE":
+        from execution.live.live_execution_adapter import LiveExecutionAdapter
+        from execution.live.live_paper_runtime_shim import LivePaperRuntimeShim
+
+        dry_run = os.environ.get("LIVE_DRY_RUN", "1") == "1"
+        live_adapter = LiveExecutionAdapter(dry_run=dry_run)
+
+        if not dry_run:
+            if not live_adapter.reconcile_or_refuse():
+                print("FATAL: reconciliation failed. Refusing to start LIVE.")
+                return
+
+        execution_runtime = LivePaperRuntimeShim(live_adapter)
+        print(f"EXECUTION MODE: LIVE (dry_run={dry_run})")
+    else:
+        execution_runtime = paper_runtime
+    _exec_mode = os.environ.get("EXECUTION_MODE", "PAPER").upper()
+    if _exec_mode == "LIVE":
+        _dry = os.environ.get("LIVE_DRY_RUN", "1") == "1"
+        print(f"Execution Mode: LIVE (dry_run={_dry})")
+    else:
+        print(f"Execution Mode: {_exec_mode}")
+        print("Market Mode: OBSERVE")
+    # ────────────────────────────────
+
     shadow_runtime = XTFuturesShadowExecutionRuntime(
         balance=paper_session.initial_balance,
         position_size_percent=paper_session.position_size_percent,
@@ -504,10 +533,13 @@ def main():
         signal_publisher=signal_publisher,
         opportunity_observer=opportunity_observer,
         opportunity_journal=opportunity_journal,
+        execution_runtime=execution_runtime,   # ← NEW
     )
 
     print()
     print("Starting operational cycles...")
+
+    
 
     observation_runner = OperationalObservationRunner(
         runtime=operational_runtime
@@ -832,7 +864,12 @@ def main():
     print("=" * 60)
     print("Operational Runtime: ACTIVE")
     print("Market Mode: OBSERVE")
-    print("Execution Mode: PAPER")
+    _exec_mode = os.environ.get("EXECUTION_MODE", "PAPER").upper()
+    if _exec_mode == "LIVE":
+        _dry = os.environ.get("LIVE_DRY_RUN", "1") == "1"
+        print(f"Execution Mode: LIVE (dry_run={_dry})")
+    else:
+        print(f"Execution Mode: {_exec_mode}")
     print("Real Orders: DISABLED")
     print("Market Sources: XT + COINMARKETCAP")
     print("Prototype Cycles:", len(results))
