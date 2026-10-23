@@ -337,3 +337,103 @@ Tag پایه: v0.2.1-dispatch-verified
 
 \- مستندات کلیدی: `metrics.py`, `analyze\_5x.py`, `analyze\_confidence.py`
 
+
+# Phoenix Genesis — Status (2026-10-23)
+
+## What Works (Do Not Touch)
+
+- **PnL accounting**: 153 sessions reconciled, `delta=0` everywhere
+- **Memory**: 5 persistent stores under `data/memory/`
+  - experiences.jsonl
+  - outcomes.jsonl
+  - strategy_performance.jsonl
+  - meta_feedback.jsonl
+  - decisions.jsonl
+- **Learning loop**: close → outcome → experience → per-strategy meta
+- **Per-strategy meta**: from own win rate, not global bias
+- **State management**: resume, Ctrl+C handling, archive merge
+- **Archive truthfulness**: `Session Archived: YES (N bytes)`
+- **Backtest infrastructure**: `tools/backtest_v2.py`
+
+## What Was Tested (And Rejected)
+
+### Strategy: BTC_MTF_TREND_ALIGNMENT_V1
+- Backtest: 181 sessions, 3145 cycles
+- 5 confidence thresholds × 8 SL/TP configs
+- **ALL configurations: EV negative**
+- Win rate in long sessions: 0% (1 SL, 10 unresolved)
+
+### Root Cause
+- Cycle duration: ~16 seconds (polling)
+- SL/TP targets: 0.5-2%
+- Signal timeframe: 5m candle
+- **Mismatch**: In 50-min session, BTC moves 0.1-0.3%, never reaches 1-2% TP
+- **Fee**: 0.12% round trip eats any small move
+
+### What Was Cleaned
+- 3 synthetic experiences removed (manual closes, not TP/SL)
+- Honest state: 13 historical replay experiences only
+- No more `adj=+5` from fabricated wins
+
+## What Remains Untouched (Ready for New Strategies)
+
+- `intelligence/evolution/` — 30+ files
+- `intelligence/governance/` — 25+ files
+- `intelligence/lifecycle/` — 25+ files
+- `intelligence/pattern_intelligence.py` — pattern detection
+- `intelligence/strategy_learner.py` — strategy generation
+- `intelligence/meta/` — meta learning stack
+
+## Next Chapter Options
+
+### 1. Mean-Reversion Strategy (recommended)
+- RSI < 30 → BUY, RSI > 70 → SELL
+- ATR-based TP/SL (dynamic with volatility)
+- Test on 181 sessions BEFORE implementation
+- Target: >55% win rate, EV > 0.05% per trade
+
+### 2. Breakout Strategy
+- Price closes above resistance (N-candle high)
+- Volume confirmation
+- ATR-based stops
+- Target: >50% win rate
+
+### 3. Order Flow
+- Requires new data sources (order book, trades)
+- Binance WebSocket or REST
+- Not feasible with current XT data
+
+### 4. Timeframe-Aligned Polling
+- 1 cycle = 1 candle (5m or 15m)
+- Longer sessions (24h)
+- More realistic backtest
+- Prerequisite for meaningful SL/TP
+
+## Do Not Do
+
+- ❌ Patch SL/TP only (proven: mathematical no-op)
+- ❌ Roll positions (proven: fee-negative)
+- ❌ Synthetic experiences (proven: corrupts meta)
+- ❌ Trade in production without backtest EV > 0
+
+## Philosophy
+
+**Learning framework is done. Strategy is not.**
+The framework is strategy-agnostic. Any future strategy plugs in.
+But no strategy runs in production without:
+1. Backtest EV > 0 on 181+ sessions
+2. Real paper trading for 100+ trades
+3. Documented win rate > 55%
+
+## Commits Reference
+
+- `8345575` — PnL reconciliation, archive merge, resume, env override
+- `216551f` — learning loop end-to-end
+- (this commit) — close strategy chapter, preserve framework
+'@
+
+[System.IO.File]::WriteAllText(
+    (Join-Path (Get-Location) "ROADMAP.md"),
+    $content,
+    (New-Object System.Text.UTF8Encoding($false))
+)
