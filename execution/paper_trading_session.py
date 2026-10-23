@@ -91,7 +91,8 @@ class PaperTradingSession:
             learning_result = self.outcome_bridge.process(
                 decision=decision,
                 entry_price=position.entry_price,
-                exit_price=closed["exit_price"]
+                exit_price=closed["exit_price"],
+                pnl=total_pnl,          # ✱ NEW
             )
 
         return {

@@ -742,6 +742,11 @@ def main():
         resilience.clear_state()
         print("STATE: cleared (run completed successfully)")
     else:
+        try:
+            resilience.save_state(cycle, paper_session)
+            print(f"STATE: saved at cycle {cycle}")
+        except Exception as e:
+            print(f"WARNING: state save failed: {e}")
         print(
             "STATE: preserved (position still open: "
             f"{paper_session.get_position().side} @ "

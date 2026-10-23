@@ -72,6 +72,7 @@ class DecisionOutcomeBridge:
         entry_price,
         exit_price,
         strategy=None,
+        pnl=None,
     ):
         outcome = OutcomeRecord(
             decision=decision,
@@ -93,9 +94,16 @@ class DecisionOutcomeBridge:
         performance_learning = None
 
         if resolved_strategy:
+            # ✱ اگر PnL واقعی داده شده، از آن استفاده کن.
+            #    وگرنه fallback به اختلاف قیمت (برای سازگاری).
+            actual_pnl = (
+                pnl if pnl is not None
+                else (exit_price - entry_price)
+            )
+
             performance = PerformanceRecord(
                 strategy=resolved_strategy,
-                profit_loss=(exit_price - entry_price),
+                profit_loss=actual_pnl,        # ✱ CHANGED
                 success=(feedback["result"] == "SUCCESS"),
             )
 

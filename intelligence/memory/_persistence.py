@@ -58,9 +58,9 @@ def load_records(path):
     p = Path(path)
     if not p.exists():
         return []
-
+    text = p.read_text(encoding="utf-8-sig")
     records = []
-    for line in p.read_text(encoding="utf-8").splitlines():
+    for line in text.splitlines():
         line = line.strip()
         if not line:
             continue

@@ -778,7 +778,6 @@ class IntelligenceFlow:
             )
 
         # ---------------------------------------------------------
-        # ---------------------------------------------------------
         # Meta confidence from historical records, before decision
         # ---------------------------------------------------------
 
@@ -787,26 +786,47 @@ class IntelligenceFlow:
             self.meta_memory.get_records()
         )
 
-        # ✱ per-strategy meta: فقط استراتژی‌هایی که خودشان outcome
-        #    دارند جریمه شوند (نه استراتژی‌های تازه).
+        # ✱ Per-strategy meta: only strategies with their own
+        #   outcomes are penalized or rewarded.
         current_strategy = None
-        if getattr(report, "operational_strategy_result", None):
-            current_strategy = (
-                report.operational_strategy_result.get("strategy")
-            )
+        op_result = getattr(report, "operational_strategy_result", None)
+        if isinstance(op_result, dict):
+            current_strategy = op_result.get("strategy")
 
         strategy_outcomes = 0
+        strategy_wins = 0
+        strategy_win_rate = 0.0
+
         if current_strategy:
-            for r in self.meta_memory.get_records():
-                rec_strategy = getattr(r, "strategy", None)
-                if rec_strategy is None and isinstance(r, dict):
-                    rec_strategy = r.get("strategy")
-                if rec_strategy == current_strategy:
-                    strategy_outcomes += 1
+            strategy_records = self.experience_memory.find_by_strategy(
+                current_strategy
+            )
+            strategy_outcomes = len(strategy_records)
+            strategy_wins = sum(
+                1 for r in strategy_records
+                if getattr(r, "success", False)
+            )
+            if strategy_outcomes > 0:
+                strategy_win_rate = strategy_wins / strategy_outcomes
 
         if strategy_outcomes >= 3:
+            # ✱ Base from MetaLearningEngine, then override with
+            #   this strategy's own win rate (not global bias).
             report.meta_learning = self.meta_learning_engine.learn(
                 report.meta_insight
+            )
+            if strategy_win_rate >= 0.6:
+                report.meta_learning["confidence_adjustment"] = +5
+            elif strategy_win_rate < 0.4:
+                report.meta_learning["confidence_adjustment"] = -5
+            else:
+                report.meta_learning["confidence_adjustment"] = 0
+            report.meta_learning["learning"] = "STRATEGY_PERFORMANCE"
+            report.meta_learning["current_strategy"] = current_strategy
+            report.meta_learning["strategy_outcomes"] = strategy_outcomes
+            report.meta_learning["strategy_wins"] = strategy_wins
+            report.meta_learning["strategy_win_rate"] = round(
+                strategy_win_rate, 3
             )
         else:
             report.meta_learning = {
@@ -814,77 +834,29 @@ class IntelligenceFlow:
                 "learning": "INSUFFICIENT_STRATEGY_DATA",
                 "current_strategy": current_strategy,
                 "strategy_outcomes": strategy_outcomes,
+                "strategy_wins": strategy_wins,
+                "strategy_win_rate": round(strategy_win_rate, 3),
             }
 
         confidence_before = report.confidence
 
-        report.confidence = (
-            self.meta_confidence_adapter.adjust(
-                report.confidence,
-                report.meta_learning
-            )
+        report.confidence = self.meta_confidence_adapter.adjust(
+            report.confidence,
+            report.meta_learning
         )
 
         adjustment = report.confidence - confidence_before
 
-        # ─── META_ADJ (فقط یک بار چاپ) ───
+        # ─── META_ADJ (single print) ───
         _ml = report.meta_learning or {}
         print(
             f"  META_ADJ | adj={_ml.get('confidence_adjustment', 0):+d} "
             f"| reason={_ml.get('learning', 'n/a')} "
             f"| strategy={_ml.get('current_strategy', 'n/a')} "
             f"| outcomes={_ml.get('strategy_outcomes', 0)} "
+            f"| wins={_ml.get('strategy_wins', 0)} "
+            f"| win_rate={_ml.get('strategy_win_rate', 0)} "
             f"| samples={report.meta_insight.samples}"
-        )
-
-        if report.meta_learning and report.meta_learning.get("confidence_adjustment", 0) != 0:
-            print(
-                f"  META_ADJ | adj={report.meta_learning['confidence_adjustment']:+d} "
-                f"| samples={report.meta_insight.samples} "
-                f"| reliability={report.meta_insight.reliability} "
-                f"| learning_rel={report.meta_learning.get('learning_reliability')}"
-            )
-        # ---------------------------------------------------------
-        # Meta confidence from historical records, before decision
-        # ---------------------------------------------------------
-
-        report.meta_insight = (
-            self.meta_intelligence.analyze(
-                self.decision_memory.records,
-                self.meta_memory.get_records()
-            )
-        )
-
-        # ✱ FIX: per-strategy meta — فقط استراتژی‌هایی که
-        #          خودشان outcome دارند جریمه شوند.
-        current_strategy = None
-        if report.operational_strategy_result:
-            current_strategy = report.operational_strategy_result.get("strategy")
-
-        strategy_feedback_count = sum(
-            1 for r in self.meta_memory.get_records()
-            if getattr(r, "strategy", None) == current_strategy
-        ) if current_strategy else 0
-
-        if strategy_feedback_count >= 3:
-            report.meta_learning = (
-                self.meta_learning_engine.learn(report.meta_insight)
-            )
-        else:
-            report.meta_learning = {
-                "confidence_adjustment": 0,
-                "learning": "INSUFFICIENT_STRATEGY_DATA",
-                "current_strategy": current_strategy,
-                "strategy_feedback_count": strategy_feedback_count,
-            }
-
-        confidence_before = report.confidence
-
-        report.confidence = (
-            self.meta_confidence_adapter.adjust(
-                report.confidence,
-                report.meta_learning
-            )
         )
 
         # ─── Confidence floor (جلوگیری از صفر شدن) ───
