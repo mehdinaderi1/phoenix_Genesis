@@ -38,11 +38,13 @@ class LiveExecutionAdapter:
         default_timeout=30.0,
         poll_interval=2.0,
         dry_run=False,
+        state_path="data/live_positions.json",
     ):
         self.exchange = XTPrivateExchange(
             api_key=api_key or os.getenv("XT_API_KEY"),
             api_secret=api_secret or os.getenv("XT_API_SECRET"),
         )
+        self.state_path = state_path
         self.executor = OrderExecutor(
             self.exchange,
             default_timeout=default_timeout,
@@ -66,6 +68,24 @@ class LiveExecutionAdapter:
             return False
         self._log(f"[LiveExec] reconciled OK")
         return True
+
+    def load_state(self) -> bool:
+        """Load prior positions. Returns False on hard failure."""
+        ok = self.tracker.load_from_file(self.state_path)
+        if not ok:
+            self._log(f"[LiveExec] state load FAILED: {self.state_path}")
+            return False
+        count = len(self.tracker.positions)
+        if count > 0:
+            self._log(f"[LiveExec] recovered {count} position(s) from disk")
+        return True
+
+    def save_state(self) -> bool:
+        """Persist current positions. Returns True on success."""
+        ok = self.tracker.save_to_file(self.state_path)
+        if not ok:
+            self._log(f"[LiveExec] state save FAILED: {self.state_path}")
+        return ok
 
     def get_position(self, symbol="btc_usdt"):
         return self.tracker.get(symbol)
@@ -100,6 +120,7 @@ class LiveExecutionAdapter:
                 symbol=symbol, side=side, execution_result=fake,
                 sl=sl, tp=tp, fee_pct=self.fee_pct,
             )
+            self.save_state()
             return {
                 "action": "OPEN",
                 "execution_result": {"status": "DRY_RUN"},
@@ -164,6 +185,8 @@ class LiveExecutionAdapter:
             closed = self.tracker.close_from_fill(
                 symbol=symbol, execution_result=fake, fee_pct=self.fee_pct,
             )
+
+            self.save_state()
             return {
                 "action": "CLOSE",
                 "execution_result": {"status": "DRY_RUN"},
@@ -199,6 +222,7 @@ class LiveExecutionAdapter:
         closed = self.tracker.close_from_fill(
             symbol=symbol, execution_result=result, fee_pct=self.fee_pct,
         )
+        self.save_state()
         return {
             "action": "CLOSE",
             "execution_result": {"status": "FILLED"},
