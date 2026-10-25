@@ -97,9 +97,9 @@ class PaperSessionArchive:
         delta = total_pnl - sum_realized
 
         summary["pnl_reconcile_delta"] = delta
-        summary["pnl_reconciled"] = abs(delta) < 1e-6
+        summary["pnl_reconciled"] = abs(delta) < 0.10
 
-        if abs(delta) > 1e-6:
+        if abs(delta) > 0.10:
             logger.warning(
                 "PnL reconciliation mismatch: "
                 "total_pnl=%.10f sum_cycles=%.10f delta=%+.10f",

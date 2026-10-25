@@ -31,8 +31,13 @@ class PaperPositionLifecycle:
 
         # ۲. Partial close
         partial_data = None
-        if position is not None:
-            frac = position.should_partial_close(price)
+        if position is not None and not getattr(position, "partial_closed", False):
+            _pm = getattr(self.session, "position_manager", None)
+            _pm_pos = getattr(_pm, "position", None) if _pm else None
+            if _pm_pos is not None and getattr(_pm_pos, "partial_closed", False):
+                frac = None
+            else:
+                frac = position.should_partial_close(price)
             if frac:
                 partial_data = self.session.position_manager.partial_close(
                     price, frac
