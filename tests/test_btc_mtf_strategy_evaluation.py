@@ -1,4 +1,4 @@
-from intelligence.trading_strategy import BTCMTFTrendAlignmentV1
+﻿from intelligence.trading_strategy import BTCMTFTrendAlignmentV1
 
 
 def test_btc_strategy_long_alignment():
@@ -31,7 +31,7 @@ def test_btc_strategy_short_alignment():
     assert result["matched"] is True
 
 
-def test_btc_strategy_conflict_returns_wait():
+def test_btc_strategy_conflict_preserves_primary_signal_without_matching():
     strategy = BTCMTFTrendAlignmentV1()
 
     result = strategy.evaluate({
@@ -41,6 +41,6 @@ def test_btc_strategy_conflict_returns_wait():
         "5m": "BUY",
     })
 
-    assert result["signal"] == "WAIT"
-    assert result["direction"] is None
+    assert result["signal"] == "BUY"
+    assert result["direction"] == "LONG"
     assert result["matched"] is False

@@ -46,24 +46,28 @@ class BTCMTFTrendAlignmentV1:
         }
 
     def evaluate(self, timeframe_states):
-        if all(
-            timeframe_states.get(timeframe) == expected
-            for timeframe, expected in self.long_conditions.items()
-        ):
+        primary_signal = timeframe_states.get("5m")
+
+        if primary_signal == "BUY":
+            aligned = all(
+                timeframe_states.get(timeframe) == expected
+                for timeframe, expected in self.long_conditions.items()
+            )
             return {
                 "signal": "BUY",
                 "direction": "LONG",
-                "matched": True,
+                "matched": aligned,
             }
 
-        if all(
-            timeframe_states.get(timeframe) == expected
-            for timeframe, expected in self.short_conditions.items()
-        ):
+        if primary_signal == "SELL":
+            aligned = all(
+                timeframe_states.get(timeframe) == expected
+                for timeframe, expected in self.short_conditions.items()
+            )
             return {
                 "signal": "SELL",
                 "direction": "SHORT",
-                "matched": True,
+                "matched": aligned,
             }
 
         return {

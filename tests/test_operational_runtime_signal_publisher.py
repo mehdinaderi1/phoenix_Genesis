@@ -1,6 +1,9 @@
-﻿from types import SimpleNamespace
+﻿from datetime import datetime, timezone
+from types import SimpleNamespace
 
-from core.market_data.operational_paper_runtime import OperationalPaperRuntime
+from core.market_data.operational_paper_runtime import (
+    OperationalPaperRuntime,
+)
 from notifications.signal_outbox import SignalOutbox
 from notifications.signal_publisher import SignalPublisher
 
@@ -36,7 +39,9 @@ class MarketRuntime:
 class Intelligence:
     def create_report(self, consensus):
         return SimpleNamespace(
+            signal="BUY",
             decision=SimpleNamespace(action="BUY"),
+            signal_timestamp="2026-10-14T11:58:30+00:00",
             action_proposal=SimpleNamespace(
                 action="BUY",
                 status="APPROVED",
@@ -60,8 +65,22 @@ class PaperRuntime:
 
 
 def test_runtime_publishes_approved_signal_to_outbox_without_sending(
-    tmp_path,
+    tmp_path, monkeypatch
 ):
+    fixed_time = datetime(
+        2026, 10, 14, 12, 0, 0, tzinfo=timezone.utc
+    )
+
+    class FixedDateTime:
+        @staticmethod
+        def now(tz=None):
+            return fixed_time
+
+    monkeypatch.setattr(
+        "core.market_data.operational_paper_runtime.datetime",
+        FixedDateTime,
+    )
+
     outbox = SignalOutbox(tmp_path / "notifications.db")
     publisher = SignalPublisher(outbox)
 
@@ -73,7 +92,6 @@ def test_runtime_publishes_approved_signal_to_outbox_without_sending(
     )
 
     results = runtime.run(cycles=2)
-
     pending = outbox.get_pending_messages()
 
     assert len(results) == 2
@@ -83,10 +101,21 @@ def test_runtime_publishes_approved_signal_to_outbox_without_sending(
     assert "Direction: BUY" in pending[0]["payload"]
     assert "OBSERVE / PAPER" in pending[0]["payload"]
 
+    saved_signal = outbox.get_signal(pending[0]["signal_id"])
+
+    assert saved_signal is not None
+    assert saved_signal["generated_at"] == "2026-10-14T11:58:30Z"
+
 
 def test_publisher_failure_does_not_block_paper_execution():
     class FailingPublisher:
-        def publish(self, proposal, observation, candle_boundaries, generated_at=None):
+        def publish(
+            self,
+            proposal,
+            observation,
+            candle_boundaries,
+            generated_at=None,
+        ):
             raise RuntimeError("notification storage unavailable")
 
     paper = PaperRuntime()
@@ -106,6 +135,3 @@ def test_publisher_failure_does_not_block_paper_execution():
     )
     assert results[0]["paper_result"]["action"] == "OPEN"
     assert len(paper.cycles) == 1
-
-
-

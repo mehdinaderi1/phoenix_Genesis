@@ -73,3 +73,21 @@ def test_missing_operational_strategy_preserves_existing_behavior():
     decision = DecisionEngine().decide(report)
 
     assert decision.action == "PREPARE_LONG"
+
+
+def test_unmatched_sell_signal_blocks_short_even_with_high_confidence():
+    report = MockReport(
+        signal="SELL",
+        risk="LOW",
+        confidence=90,
+        operational_strategy_result={
+            "strategy": "BTC_MTF_TREND_ALIGNMENT_V1",
+            "signal": "SELL",
+            "direction": "SHORT",
+            "matched": False,
+        }
+    )
+
+    decision = DecisionEngine().decide(report)
+
+    assert decision.action == "WAIT"

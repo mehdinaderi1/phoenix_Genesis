@@ -24,6 +24,7 @@ class MarketReport:
     strategy_consensus: dict = None
     champion_strategy: dict = None
     operational_strategy_result: dict | None = None
+    signal_timestamp: str | None = None
 
 
     def __contains__(self, key):

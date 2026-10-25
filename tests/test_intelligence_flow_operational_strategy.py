@@ -1,4 +1,4 @@
-from intelligence.consensus import ConsensusResult
+﻿from intelligence.consensus import ConsensusResult
 from intelligence.flow import IntelligenceFlow
 
 
@@ -17,8 +17,7 @@ def test_operational_strategy_result_is_exposed_in_report():
         }
     )
 
-    flow = IntelligenceFlow()
-    report = flow.create_report(consensus)
+    report = IntelligenceFlow().create_report(consensus)
 
     assert report.operational_strategy_result == {
         "strategy": "BTC_MTF_TREND_ALIGNMENT_V1",
@@ -44,8 +43,7 @@ def test_operational_strategy_short_result_is_exposed_in_report():
         }
     )
 
-    flow = IntelligenceFlow()
-    report = flow.create_report(consensus)
+    report = IntelligenceFlow().create_report(consensus)
 
     assert report.operational_strategy_result == {
         "strategy": "BTC_MTF_TREND_ALIGNMENT_V1",
@@ -56,7 +54,7 @@ def test_operational_strategy_short_result_is_exposed_in_report():
     assert report.decision.action == "PREPARE_SHORT"
 
 
-def test_operational_strategy_conflict_returns_wait_in_report():
+def test_operational_strategy_conflict_preserves_signal_but_rejects_matching():
     consensus = ConsensusResult(
         trend="MIXED",
         signal="WAIT",
@@ -71,13 +69,12 @@ def test_operational_strategy_conflict_returns_wait_in_report():
         }
     )
 
-    flow = IntelligenceFlow()
-    report = flow.create_report(consensus)
+    report = IntelligenceFlow().create_report(consensus)
 
     assert report.operational_strategy_result == {
         "strategy": "BTC_MTF_TREND_ALIGNMENT_V1",
-        "signal": "WAIT",
-        "direction": None,
+        "signal": "BUY",
+        "direction": "LONG",
         "matched": False,
     }
     assert report.decision.action == "WAIT"

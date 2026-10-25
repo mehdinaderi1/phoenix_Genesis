@@ -1,4 +1,4 @@
-﻿from intelligence.consensus import ConsensusResult
+from intelligence.consensus import ConsensusResult
 
 
 class MultiTimeframeAnalyzer:
@@ -44,11 +44,21 @@ class MultiTimeframeAnalyzer:
         signal_conflict = len(set(signals)) != 1
         conflict_penalty = 0.5 if signal_conflict else 1.0
 
-        if signal_conflict:
+        primary_5m = next(
+            (item for item in analyses if item.timeframe == "5m"),
+            None
+        )
+
+        if primary_5m is not None:
+            final_signal = primary_5m.signal
+        elif signal_conflict:
             final_signal = "WAIT"
-            final_confidence = average_confidence * conflict_penalty
         else:
             final_signal = signals[0]
+
+        if signal_conflict:
+            final_confidence = average_confidence * conflict_penalty
+        else:
             final_confidence = average_confidence
 
         trends = [item.trend for item in analyses]

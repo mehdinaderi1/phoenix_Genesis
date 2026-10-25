@@ -57,3 +57,26 @@ def test_decision_engine_reports_directional_gate_details(capsys):
     assert "'signal_is_buy': False" in captured
     assert "'confidence_at_least_80': False" in captured
     assert "'risk_is_low': False" in captured
+
+
+def test_decision_engine_returns_wait_when_operational_strategy_does_not_match():
+    report = MarketReport(
+        symbol="BTCUSDT",
+        timeframe="30m",
+        trend="DOWN",
+        regime="TREND",
+        signal="SELL",
+        confidence=75,
+        risk="HIGH",
+        reasons=["bearish momentum"],
+        operational_strategy_result={
+            "strategy": "BTC_MTF_TREND_ALIGNMENT_V1",
+            "signal": "SELL",
+            "direction": "SHORT",
+            "matched": False,
+        },
+    )
+
+    result = DecisionEngine().decide(report)
+
+    assert result.action == "WAIT"

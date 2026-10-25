@@ -1,0 +1,47 @@
+﻿from experiments.signal_matrix.signal_matrix import (
+    SignalMatrix,
+    StrategySignal,
+)
+
+
+def record_timeframe_analysis(
+    matrix: SignalMatrix,
+    strategy: str,
+    analysis,
+    timestamp: str | None = None,
+) -> StrategySignal:
+    """Record one existing timeframe analysis without changing its logic."""
+
+    raw_signal = getattr(analysis, "signal", None)
+
+    if raw_signal in ("BUY", "SELL"):
+        state = raw_signal
+    elif raw_signal == "WAIT":
+        state = "NO_SIGNAL"
+    else:
+        state = "NOT_EVALUATED"
+
+    raw_confidence = getattr(analysis, "confidence", None)
+    confidence = (
+        float(raw_confidence)
+        if raw_confidence is not None
+        else None
+    )
+
+    raw_reasons = getattr(analysis, "reasons", ())
+    reasons = (
+        (raw_reasons,)
+        if isinstance(raw_reasons, str)
+        else tuple(raw_reasons or ())
+    )
+
+    result = StrategySignal(
+        strategy=strategy,
+        timeframe=str(getattr(analysis, "timeframe", "") or ""),
+        state=state,
+        confidence=confidence,
+        timestamp=timestamp,
+        reasons=reasons,
+    )
+    matrix.add(result)
+    return result

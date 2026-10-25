@@ -1,0 +1,66 @@
+﻿from analysis.timeframe_analyzer import TimeframeAnalyzer
+from intelligence.multitimeframe import MultiTimeframeAnalyzer
+from experiments.signal_matrix.market_data_probe import MarketDataMatrixProbe
+
+
+def compare_matrix_with_consensus(
+    reader,
+    timeframes=("5m", "15m", "30m", "4H", "1D"),
+    symbol="BTCUSDT",
+):
+    matrix = MarketDataMatrixProbe(
+        reader, TimeframeAnalyzer()
+    ).run(symbol=symbol, timeframes=timeframes)
+
+    valid_analyses = []
+    analyzer = TimeframeAnalyzer()
+
+    for timeframe in timeframes:
+        prices = reader.get_close_prices(symbol, timeframe)
+        if not prices:
+            continue
+
+        analysis = analyzer.analyze(prices, timeframe)
+        valid_analyses.append(analysis)
+
+    consensus = MultiTimeframeAnalyzer().analyze(valid_analyses)
+
+    rows = []
+    for signal in matrix.all_signals():
+        rows.append({
+            "strategy": signal.strategy,
+            "timeframe": signal.timeframe,
+            "independent_signal": signal.state,
+            "diagnostic_code": signal.diagnostic_code,
+            "confidence": signal.confidence,
+            "reasons": list(signal.reasons),
+            "data_valid": signal.data_valid,
+            "consensus_signal": consensus.signal,
+            "consensus_confidence": consensus.confidence,
+        })
+
+    return {
+        "rows": rows,
+        "consensus": consensus,
+        "matrix": matrix,
+    }
+
+
+def print_comparison(report):
+    print("\n=== INDEPENDENT SIGNAL MATRIX VS CURRENT CONSENSUS ===")
+    for row in report["rows"]:
+        print(
+            f'{row["timeframe"]:>4} | '
+            f'{row["independent_signal"]:<14} | '
+            f'diagnostic={row["diagnostic_code"] or "-":<32} | '
+            f'confidence={row["confidence"]!s:<6} | '
+            f'valid={row["data_valid"]} | '
+            f'reasons={row["reasons"]}'
+        )
+
+    consensus = report["consensus"]
+    print("\n=== CURRENT CONSENSUS ===")
+    print(f"signal={consensus.signal}")
+    print(f"confidence={consensus.confidence}")
+    print(f"trend={consensus.trend}")
+    print(f"breakdown={consensus.breakdown}")

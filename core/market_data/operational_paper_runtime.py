@@ -1,4 +1,4 @@
-﻿from dataclasses import asdict, is_dataclass
+from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
 
 from core.market_data.operational_action_translator import (
@@ -129,6 +129,17 @@ class OperationalPaperRuntime:
                 report = self.intelligence_flow.create_report(
                     consensus
                 )
+                signal = str(
+                    getattr(report, "signal", "") or ""
+                ).upper()
+
+                if signal in {"BUY", "SELL"}:
+                    report.signal_timestamp = (
+                        getattr(report, "signal_timestamp", None)
+                        or datetime.now(timezone.utc).isoformat()
+                    )
+                else:
+                    report.signal_timestamp = None
 
                 translated_action_proposal = (
                     self.action_translator.translate(
@@ -176,7 +187,7 @@ class OperationalPaperRuntime:
                             translated_action_proposal,
                             observation,
                             candle_boundaries,
-                            generated_at=datetime.now(timezone.utc).isoformat(),
+                            generated_at=getattr(report, "signal_timestamp", None),
                         )
                     except Exception as exc:
                         notification_error = (
@@ -533,3 +544,4 @@ class OperationalPaperRuntime:
         summary["error_cycles"] = error_cycles
 
         return summary
+

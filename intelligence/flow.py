@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from intelligence.action_proposal import ActionProposal
 from intelligence.decision_memory import DecisionMemory
 from intelligence.decision_outcome_bridge import DecisionOutcomeBridge
@@ -540,6 +541,12 @@ class IntelligenceFlow:
                 *analysis["reasons"]
             ],
             operational_strategy_result=operational_strategy_result,
+        )
+
+        report.signal_timestamp = (
+            datetime.now(timezone.utc).isoformat()
+            if str(report.signal).upper() in {"BUY", "SELL"}
+            else None
         )
 
         report.scenarios = scenarios

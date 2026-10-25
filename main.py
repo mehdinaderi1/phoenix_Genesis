@@ -1,4 +1,4 @@
-import os
+﻿import os
 from notifications.dispatcher import NotificationDispatcher
 from notifications.signal_outbox import SignalOutbox
 from notifications.signal_publisher import SignalPublisher
@@ -389,10 +389,17 @@ def main():
 
     timeframes = ("5m", "15m", "30m", "4H", "1D")
 
+    observation_cycles = int(
+        os.environ.get("PHOENIX_OBSERVATION_CYCLES", "20")
+    )
+    observation_interval_seconds = float(
+        os.environ.get("PHOENIX_OBSERVATION_INTERVAL_SECONDS", "0")
+    )
+
     results = observation_runner.run(
         symbol="BTCUSDT",
-        cycles=20,
-        interval_seconds=0,
+        cycles=observation_cycles,
+        interval_seconds=observation_interval_seconds,
         continue_on_error=True,
         timeframes=timeframes,
     )
