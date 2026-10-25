@@ -221,3 +221,31 @@
 ### Bugs remaining
 - PnL reconciliation warning (tolerance 0.10 now covers it)
 - SESSION archive from interrupted run can have 102 cycles vs 100 planned (minor)
+
+---
+
+## 2026-10-25 FINAL - Volatility gate 90% complete
+
+### What works
+- correlation(range%, win%) = +0.996 — hypothesis CONFIRMED
+- TIGHT  (<0.3%): 0% win, -0.014 PnL
+- NORMAL (0.3-0.7%): 33% win, -0.008 PnL
+- WIDE   (0.7-1.5%): 62.5% win, +0.534 PnL
+
+### Gate implementation
+- intelligence/decision_engine.py
+- _compute_volatility(report) — works in isolation
+- Gate before if can_long — works in isolation
+- Diagnostic (python -c): LOW_VOLATILITY confirmed at 0.209% < 0.3%
+- Runtime (main.py): gate not triggering despite env='0.3', min_vol=0.3, candles=250
+- Root cause: unknown difference between diagnostic and runtime (likely _vol_pct=None or >=0.3)
+- Next: add debug print of _vol_pct value, check candles type
+
+### Volatility analysis tool
+- tools/volatility_analysis.py — analyzes session archives
+- Confirms correlation hypothesis
+
+### Status
+- Infrastructure: 100% working
+- Volatility gate: 90% (logic works, runtime issue)
+- Tomorrow: 10 minutes to find the runtime bug

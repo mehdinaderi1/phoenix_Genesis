@@ -48,6 +48,58 @@ class DecisionEngine:
         )
         return trace.to_dict()
 
+    def _compute_volatility(self, report):
+        """Compute ATR-based volatility percentage. Returns None if not computable."""
+        candles = getattr(report, "candles", None)
+
+        # Fallback: fetch fresh 30m candles from XT if report has none
+        if not candles or len(candles) < 15:
+            try:
+                from exchanges.xt_exchange import XTExchange
+                _ex = XTExchange(timeout=10)
+                candles = _ex.get_historical_candles("BTCUSDT", "30m", limit=30)
+            except Exception:
+                candles = None
+
+        if not candles or len(candles) < 15:
+            return None
+
+        trs = []
+        for i in range(1, len(candles)):
+            c = candles[i]
+            pc = candles[i - 1]
+
+            if hasattr(c, "high"):
+                h, l = c.high, c.low
+                pc_close = getattr(pc, "close", None)
+            elif isinstance(c, dict):
+                h, l = c.get("high"), c.get("low")
+                pc_close = pc.get("close") if isinstance(pc, dict) else getattr(pc, "close", None)
+            else:
+                return None
+
+            if h is None or l is None or pc_close is None:
+                continue
+            trs.append(max(h - l, abs(h - pc_close), abs(l - pc_close)))
+
+        if len(trs) < 14:
+            return None
+
+        atr = sum(trs[-14:]) / 14
+
+        last = candles[-1]
+        if hasattr(last, "close"):
+            last_close = last.close
+        elif isinstance(last, dict):
+            last_close = last.get("close")
+        else:
+            return None
+
+        if not last_close or last_close <= 0:
+            return None
+
+        return atr / last_close * 100
+
     def _build_explanation(self, report):
         consensus = getattr(report, "strategy_consensus", None)
         if not consensus:
@@ -130,6 +182,27 @@ class DecisionEngine:
             "confidence":      report.confidence,
             "trend_long":      trend_long,
         })
+
+        # Volatility gate (env-configurable, default OFF)
+        _min_vol = float(os.getenv("PHOENIX_MIN_VOLATILITY_PCT", "0") or 0)
+        if _min_vol > 0:
+            _vol_pct = self._compute_volatility(report)
+            report.volatility_pct = _vol_pct
+            if _vol_pct is not None and _vol_pct < _min_vol:
+                trace = self._build_trace(report, "WAIT", explanation, trend)
+                return DecisionResult(
+                    action="WAIT",
+                    reason=f"LOW_VOLATILITY ({_vol_pct:.3f}% < {_min_vol}%)",
+                    confidence=report.confidence,
+                    regime=getattr(report, "regime", None),
+                    signal=getattr(report, "signal", None),
+                    risk=getattr(report, "risk", None),
+                    trace=trace,
+                    explanation=explanation,
+                    metadata={**metadata, "trace": trace},
+                    reason_code="LOW_VOLATILITY",
+                    **metadata,
+                )
 
         if can_long:
             trace = self._build_trace(report, "PREPARE_LONG", explanation, trend)
