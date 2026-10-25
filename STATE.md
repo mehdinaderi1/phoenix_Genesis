@@ -58,7 +58,7 @@
     python .\main.py
 
 ## TODO
-- [x] Verify PARTIAL/SL_MOVE/TP_EXTEND — PASSED (integration test, not live)
+- [x] Verify PARTIAL/SL_MOVE/TP_EXTEND — PASSED (integration test + live position opened)
 - [x] Decouple BE_AT_R from PARTIAL_TP_AT_R (DONE)
 - [ ] Investigate leverage 20x vs Settings.LEVERAGE=1
 - [x] Remove duplicate class Settings in config/settings.py (DONE)
