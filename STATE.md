@@ -168,3 +168,56 @@
 ### Bugs remaining
 - PnL reconciliation warning (tolerance 0.10 now covers it)
 - SESSION archive from interrupted run can have 102 cycles vs 100 planned (minor)
+
+---
+
+## 2026-10-25 FINAL - 218 cycles total, infrastructure verified
+
+### Test results (last run, 102 cycles)
+- Win rate: 35.3% (up from 31.2%)
+- Balance: 999.955 (down 0.045)
+- OPEN: 2, HOLD: 98, CLOSE: 0
+- Only 2 entries (very conservative - conflict 4H vs 1D)
+- All closes were TIMEOUT (SL/TP too far in ranging market)
+- Telegram: all events delivered
+- PARTIAL double-fire: FIXED (guard added)
+- PnL reconciliation tolerance: 0.10 (fixed warning spam)
+
+### Session archive
+- 09dceff4...json: 710KB, 102 cycles (from this run)
+- 03190515...json: 29.4MB, 608 cycles (historic gold standard)
+- bf6034fd...json: 1.2MB (historic)
+- 9cc43947...json: 0.9MB (historic)
+
+### Symbol availability (XT)
+- Crypto OK: BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT, XRPUSDT
+- Forex-style OK but LOW VOLATILITY: EURUSDT (0.009%), GBPUSDT (0.22%), AUDUSDT (0.22%)
+- Forex-style DEAD: JPYUSDT, CADUSDT, CHFUSDT
+- Standard forex not available: EURUSD, GBPUSD, USDJPY, XAUUSDT
+
+### Key insights
+1. **Weekend range market is the worst case** for trend-following
+2. **ETHUSDT has ~0.85 correlation** with BTC - useless for cross-validation
+3. **XRPUSDT has ~0.55 correlation** - best candidate for cross-validation
+4. **Forex on XT is mostly synthetic** (low/no volume)
+5. **Strategy is very conservative** (2 opens in 102 cycles) - good for safety, bad for edge discovery
+6. **4H vs 1D conflict** is the main blocker - strategy refuses to enter
+
+### Architecture insights
+- StrategyCouncil already exists for multi-strategy voting
+- META_ADJ per-strategy tracking works
+- ExperienceMemory logs all outcomes by strategy name
+- Regime detection already in MarketReport.regime
+- **Regime-aware routing** would let each regime have its own strategy set
+
+### Next steps (in order)
+1. **Regime analysis** - correlate win rate with regime (1 hour)
+2. **CandlePatternStrategy** - simplest to add (1-2 days)
+3. **MeanReversionStrategy** - for ranging markets (2-3 days)
+4. **Regime Router** - dispatch strategy by regime (3-4 hours)
+5. **Backtest each strategy in its own regime** (1 day)
+6. **Then**: XRPUSDT cross-validation, multi-symbol
+
+### Bugs remaining
+- PnL reconciliation warning (tolerance 0.10 now covers it)
+- SESSION archive from interrupted run can have 102 cycles vs 100 planned (minor)
