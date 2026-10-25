@@ -61,5 +61,5 @@
 - [ ] Verify PARTIAL/SL_MOVE/TP_EXTEND live (need price move >1R)
 - [x] Decouple BE_AT_R from PARTIAL_TP_AT_R (DONE)
 - [ ] Investigate leverage 20x vs Settings.LEVERAGE=1
-- [ ] Remove duplicate class Settings in config/settings.py
+- [x] Remove duplicate class Settings in config/settings.py (DONE)
 - [ ] Merge experiment -> master when stable
