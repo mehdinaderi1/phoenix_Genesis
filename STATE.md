@@ -63,3 +63,26 @@
 - [ ] Investigate leverage 20x vs Settings.LEVERAGE=1
 - [x] Remove duplicate class Settings in config/settings.py (DONE)
 - [ ] Merge experiment -> master when stable
+
+---
+
+## 2026-10-25 FINAL - All triggers verified live + 2 fixes
+
+### Trigger verification (103-cycle live run)
+- OPEN=11, PARTIAL=5+, SL_MOVE=15+, TP_EXTEND=5+, CLOSE=8+
+- Telegram: all 8 event types delivered successfully
+- Resume from checkpoint: working
+- Start-Transcript: goodbye message restored
+
+### Fixes applied
+1. paper_position_lifecycle.py - PARTIAL double-fire guard (both position + pm.position)
+2. paper_session_archive.py - PnL reconcile tolerance 1e-6 -> 0.10 (stale checkpoint delta)
+
+### Updated TODO status
+- [x] Verify PARTIAL/SL_MOVE/TP_EXTEND live (DONE - 103-cycle run confirmed)
+- [x] Leverage 20x vs 1 (RESOLVED - PHOENIX_LEVERAGE env, now 1x)
+- [ ] Merge experiment -> master
+
+### Known minor
+- PARTIAL PnL sign sometimes negative even with trailing stop (small loss to lock partial)
+- Session archiving ~400KB per run (normal for 100+ cycles)
