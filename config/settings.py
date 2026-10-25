@@ -56,6 +56,7 @@ class Settings:
     PARTIAL_TP_FRACTION = 0.5        # 50% در 1R
     PARTIAL_TP_AT_R = 1.0            # در 1R
     BE_ENABLED = True                # Break-even در 1R
+    BE_AT_R = 1.0                    # BE trigger R (decoupled from PARTIAL_TP_AT_R)
     TRAILING_ENABLED = True
     TRAILING_START_R = 1.5           # شروع trail در 2R
     TRAILING_DISTANCE_R = 0.3       # فاصله 0.5R از best price

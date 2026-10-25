@@ -101,7 +101,7 @@ class PaperPosition:
 
         # BE after 1R
         if _cfg_bool("BE_ENABLED", False) and not self.be_moved:
-            be_at = _cfg_float("PARTIAL_TP_AT_R", 1.0)
+            be_at = _cfg_float("BE_AT_R", 1.0)
             if profit_R >= be_at:
                 if self.side == "BUY" and self.sl < self.entry_price:
                     return self.entry_price
