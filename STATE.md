@@ -86,3 +86,32 @@
 ### Known minor
 - PARTIAL PnL sign sometimes negative even with trailing stop (small loss to lock partial)
 - Session archiving ~400KB per run (normal for 100+ cycles)
+
+---
+
+## 2026-10-25 FINAL - All triggers verified live + 2 fixes
+
+### Trigger verification (103-cycle live run)
+- OPEN=11, PARTIAL=5+, SL_MOVE=15+, TP_EXTEND=5+, CLOSE=8+
+- Telegram: all 8 event types delivered successfully
+- Resume from checkpoint: working
+- Start-Transcript: goodbye message restored
+
+### Fixes applied
+1. paper_position_lifecycle.py - PARTIAL double-fire guard (both position + pm.position)
+2. paper_session_archive.py - PnL reconcile tolerance 1e-6 -> 0.10 (stale checkpoint delta)
+
+### Context: weekend market
+- All tests on 2026-10-24/25 were weekend (ranging market)
+- Strategy is trend-following, loses in ranges (expected)
+- Next test: weekday market with real trending conditions
+
+### Known minor
+- PARTIAL PnL sign sometimes negative even with trailing stop (small loss to lock partial)
+- Session archiving ~400KB per run (normal for 100+ cycles)
+
+### Next steps
+- [ ] Test 100 cycles during weekday market (real trends)
+- [ ] Compare TP/SL configs: (0.15/0.3), (0.2/0.4), (0.1/0.2)
+- [ ] Need 500+ trades for statistical significance
+- [ ] Merge experiment -> master when stable
