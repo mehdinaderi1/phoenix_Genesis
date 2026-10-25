@@ -16,6 +16,7 @@ class XTExchange(BaseExchange):
         "5m": "5m",
         "15m": "15m",
         "30m": "30m",
+	"1H": "1h",
         "4H": "4h",
         "1D": "1d",
     }

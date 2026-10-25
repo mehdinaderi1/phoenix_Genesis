@@ -572,6 +572,12 @@ class IntelligenceFlow:
             best_strategy = (
                 strategy_selection["champion"]
             )
+            # ─── Defensive guard: champion without 'name' ───
+            if best_strategy is not None:
+                if not isinstance(best_strategy, dict) or not best_strategy.get("name"):
+                    print(f"WARNING: champion missing 'name' -> treating as no strategy")
+                    best_strategy = None
+            # ────────────────────────────────────────────────
 
             report.strategy_ranking = (
                 strategy_selection["ranking"]

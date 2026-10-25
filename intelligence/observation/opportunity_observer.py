@@ -28,6 +28,27 @@ class OpportunityObserver:
         strategy_passed = self.decision_rules.strategy_is_valid(report)
         consensus_passed = self.decision_rules.consensus_is_valid(report)
 
+        # ——— پچ: استفاده از DecisionRules به‌جای مقادیر hardcode ———
+        if is_buy:
+            allowed_risk = getattr(
+                self.decision_rules, "LONG_ALLOWED_RISK", ("LOW",)
+            )
+            risk_passed = getattr(report, "risk", None) in allowed_risk
+            threshold = getattr(
+                self.decision_rules, "LONG_MIN_CONFIDENCE", 80
+            )
+            confidence_passed = getattr(report, "confidence", 0) >= threshold
+        elif is_sell:
+            threshold = getattr(
+                self.decision_rules, "SHORT_MIN_CONFIDENCE", 70
+            )
+            risk_passed = True
+            confidence_passed = getattr(report, "confidence", 0) >= threshold
+        else:
+            risk_passed = False
+            threshold = None
+            confidence_passed = False
+
         if is_buy:
             risk_passed = getattr(report, "risk", None) == "LOW"
             threshold = 80
@@ -87,11 +108,11 @@ class OpportunityObserver:
             "risk": self._filter(
                 risk_passed,
                 (
-                    "Risk is LOW, as required for LONG."
+                    f"Risk {getattr(report, 'risk', None)!r} allowed for LONG (allowed: {getattr(self.decision_rules, 'LONG_ALLOWED_RISK', ('LOW',))})."
                     if is_buy and risk_passed
-                    else "LONG requires risk == LOW under current rules."
+                    else f"Risk {getattr(report, 'risk', None)!r} not allowed for LONG (allowed: {getattr(self.decision_rules, 'LONG_ALLOWED_RISK', ('LOW',))})."
                     if is_buy
-                    else "Current SHORT rules do not require LOW risk; risk recorded for visibility."
+                    else "SHORT rules do not require LOW risk; risk recorded for visibility."
                     if is_sell
                     else "No directional candidate; side-specific risk gate is not applicable."
                 ),

@@ -78,12 +78,17 @@ class StrategySelector:
                 ranking_result.top_strategy
             )
 
-
             if champion_item:
 
-                champion = (
-                    champion_item.strategy_record
+                champion = dict(
+                    champion_item.strategy_record or {}
                 )
+                # ─── پچ: name از strategy_name پر شود ───
+                if "name" not in champion:
+                    champion["name"] = (
+                        champion_item.strategy_name
+                    )
+                # ──────────────────────────────────────
 
 
         else:

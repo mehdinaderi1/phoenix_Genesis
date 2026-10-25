@@ -1,8 +1,8 @@
-﻿import os
+import os
 
 try:
     from dotenv import load_dotenv
-    load_dotenv(override=False)     # ← PowerShell env vars win
+    load_dotenv(override=False)     # â† PowerShell env vars win
 except ImportError:
     pass
 
@@ -46,7 +46,7 @@ def configure_market(exchange):
         "volume": 1,
     }
 
-    for timeframe in ("30m", "4H", "1D"):
+    for timeframe in ("30m", "1H", "4H", "1D"):
         exchange.set_candle_sequence(
             "BTCUSDT",
             timeframe,
@@ -353,13 +353,13 @@ def check_position_sl_tp(paper_session, source_manager, resilience):
     if not reason:
         return None
 
-    # ─── اطلاعات اهرم قبل از بستن ───
+    # â”€â”€â”€ Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø§Ù‡Ø±Ù… Ù‚Ø¨Ù„ Ø§Ø² Ø¨Ø³ØªÙ† â”€â”€â”€
     lev = float(getattr(position, "leverage", 1.0))
     qty = float(getattr(position, "quantity", 0.0))
     entry = float(getattr(position, "entry_price", 0.0))
     notional = qty * entry
     margin = notional / max(lev, 1.0)
-    # ─────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     print(
         f"RECOVERY: closing position at {reason} "
@@ -375,7 +375,7 @@ def check_position_sl_tp(paper_session, source_manager, resilience):
 
     pnl = closed.get("realized_pnl", 0.0)
     pnl_pct_on_margin = (pnl / margin * 100) if margin > 0 else 0.0
-    # ─── گزارش PnL نسبت به مارجین (اثر واقعی اهرم) ───
+    # â”€â”€â”€ Ú¯Ø²Ø§Ø±Ø´ PnL Ù†Ø³Ø¨Øª Ø¨Ù‡ Ù…Ø§Ø±Ø¬ÛŒÙ† (Ø§Ø«Ø± ÙˆØ§Ù‚Ø¹ÛŒ Ø§Ù‡Ø±Ù…) â”€â”€â”€
     print(
         f"RECOVERY: position closed | "
         f"PnL={pnl:+.4f} USDT ({pnl_pct_on_margin:+.2f}% on margin) | "
@@ -412,7 +412,7 @@ def main():
         database=engine.database,
     )
 
-    timeframes = ("5m", "15m", "30m", "4H", "1D")
+    timeframes = ("5m", "15m", "30m", "1H", "4H", "1D")
 
     warm_up_results = source_candle_pipeline.warm_up(
         symbol="BTCUSDT",
@@ -472,7 +472,7 @@ def main():
         session=paper_session
     )
 
-    # ─── EXECUTION MODE SELECTOR ───
+    # â”€â”€â”€ EXECUTION MODE SELECTOR â”€â”€â”€
     execution_mode = os.environ.get("EXECUTION_MODE", "PAPER").upper()
     live_adapter = None
 
@@ -503,7 +503,7 @@ def main():
     else:
         print(f"Execution Mode: {_exec_mode}")
         print("Market Mode: OBSERVE")
-    # ────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     shadow_runtime = XTFuturesShadowExecutionRuntime(
         balance=paper_session.initial_balance,
@@ -537,7 +537,7 @@ def main():
         signal_publisher=signal_publisher,
         opportunity_observer=opportunity_observer,
         opportunity_journal=opportunity_journal,
-        execution_runtime=execution_runtime,   # ← NEW
+        execution_runtime=execution_runtime,   # â† NEW
     )
 
     print()
@@ -556,7 +556,7 @@ def main():
         os.environ.get("PHOENIX_OBSERVATION_INTERVAL_SECONDS", "0")
     )
 
-    # ✱ محاسبهٔ بازهٔ مطلق سیکل‌ها
+    # âœ± Ù…Ø­Ø§Ø³Ø¨Ù‡Ù” Ø¨Ø§Ø²Ù‡Ù” Ù…Ø·Ù„Ù‚ Ø³ÛŒÚ©Ù„â€ŒÙ‡Ø§
     end_cycle = start_cycle + observation_cycles - 1
     total_cycles = end_cycle
     print(
@@ -566,7 +566,7 @@ def main():
 
     results = []
 
-    # ✱ پیگیری interrupt: اگر کاربر Ctrl+C زد، state پاک نشود
+    # âœ± Ù¾ÛŒÚ¯ÛŒØ±ÛŒ interrupt: Ø§Ú¯Ø± Ú©Ø§Ø±Ø¨Ø± Ctrl+C Ø²Ø¯ØŒ state Ù¾Ø§Ú© Ù†Ø´ÙˆØ¯
     interrupted = False
 
     # Recovery check: if a position was open before, verify SL/TP
@@ -580,7 +580,7 @@ def main():
                 if reason:
                     print(f"RECOVERY: closing position at {reason}")
                     closed = paper_session.close_position(exit_price)
-                    # ✱ پچ: این close هم باید در results و notification بیاید
+                    # âœ± Ù¾Ú†: Ø§ÛŒÙ† close Ù‡Ù… Ø¨Ø§ÛŒØ¯ Ø¯Ø± results Ùˆ notification Ø¨ÛŒØ§ÛŒØ¯
                     if closed is not None:
                         rec = {
                             "position": closed.get("position"),
@@ -631,7 +631,7 @@ def main():
                     sl_tp_result["realized_pnl"],
                     sl_tp_result["close_reason"],
                 )
-                # ✱ پچ: این نتیجه را به نتایج اضافه کن
+                # âœ± Ù¾Ú†: Ø§ÛŒÙ† Ù†ØªÛŒØ¬Ù‡ Ø±Ø§ Ø¨Ù‡ Ù†ØªØ§ÛŒØ¬ Ø§Ø¶Ø§ÙÙ‡ Ú©Ù†
                 results.append({
                     "cycle_number": cycle,
                     "observation": None,
@@ -647,7 +647,7 @@ def main():
                     "error": None,
                     "recovery_result": sl_tp_result,
                 })
-
+        
         except Exception as e:
             print(f"WARNING: SL/TP check failed: {e}")
 
@@ -716,14 +716,14 @@ def main():
                 elif action == "SL_MOVE":
                     si = paper_result.get("sl_move_info") or {}
                     print(
-                        f"  SL_MOVE | {si.get('old_sl', 0):.2f} → {si.get('new_sl', 0):.2f}"
+                        f"  SL_MOVE | {si.get('old_sl', 0):.2f} â†’ {si.get('new_sl', 0):.2f}"
                     )
                     notifier.notify_sl_move(
                         paper_result.get("position"),
                         si.get("old_sl", 0),
                         si.get("new_sl", 0),
                     )
-            # ─── Dispatch pending Telegram messages every N cycles ───
+            # â”€â”€â”€ Dispatch pending Telegram messages every N cycles â”€â”€â”€
             dispatch_every = int(os.environ.get("PHOENIX_DISPATCH_EVERY", "5"))
             if (cycle % dispatch_every == 0
                     and os.environ.get("PHOENIX_TELEGRAM_ENABLED", "0").strip() == "1"):
@@ -737,7 +737,7 @@ def main():
                         print(f"DISPATCH@{cycle}: {dresult}")
                 except Exception as e:
                     print(f"WARNING: periodic dispatch failed: {e}")
-            # ─────────────────────────────────────────────────────    
+            # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€    
 
             # Save state every 10 cycles
             if cycle % 10 == 0:
@@ -789,7 +789,7 @@ def main():
             f"{paper_session.get_position().entry_price})"
         )
 
-    # ─── Archive the full session ONCE after all cycles ───
+    # â”€â”€â”€ Archive the full session ONCE after all cycles â”€â”€â”€
     archive_ok = False
     archive_path = None
     archive_size = 0
@@ -819,7 +819,7 @@ def main():
                     )
         except Exception as e:
             print(f"WARNING: archive save failed: {e}")
-    # ──────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     print()
     print("=" * 60)

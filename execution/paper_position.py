@@ -15,6 +15,25 @@ def _fee_rate() -> float:
     return float(table.get(order_type, 0.0))
 
 
+def _cfg_bool(key: str, default: bool) -> bool:
+    for env_key in (f"PHOENIX_{key}", key):
+        v = os.getenv(env_key)
+        if v is not None:
+            return v.strip().lower() in ("1", "true", "yes", "on")
+    return bool(getattr(Settings, key, default))
+
+
+def _cfg_float(key: str, default: float) -> float:
+    for env_key in (f"PHOENIX_{key}", key):
+        v = os.getenv(env_key)
+        if v is not None:
+            try:
+                return float(v)
+            except ValueError:
+                pass
+    return float(getattr(Settings, key, default))
+
+
 @dataclass
 class PaperPosition:
     symbol: str
@@ -65,13 +84,13 @@ class PaperPosition:
 
     # ─── Partial ───
     def should_partial_close(self, current_price: float):
-        if not getattr(Settings, "PARTIAL_TP_ENABLED", False):
+        if not _cfg_bool("PARTIAL_TP_ENABLED", False):
             return None
         if self.partial_closed:
             return None
-        threshold = float(getattr(Settings, "PARTIAL_TP_AT_R", 1.0))
+        threshold = _cfg_float("PARTIAL_TP_AT_R", 1.0)
         if self._profit_in_R(current_price) >= threshold:
-            return float(getattr(Settings, "PARTIAL_TP_FRACTION", 0.5))
+            return _cfg_float("PARTIAL_TP_FRACTION", 0.5)
         return None
 
     # ─── BE + Trailing ───
@@ -81,8 +100,8 @@ class PaperPosition:
         profit_R = self._profit_in_R(current_price)
 
         # BE after 1R
-        if getattr(Settings, "BE_ENABLED", False) and not self.be_moved:
-            be_at = float(getattr(Settings, "PARTIAL_TP_AT_R", 1.0))
+        if _cfg_bool("BE_ENABLED", False) and not self.be_moved:
+            be_at = _cfg_float("PARTIAL_TP_AT_R", 1.0)
             if profit_R >= be_at:
                 if self.side == "BUY" and self.sl < self.entry_price:
                     return self.entry_price
@@ -90,11 +109,11 @@ class PaperPosition:
                     return self.entry_price
 
         # Trailing after 2R
-        if getattr(Settings, "TRAILING_ENABLED", False):
-            start_R = float(getattr(Settings, "TRAILING_START_R", 2.0))
+        if _cfg_bool("TRAILING_ENABLED", False):
+            start_R = _cfg_float("TRAILING_START_R", 2.0)
             if profit_R >= start_R and self.best_price_seen is not None:
                 risk = self._risk_distance()
-                dist = float(getattr(Settings, "TRAILING_DISTANCE_R", 0.5))
+                dist = _cfg_float("TRAILING_DISTANCE_R", 0.5)
                 if self.side == "BUY":
                     candidate = self.best_price_seen - risk * dist
                     if candidate > self.sl and candidate > self.entry_price:
@@ -146,7 +165,12 @@ class PaperPosition:
                     return True, "TP", self.tp
 
         if self.opened_at is not None:
-            max_hours = float(getattr(Settings, "MAX_POSITION_HOURS", 4))
+            max_hours = float(
+                os.getenv(
+                    "PHOENIX_MAX_POSITION_HOURS",
+                    getattr(Settings, "MAX_POSITION_HOURS", 4),
+                )
+            )
             try:
                 opened = datetime.fromisoformat(self.opened_at)
                 now = now_utc or datetime.now(timezone.utc)

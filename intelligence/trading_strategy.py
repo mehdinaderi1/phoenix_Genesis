@@ -6,7 +6,7 @@ class BTCMTFTrendAlignmentV1:
     symbol = "BTCUSDT"
     market = "FUTURES"
     primary_timeframe = "5m"
-    context_timeframes = ["15m", "30m"]
+    context_timeframes = ["15m", "30m", "1H"]
     higher_timeframe = "4H"
 
     USE_RELAXED_ALIGNMENT = (

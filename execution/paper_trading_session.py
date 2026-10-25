@@ -98,7 +98,7 @@ class PaperTradingSession:
         return {
             "position": position,
             "exit_price": closed["exit_price"],
-            "realized_pnl": total_pnl,
+            "realized_pnl": remaining_pnl,
             "partial_pnl": partial_pnl,
             "remaining_pnl": remaining_pnl,
             "trade": trade,

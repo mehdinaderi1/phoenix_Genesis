@@ -57,8 +57,8 @@ class Settings:
     PARTIAL_TP_AT_R = 1.0            # در 1R
     BE_ENABLED = True                # Break-even در 1R
     TRAILING_ENABLED = True
-    TRAILING_START_R = 2.0           # شروع trail در 2R
-    TRAILING_DISTANCE_R = 0.5        # فاصله 0.5R از best price
-    TP_EXTEND_AFTER_PARTIAL_R = 3.0   # بعد از partial، TP به 3R می‌رود
+    TRAILING_START_R = 1.5           # شروع trail در 2R
+    TRAILING_DISTANCE_R = 0.3       # فاصله 0.5R از best price
+    TP_EXTEND_AFTER_PARTIAL_R = 10   # بعد از partial، TP به 3R می‌رود
     # config/settings.py
     position_size_percent = 5.0     # یا 10.0

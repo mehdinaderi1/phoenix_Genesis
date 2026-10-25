@@ -1,6 +1,7 @@
 import os
 
 from config.settings import Settings
+from execution.paper_position import _cfg_bool, _cfg_float
 
 
 class PaperPositionLifecycle:
@@ -50,9 +51,9 @@ class PaperPositionLifecycle:
                     )
 
                     # ─── TP را گسترش بده تا trailing فضای مانور داشته باشد ───
-                    if getattr(Settings, "PARTIAL_TP_ENABLED", False):
-                        extend_R = float(
-                            getattr(Settings, "TP_EXTEND_AFTER_PARTIAL_R", 3.0)
+                    if _cfg_bool("PARTIAL_TP_ENABLED", False):
+                        extend_R = _cfg_float(
+                            "TP_EXTEND_AFTER_PARTIAL_R", 3.0
                         )
                         risk = position._risk_distance()
                         if risk > 0:

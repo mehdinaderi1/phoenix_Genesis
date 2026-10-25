@@ -437,3 +437,30 @@ But no strategy runs in production without:
     $content,
     (New-Object System.Text.UTF8Encoding($false))
 )
+
+## Strategy Research (2026-10-23)
+
+### Tested
+- RSI mean-reversion: 5m, 14/21 period, all thresholds
+- EMA cross: 5/10/20 × 20/50/100
+- 156 configs × 2 fee levels × 3 timeframes
+- Data: 20747 candles, 66 days, 5m BTCUSDT
+
+### Result
+- **17 / 156 configs positive at fee=0.04% (maker)**
+- **0 / 156 configs positive at fee=0.12% (taker)**
+- Best: +0.036% per trade (n=48, statistically weak)
+- Most robust: +0.0026% per trade (n=863, statistically strong)
+
+### Conclusion
+Edge exists but is **too small to overcome taker fees**.
+Requires maker orders (0.04%), $5000+ capital, and acceptance
+of regime-shift risk.
+
+**Not recommended for production.**
+
+### What This Means
+- The learning framework works
+- Backtest infrastructure works
+- But no simple strategy on 5m BTC has robust edge
+- Next: ML, order flow, or funding rate arb (if pursued)

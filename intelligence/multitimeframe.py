@@ -1,4 +1,4 @@
-﻿import os
+import os
 from collections import Counter
 
 from intelligence.consensus import ConsensusResult
@@ -22,6 +22,7 @@ class MultiTimeframeAnalyzer:
     def get_weight(self, timeframe):
         weights = {
             "30m": 1,
+            "1H": 1,
             "4H": 2,
             "1D": 3,
             "Daily": 3,
