@@ -1,7 +1,7 @@
 # Phoenix Genesis - Session State
 
 **Date:** 2026-10-25
-**Local path:** C:\Users\Ali\Desktop\phoenix_new
+**Local path:** D:\phoenix_Genesis
 **Branch:** experiment/scalp-single-strategy
 **Remote:** https://github.com/mehdinaderi1/phoenix_Genesis.git
 **Python:** 3.14
