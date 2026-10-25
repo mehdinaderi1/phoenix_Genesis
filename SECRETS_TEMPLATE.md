@@ -1,0 +1,21 @@
+﻿# Phoenix Genesis — Secrets Template
+
+## .env (copy to .env on new machine, fill real values)
+
+PHOENIX_TELEGRAM_ENABLED=1
+TELEGRAM_BOT_TOKEN=<from @BotFather>
+TELEGRAM_CHAT_ID=<your chat id>
+
+PHOENIX_RELAXED_RULES=1
+PHOENIX_CONFIDENCE_FLOOR=35
+PHOENIX_SYMMETRIC_CONFIDENCE=1
+PHOENIX_SL_PERCENT=0.1
+PHOENIX_TP_PERCENT=0.2
+PHOENIX_LEVERAGE=1
+
+## run_paper.ps1 (copy to repo root)
+
+$env:PHOENIX_OBSERVATION_CYCLES = "100"
+$env:PHOENIX_OBSERVATION_INTERVAL_SECONDS = "30"
+$env:PHOENIX_MAX_POSITION_HOURS = "0.5"
+python -u .\main.py
