@@ -27,9 +27,10 @@ class DecisionRules:
     # ─────────────────────────────────────────────────────────
     # آستانه‌ی اجماع
     # ─────────────────────────────────────────────────────────
-    CONSENSUS_MIN_CONFIDENCE = (
-        0.4 if USE_RELAXED_RULES else 0.6
-    )
+    CONSENSUS_MIN_CONFIDENCE = float(os.getenv(
+        "PHOENIX_CONSENSUS_MIN_CONFIDENCE",
+        "0.4" if USE_RELAXED_RULES else "0.6"
+    ))
 
     # ─────────────────────────────────────────────────────────
     # آستانه‌های Confidence

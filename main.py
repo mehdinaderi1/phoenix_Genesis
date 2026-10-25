@@ -417,7 +417,7 @@ def main():
     warm_up_results = source_candle_pipeline.warm_up(
         symbol="BTCUSDT",
         timeframes=timeframes,
-        limit=30,
+        limit=300,
     )
 
     print("Historical MTF warm-up:", warm_up_results)
