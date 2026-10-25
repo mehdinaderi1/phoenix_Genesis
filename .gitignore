@@ -108,3 +108,9 @@ test_*.log
 __pycache__/
 *.pyc
 data/memory/
+# ─── Additional (patch 2026-10-25) ───
+*.bak.*
+*_apply_*.py
+data/live_positions.json
+data/strategy_lab_results.json
+data/*.json.bak*
