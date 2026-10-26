@@ -490,3 +490,50 @@
 - [ ] OR enable PHOENIX_RELAXED_RULES=1 to allow MEDIUM risk (design decision)
 - [ ] If no MEDIUM window appears in next few hours, run overnight and review
 - [ ] Consider documenting risk classifier source in TODO.md
+## 2026-10-26 22:10 - ROOT CAUSE FOUND: risk thresholds are confidence-based
+
+### Confirmed source
+- intelligence/risk_analyzer.py (RiskAnalyzer.analyze, called from flow.py:436)
+- Legacy thresholds (PHOENIX_RELAXED_RISK=0):
+    consensus.confidence >= 80 → LOW
+    consensus.confidence >= 60 → MEDIUM
+    consensus.confidence <  60 → HIGH
+- reasoning.py has its own thresholds (75/50/50) but they are overridden
+  by risk_assessment.level in reasoning.py:64.
+- So effective classifier is: <60 → HIGH, 60-79 → MEDIUM, >=80 → LOW.
+
+### In today's runs
+- consensus.confidence (== ContextConfidence) stuck at 51.00 in most runs,
+  briefly 56.67 in latest. Always < 60 → always HIGH.
+- DecisionConfidence grows +0.5/cycle but is separate and does NOT
+  affect risk classification.
+- RANGING regime hypothesis was WRONG — no correlation exists.
+
+### Env flags (two separate ones, both off)
+- PHOENIX_RELAXED_RULES — affects decision_rules.can_long/can_short
+  (LONG_MIN_CONFIDENCE 80→30, SHORT_MIN_CONFIDENCE 70→20,
+   risk sets expand to include MEDIUM)
+- PHOENIX_RELAXED_RISK — affects risk_analyzer thresholds
+  (LOW≥60, MEDIUM≥25, HIGH<25)
+
+### Three options to enable a trade
+A. Wait for consensus.confidence >= 80 (strong aligned market)
+B. Wait for >= 60 AND enable PHOENIX_RELAXED_RULES=1 (allows MEDIUM)
+C. Enable PHOENIX_RELAXED_RISK=1 (drops thresholds; not backtested)
+
+### All today's logic bugs closed
+1. TREND stale (fetch fresh 250 candles)
+2. can_long risk check (LONG_ALLOWED_RISK)
+3. can_short risk check (SHORT_ALLOWED_RISK)
+4. diagnose_short risk check (DECISION_RISK_HIGH)
+5. VOLGATE visibility (debug print, working)
+6. Clean stop (PHOENIX_OBSERVATION_CYCLES)
+7. Session ID confusion (documented as resume behavior)
+8. reasoning.py debug print (moved before return)
+9. Root cause of no-trade traced to risk_analyzer.py
+
+### Suggested next test
+- Run 500-cycle overnight in current config (no env changes).
+- Watch for consensus.confidence crossing 60 or 80.
+- If 60-79 window lasts: no trade (expected).
+- If >=80 window appears: trade fires (validates pipeline end-to-end).
