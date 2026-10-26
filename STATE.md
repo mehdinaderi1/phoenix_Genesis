@@ -283,3 +283,20 @@
 - Test 100+ cycles with threshold 0.5%
 - Compare win rate with/without gate
 - If win rate > 50%: merge to master and consider live paper test
+
+---
+
+## 2026-10-26 12:13 - Test 2 (run_20261026_121353.log)
+
+- 53 cycles, 0 errors, OPEN 0 / HOLD 53 / CLOSE 0 / Final NONE
+- Signal BUY vs Trend BEARISH → all WAIT (mixed-signal, intentional)
+- Balance 1000.0049, PnL +0.0049, Telegram 0/0
+- Learning unchanged: 21 exp / 9 wins / win_rate 0.429 / META_ADJ 0
+
+### Open issues (unresolved)
+- Session ID 09dceff4 appears with two sizes (710KB/102 vs 1.44MB/53)
+- Volatility gate not visible in this log
+- Balance drift 1000.0069 → 1000.0049
+- Trades=18 vs OPEN=0/CLOSE=0 — label needed
+- TREND price/EMA frozen across cycles
+- DecisionConfidence +0.5/cycle mechanical
