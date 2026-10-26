@@ -249,3 +249,37 @@
 - Infrastructure: 100% working
 - Volatility gate: 90% (logic works, runtime issue)
 - Tomorrow: 10 minutes to find the runtime bug
+
+---
+
+## 2026-10-26 12:00 - VOLATILITY GATE WORKING (100%)
+
+### Root cause found and fixed
+- Candles from runtime are list type: [ts, o, h, l, c, v]
+- Original _compute_volatility only handled dict / object → returned None
+- Fix: added _ohlc() helper that handles list, dict, and object
+
+### Verified working
+- Cycle 268-271: gate correctly triggered LOW_VOLATILITY
+- vol=0.357% < threshold=2.0% → WAIT
+- Also caught PARTIAL: +0.0035 PnL, TP_EXTEND to 79564, SL_MOVE to BE
+
+### Threshold analysis (from tools/volatility_analysis.py)
+- TIGHT (<0.3%): 0% win, -0.014 PnL (BLOCK)
+- NORMAL (0.3-0.7%): 33% win, -0.008 PnL (borderline)
+- WIDE (0.7-1.5%): 62.5% win, +0.534 PnL (ALLOW)
+
+### Decision: threshold = 0.5%
+- Blocks TIGHT and weak NORMAL
+- Allows strong NORMAL and WIDE
+
+### Status
+- Win rate: 45% (up from 31% earlier today)
+- Balance: 1000.0069 (positive!)
+- META_ADJ: 0 (from -5)
+- Session archive: 120 sessions, 14 trades analyzed
+
+### Next
+- Test 100+ cycles with threshold 0.5%
+- Compare win rate with/without gate
+- If win rate > 50%: merge to master and consider live paper test

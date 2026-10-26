@@ -64,19 +64,20 @@ class DecisionEngine:
         if not candles or len(candles) < 15:
             return None
 
+        def _ohlc(c):
+            """Return (high, low, close) from candle (dict, object, or list [ts,o,h,l,c,v])."""
+            if isinstance(c, (list, tuple)) and len(c) >= 5:
+                return float(c[2]), float(c[3]), float(c[4])
+            if isinstance(c, dict):
+                return c.get("high"), c.get("low"), c.get("close")
+            if hasattr(c, "high"):
+                return c.high, c.low, getattr(c, "close", None)
+            return None, None, None
+
         trs = []
         for i in range(1, len(candles)):
-            c = candles[i]
-            pc = candles[i - 1]
-
-            if hasattr(c, "high"):
-                h, l = c.high, c.low
-                pc_close = getattr(pc, "close", None)
-            elif isinstance(c, dict):
-                h, l = c.get("high"), c.get("low")
-                pc_close = pc.get("close") if isinstance(pc, dict) else getattr(pc, "close", None)
-            else:
-                return None
+            h, l, _ = _ohlc(candles[i])
+            _, _, pc_close = _ohlc(candles[i - 1])
 
             if h is None or l is None or pc_close is None:
                 continue
@@ -86,13 +87,9 @@ class DecisionEngine:
             return None
 
         atr = sum(trs[-14:]) / 14
+        _, _, last_close = _ohlc(candles[-1])
 
-        last = candles[-1]
-        if hasattr(last, "close"):
-            last_close = last.close
-        elif isinstance(last, dict):
-            last_close = last.get("close")
-        else:
+        if not last_close or last_close <= 0:
             return None
 
         if not last_close or last_close <= 0:
@@ -188,6 +185,7 @@ class DecisionEngine:
         if _min_vol > 0:
             _vol_pct = self._compute_volatility(report)
             report.volatility_pct = _vol_pct
+
             if _vol_pct is not None and _vol_pct < _min_vol:
                 trace = self._build_trace(report, "WAIT", explanation, trend)
                 return DecisionResult(
