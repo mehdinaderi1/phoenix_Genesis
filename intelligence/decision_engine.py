@@ -27,20 +27,29 @@ class DecisionEngine:
 
     def _build_trace(self, report, action, explanation, trend=None):
         trend = trend or {"long": True, "short": True}
+        signal = getattr(report, "signal", None)
+        risk = getattr(report, "risk", None)
+
+        # Risk gate must match the direction we are evaluating
+        if signal == "SELL":
+            risk_allowed = risk in self.rules.SHORT_ALLOWED_RISK
+        else:
+            risk_allowed = risk in self.rules.LONG_ALLOWED_RISK
+
         trace = DecisionTrace(
             decision=action,
-            signal=getattr(report, "signal", None),
+            signal=signal,
             confidence=report.confidence,
             risk=getattr(report, "risk", "UNKNOWN"),
             strategy_consensus=getattr(report, "strategy_consensus", {}),
             gates={
                 "strategy":   self.rules.strategy_is_valid(report),
                 "consensus":  self.rules.consensus_is_valid(report),
-                "signal":     getattr(report, "signal", None) in ["BUY", "SELL"],
-                "risk":       getattr(report, "risk", None) == "LOW",
+                "signal":     signal in ["BUY", "SELL"],
+                "risk":       risk_allowed,
                 "confidence": getattr(report, "confidence", 0) >= float(
-                os.environ.get("PHOENIX_CONFIDENCE_GATE", "80")
-            ),
+                    os.environ.get("PHOENIX_CONFIDENCE_GATE", "80")
+                ),
                 "trend_long":  trend["long"],
                 "trend_short": trend["short"],
             },
@@ -48,19 +57,12 @@ class DecisionEngine:
         )
         return trace.to_dict()
 
-    def _compute_volatility(self, report):
-        """Compute ATR-based volatility percentage. Returns None if not computable."""
-        candles = getattr(report, "candles", None)
+    def _compute_volatility(self, candles):
+        """Compute ATR-based volatility percentage from candles.
 
-        # Fallback: fetch fresh 30m candles from XT if report has none
-        if not candles or len(candles) < 15:
-            try:
-                from exchanges.xt_exchange import XTExchange
-                _ex = XTExchange(timeout=10)
-                candles = _ex.get_historical_candles("BTCUSDT", "30m", limit=30)
-            except Exception:
-                candles = None
-
+        Caller must supply fresh candles (decide() handles the fetch).
+        Returns None if not computable.
+        """
         if not candles or len(candles) < 15:
             return None
 
@@ -92,9 +94,6 @@ class DecisionEngine:
         if not last_close or last_close <= 0:
             return None
 
-        if not last_close or last_close <= 0:
-            return None
-
         return atr / last_close * 100
 
     def _build_explanation(self, report):
@@ -102,6 +101,23 @@ class DecisionEngine:
         if not consensus:
             return {}
         return self.explanation_builder.build(consensus).to_dict()
+
+    def _fetch_fresh_candles(self, report):
+        """Return fresh 30m candles; fall back to report.candles if XT fails."""
+        candles = (
+            getattr(report, "candles", None)
+            or getattr(report, "candles_df", None)
+            or getattr(report, "ohlcv", None)
+        )
+        try:
+            from exchanges.xt_exchange import XTExchange
+            _ex = XTExchange(timeout=10)
+            fresh = _ex.get_historical_candles("BTCUSDT", "30m", limit=250)
+            if fresh and len(fresh) >= 15:
+                candles = fresh
+        except Exception:
+            pass
+        return candles
 
     def decide(self, report):
 
@@ -136,14 +152,12 @@ class DecisionEngine:
                 strategy_allows_long = True
             elif _cs == "SELL":
                 strategy_allows_short = True
-        # ─────────────────────────────────────────────────────────     
-       
+        # ─────────────────────────────────────────────────────────
+
+        # ─── Fresh candles (shared by TREND + VOLGATE) ───
+        candles = self._fetch_fresh_candles(report)
+
         # ─── Trend filter (EMA) — همیشه محاسبه شود ───
-        candles = (
-            getattr(report, "candles", None)
-            or getattr(report, "candles_df", None)
-            or getattr(report, "ohlcv", None)
-        )
         trend_long, trend_short = passes_trend_filter(candles)
         if os.environ.get("DISABLE_TREND_FILTER", "0").strip() == "1":
             trend_long, trend_short = True, True
@@ -182,9 +196,11 @@ class DecisionEngine:
 
         # Volatility gate (env-configurable, default OFF)
         _min_vol = float(os.getenv("PHOENIX_MIN_VOLATILITY_PCT", "0") or 0)
+        print(f"[VOLGATE] enabled={'yes' if _min_vol > 0 else 'no'} min_vol={_min_vol}")
         if _min_vol > 0:
-            _vol_pct = self._compute_volatility(report)
+            _vol_pct = self._compute_volatility(candles)
             report.volatility_pct = _vol_pct
+            print(f"[VOLGATE] vol_pct={_vol_pct} threshold={_min_vol} regime={getattr(report,'regime','?')}")
 
             if _vol_pct is not None and _vol_pct < _min_vol:
                 trace = self._build_trace(report, "WAIT", explanation, trend)
