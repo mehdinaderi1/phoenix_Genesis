@@ -300,3 +300,134 @@
 - Trades=18 vs OPEN=0/CLOSE=0 — label needed
 - TREND price/EMA frozen across cycles
 - DecisionConfidence +0.5/cycle mechanical
+
+## 2026-10-26 12:55 - Diagnostics resolved
+
+### Resolved
+- Trades=18 source: summary.trade_count in archive (cumulative over session, not this run).
+- Session ID 09dceff4 is one long-lived session resumed across runs; not a collision.
+  710KB/102-cycles earlier state → 1.44MB/411-cycles current state.
+- Balance drift 1000.0069 → 1000.0049 explained by pnl_reconcile_delta = -0.0197
+  (within tolerance 0.10). pnl_reconciled: true.
+
+### Corrected limitation
+- Archive summary uses "cycles_processed" (411, cumulative) while the printed run
+  summary uses "Cycles Processed" (53, this run). Labels must be disambiguated
+  to avoid future confusion.
+
+### Still open
+- Volatility gate absent from run_20261026_121353.log. Add [VOLGATE] debug print.
+- Verify $j.cycles.Count to confirm cumulative vs bug.
+## 2026-10-26 13:35 - VOLGATE confirmed; staleness root cause identified
+
+### VOLGATE — CLOSED
+- Confirmed working with PHOENIX_MIN_VOLATILITY_PCT=0.5.
+- vol_pct=0.276% < 0.5% correctly returns WAIT (LOW_VOLATILITY).
+- Gate fires BEFORE can_long/can_short, so it pre-empts all trade paths.
+
+### NEW: root cause of both stale TREND and frozen vol_pct
+- vol_pct=0.27636312586882783 identical across 10 cycles (15 decimals).
+- TREND price=80533.02 fixed across 10 cycles while live Price varied
+  80527.72 → 80470.28.
+- Both pass_trend_filter and _compute_volatility consume report.candles.
+- Hypothesis: candles refresh only at timeframe boundaries, not per cycle.
+  In-progress 30m candle not updated between cycles → ATR and EMA frozen.
+- Same root cause as earlier "TREND stale" observation.
+
+### Confirmed: DecisionConfidence increment
+- From cycle 2 onward, exactly +0.5/cycle (44.55 → 48.55 over 9 cycles).
+- Unrelated to market; tied to successful_cycles counter.
+
+### Workflow note
+- env.local.ps1 sets 0.5 but shell had 0.3 (not sourced).
+- Must `. .\env.local.ps1` before `python .\main.py`, or override explicitly.
+
+### Next
+- Locate where report.candles is set (main.py / operational_paper_runtime).
+- Fix to refresh in-progress candle each cycle, or fetch fresh 30m in
+  _compute_volatility (fallback exists but is bypassed when candles >= 15).
+- Then re-run 53 cycles and verify vol_pct changes cycle to cycle.
+
+## 2026-10-26 14:10 - main.py max-cycles: NOT NEEDED
+
+### Finding
+- main.py already supports clean stop via PHOENIX_OBSERVATION_CYCLES (line ~420).
+- No PHOENIX_MAX_CYCLES addition needed.
+- Log file "Saved to: ..." in earlier runs came from external wrapper/transcript,
+  not main.py. main.py itself writes nothing to a log file.
+- On Ctrl+C, transcript loses tail because Stop-Transcript not called.
+
+### Correct diagnostic procedure
+- Start-Transcript -Path .\run_YYYYMMDD_HHMMSS.log -Append
+- $env:PHOENIX_OBSERVATION_CYCLES = "10"   # clean stop after 10 cycles
+- $env:PHOENIX_MIN_VOLATILITY_PCT = "0.5"
+- python .\main.py
+- Stop-Transcript
+
+### Cosmetic issues (deferred)
+- total_cycles = end_cycle causes misleading progress % on resume runs
+  (e.g., "Cycle 27/79 (34%)"). Display only, not functional.
+- Execution Mode printed twice (before loop and in final status).
+
+## 2026-10-26 14:45 - decision_rules.py fix verified; remaining env + limit issues
+
+### Fixes applied and verified in code
+- SHORT_ALLOWED_RISK = LONG_ALLOWED_RISK (added)
+- can_short() now reads risk and checks risk in SHORT_ALLOWED_RISK (added)
+- decision_engine._build_trace uses direction-aware risk_allowed (added)
+
+### Remaining issues
+1. decision_engine._fetch_fresh_candles still limit=30; trend filter needs 200.
+   Regression: "[TREND] not enough candles (30<200) → permissive" every cycle.
+   Fix: change limit=30 to limit=250.
+2. If PHOENIX_RELAXED_RULES=1 AND PHOENIX_ALLOW_HIGH_RISK=1, then HIGH risk
+   still passes can_short by design. Not a bug, but must confirm intent.
+3. can_short uses "signal == SELL" hardcoded while can_long uses
+   LONG_ALLOWED_SIGNALS. Inconsistent with relaxed-mode docstring
+   ("SHORT: signal in (SELL, WAIT)"). Cosmetic/optional.
+
+### Next test
+- Apply limit=250
+- Verify $env:PHOENIX_RELAXED_RULES and $env:PHOENIX_ALLOW_HIGH_RISK
+- Run 10 cycles, confirm:
+  - [TREND] with real EMA (not "not enough candles")
+  - CAN SHORT: False with Risk=HIGH (if PHOENIX_ALLOW_HIGH_RISK=0)
+  - RulesShort=False with Risk=HIGH in GateDetail
+
+ ## 2026-10-26 14:50 - All major fixes verified; risk=HIGH is new blocker
+
+### Verified fixed
+- TREND stale: [TREND] shows real EMA from fresh 250 candles, values change
+  per cycle (80473.34 → 80456.01). No more "not enough candles (30<200)".
+- can_short risk check: SHORT CHECK with Risk=HIGH → CAN SHORT: False.
+  GateDetail shows RulesShort=False. Confirmed end-to-end.
+- can_long risk check: same for LONG path.
+- VOLGATE: vol_pct=0.5129 > threshold=0.5 → gate does NOT fire, decision
+  proceeds to next layer. No more unconditional LOW_VOLATILITY WAIT.
+- Clean stop: PHOENIX_OBSERVATION_CYCLES=10, transcript saved, state cleared.
+- New session 239ce1dc after clean completion (resilience.clear_state ran).
+
+### Behavior observed (correct)
+- Signal=BUY, Trend EMA long=False short=True, Risk=HIGH.
+- can_long=False (trend_long=False AND rules_long=False due to Risk=HIGH).
+- can_short=False (strategy_signal=BUY so strategy_allows_short=False,
+  AND rules_short=False due to Risk=HIGH).
+- Decision=WAIT (DECISION_RISK_HIGH), reason_code from diagnose_long().
+- This is exactly the intended conservative behavior.
+
+### Still open (non-critical)
+- DecisionConfidence mechanical +0.5/cycle from successful_cycles counter.
+  Unrelated to market; has no practical effect since no trade path fires.
+- Select-String on Start-Transcript log returns empty: file is UTF-16 LE.
+  Use Get-Content -Encoding Unicode or Select-String -Encoding Unicode.
+- Risk=HIGH means no trade in either legacy or relaxed mode. 100+ cycle
+  test in current market would produce 0 trades. Options:
+  1. Wait for Risk=LOW/MEDIUM (preferred).
+  2. Enable PHOENIX_RELAXED_RULES=1 (design decision).
+  3. Audit risk classification source (core/market_data or intelligence).
+
+### Next
+- Watch for a market window with Risk != HIGH to validate trade path.
+- Or run 100+ cycles overnight and review when market regime changes.
+- Add to TODO.md: "Risk=HIGH is a hard no-trade zone under legacy rules;
+  verify risk classification source before any relaxation."
