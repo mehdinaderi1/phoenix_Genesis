@@ -46,6 +46,8 @@ class DecisionRules:
         (("LOW", "MEDIUM", "HIGH") if _ALLOW_HIGH else ("LOW", "MEDIUM"))
         if USE_RELAXED_RULES else ("LOW",)
     )
+    # Risk مجاز برای SHORT (هم‌سیاست با LONG)
+    SHORT_ALLOWED_RISK = LONG_ALLOWED_RISK
 
     # ─────────────────────────────────────────────────────────
     # سیگنال‌های مجاز
@@ -146,12 +148,14 @@ class DecisionRules:
     def can_short(self, report):
 
         signal = getattr(report, "signal", None)
+        risk = getattr(report, "risk", None)
         confidence = getattr(report, "confidence", 0)
 
         return (
             self.strategy_is_valid(report)
             and self.consensus_is_valid(report)
-            and signal in self.SHORT_ALLOWED_SIGNALS
+            and signal == "SELL"
+            and risk in self.SHORT_ALLOWED_RISK
             and confidence >= self.SHORT_MIN_CONFIDENCE
         )
         
@@ -191,6 +195,10 @@ class DecisionRules:
         signal = getattr(report, "signal", None)
         if signal not in self.SHORT_ALLOWED_SIGNALS:
             return False, "DECISION_SIGNAL_INVALID"
+
+        risk = getattr(report, "risk", None)
+        if risk not in self.SHORT_ALLOWED_RISK:
+            return False, "DECISION_RISK_HIGH"
 
         conf = getattr(report, "confidence", 0)
         if conf < self.SHORT_MIN_CONFIDENCE:
