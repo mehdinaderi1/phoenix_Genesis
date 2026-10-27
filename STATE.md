@@ -686,3 +686,245 @@ C. Build Trend Scanner + ZEC rotation (structural, 1-2 weeks)
 - [ ] Remove FTMUSDT, RNDRUSDT from universe (0 history)
 - [ ] Continue scanning every 2 hours
 - [ ] Watch TIA/INJ for ADX >25 → first real opportunity
+
+## 2026-10-27 21:45 - EMA diagnostics: FET best entry candidate
+
+### ZEC — extended
+- Price 1291.41, EMA20 1252.15 (+3.14%)
+- EMA50 1233.30 (+4.71%), EMA200 1212.90 (+6.47%)
+- Perfect bullish stack (Price > EMA20 > EMA50 > EMA200)
+- But +3.14% above EMA20 = chasing risk
+- Wait for pullback to 1255-1265
+
+### FET — best opportunity
+- Price 0.1802, EMA20 0.1757 (+2.58%)
+- EMA50 0.1752 (+2.84%), EMA200 0.1765 (+2.09%)
+- Structure: EMA200 > EMA50 > EMA20 but price just broke above ALL
+- Early reversal, fresh(4b), ADX 28.1, HOT=5, score 70
+- Wait for pullback to 0.176-0.178 for entry
+
+### PEPE — skip
+- ADX 22.5 (below 25 threshold)
+- EMA structure poor (EMA200 just barely broken)
+- Not enough confirmation
+
+### Trade plan (pending)
+- FET: entry 0.176-0.178, SL 0.1740, TP1 0.190, TP2 0.200, 1% pos
+- ZEC: entry 1255-1265, SL 1233, TP1 1310, TP2 1350, 1% pos
+- Whichever triggers first, with R/R check
+
+### Tools
+- [ ] Deploy entry_alert.py to monitor both targets
+
+
+## 2026-10-27 21:45 - Alert running, waiting for entry zones
+
+### Entry zones active
+- FET: 0.176-0.179 (current 0.1803, -0.7% away)
+- ZEC: 1250-1265 (current 1294, -2.3% away)
+
+### Alert script running
+- tools/entry_alert.py, 5-min interval
+- Will print 🔔FET or 🔔ZEC when in range
+- No manual intervention needed until then
+
+### Watchlist expansion opportunity
+- Run scan_trends.py every 30 min for new fresh candidates
+## 2026-10-27 22:00 - CONFIRMED: XT is spot-only, strategy is LONG-only
+
+### Diagnostic
+- `dir(XTExchange)` has NO: future, margin, short, borrow, lend
+- XTExchange only supports: get_price, get_historical_candles, get_candle,
+  get_balance, health_check, connect
+
+### Implication
+- Can only BUY. Cannot SHORT.
+- DOWN trends in scanner are context-only (market sentiment), not tradeable
+- Strategy is effectively LONG-only until we add futures exchange
+
+### Impact assessment
+- Short-term (today/tomorrow): minimal — market is bullish
+- Medium-term (1 week): moderate if market turns bearish
+- Long-term: significant — 50% of market inaccessible
+
+### Three paths
+A. Accept LONG-only (default, zero work)
+B. Add Binance/Bybit futures (1-2 weeks work)
+C. Check XT spot margin short (quick test if available)
+
+### Action now
+- None. Market is UP. Scanner will show UP opportunities only.
+- DOWN signals will be logged but not acted upon.
+- Decision on futures postponed until market turns bearish.
+## 2026-10-27 22:50 - CRITICAL: Entry point is 4H channel edge
+
+### Core insight (user's contribution)
+- Entry precision is MORE IMPORTANT than strategy itself
+- LONG only at 4H channel BOTTOM
+- SHORT only at 4H channel TOP
+- Without channel-edge entry, even good strategy loses
+
+### 4H Channel detection
+- Donchian Channel, N=30 candles (5 days)
+- Upper = highest(high, 30x4H)
+- Lower = lowest(low, 30x4H)
+- Mid = (upper + lower) / 2
+- Recalculate every 4H candle close
+
+### Entry logic
+- LONG when price <= lower + 0.3%
+- SHORT when price >= upper - 0.3%
+- Size based on confidence (1% if >=70, 0.5% if 50-70)
+- Leverage: 30x
+
+### Risk management
+- Initial SL: 0.8% outside channel
+- Avg 1: at 1.5% beyond channel (size 1.5-2x)
+- Avg 2: at 3.5% beyond channel (size 2-3x)
+- Hard SL: 5.5% beyond channel (only after avg 2)
+- Remove averages at breakeven
+- Trailing SL: 1% behind price after +1% profit
+
+### Channel validity filter
+- Width >= 2% (otherwise skip)
+- 20+ candles since last channel break
+- Volume confirmation at edges
+
+### Concrete BTC example
+- 4H channel: 79,000 - 82,000 (width 3.8%)
+- SHORT entry: 81,800 (near top)
+- SL initial: 82,300 (0.6% above)
+- Avg 1: 83,000 (if price rises)
+- Avg 2: 84,500 (if rises more)
+- Hard SL: 85,500
+- Target: 80,500 (mid) / 79,200 (bottom)
+
+### Why this works
+- Entering at extreme gives best R/R (5:1 vs 0.4:1)
+- Small SL (0.8%) limits damage
+- DCA catches quick reversions
+- Hard SL protects from channel breakouts
+- 30x + small size = risk 3-4% max total
+
+### Implementation phases
+1. Donchian Channel detection (1 day)
+2. Entry at channel edges (1 day)
+3. Initial SL + DCA logic (2 days)
+4. Remove averages + trailing (2 days)
+5. Integration + paper testing (1 week)
+Total: ~2 weeks for MVP
+
+## 2026-10-27 22:25 - Lesson: strong trends don't pull back
+
+### Alert history (40 min)
+- FET: 0.1803 → 0.1823 (peak) → 0.1814 (now), +0.6%
+- ZEC: 1294.30 → 1301.99 (peak) → 1297.12 (now), +0.2%
+- Neither reached entry zones (FET 0.176-0.179, ZEC 1250-1265)
+
+### Conclusion
+- Strong trends (ADX > 28) may run without pullback
+- Waiting for fixed-price pullback = missed opportunity
+- New strategy: entry at 4H Donchian channel edge, not fixed price
+
+### Action
+- Stop entry_alert.py (no longer relevant)
+- Build detect_channel.py (4H Donchian for all symbols)
+- Tomorrow: use channel-based entry zones, not fixed prices
+
+### Lesson for future
+- Fixed-price alerts are wrong for trending markets
+- Use dynamic levels (channel edges, pivots) instead
+- Wait for price at edge, not arbitrary pullback %
+## 2026-10-27 22:40 - No rejection yet on XRP/BNB
+
+### Candles analysis (last 5 x 4H)
+XRP: 1.3000 → 1.3026 → 1.3029 → 1.3210 → 1.3255
+- Monotonic rise, no rejection wick
+- 0.4% below upper (1.3307)
+- Trend is UP, not reversing
+
+BNB: 739.38 → 736.42 → 740.37 → 750.09 → 749.31
+- Risen with tiny red candle last
+- 0.57% below upper (753.58)
+- Weak signal, no long upper wick
+
+### Decision
+- NO SHORT entry. No rejection confirmed.
+- Wait for a 4H candle that closes with:
+  * Long upper wick (top wick > body)
+  * Bearish body (red) OR doji
+  * Volume > previous candle
+- If such candle appears at channel top: enter SHORT
+
+### Alternative view
+- Market is trending UP (ZEC +5%, FET +3.5%, PEPE +3.9%)
+- SHORT counter-trend is risky even at channel top
+- Consider: wait for pullback to LOWER channel, enter LONG instead
+- Same strategy logic (enter at edge), but in trend direction
+
+### Next actions
+- [ ] Optionally build candle_rejection_alert.py (checks every 4H close)
+- [ ] Or wait manually for next 4H candle at 00:00 UTC
+- [ ] Consider switching to LONG-bias while market trends up
+
+## 2026-10-27 22:50 - BTC turned DOWN, 4 SHORT candidates waiting
+
+### BTC direction flipped
+- Was FLAT at 22:35, now DOWN at 22:48
+- BTC price 80,650 (mid of channel 79,237-82,061)
+- Only SHORT allowed
+
+### 4 valid SHORT candidates (waiting pullback)
+- BNB: pos=86.1%, width=4.82%, dist_from_top=1.3% ← BEST
+- XRP: pos=90.9%, width=5.84%, dist_from_top=0.6%
+- ZEC: pos=98.5%, width=14.73% (wide, caution)
+- INJ: pos=77.8%, width=11.30% (wide)
+
+### 2 invalid (breakout)
+- POL: pos=105.1% (above channel top)
+- DOT: pos=0% but width=20.45% (too wide)
+
+### No pullback confirmation yet
+- Need 4H close at 00:00 UTC (~70 min from now)
+- Bearish pullback = bullish candle with upper wick >= 30%
+- Or bearish candle with upper wick >= 40%
+
+### Plan
+- Wait until 00:05 UTC
+- Run detect_pullback.py again
+- If BNB or XRP shows pullback → enter SHORT
+- Entry levels prepared:
+  BNB: entry~749.63, SL 759.61 (+1.33%), TP1 735.83, TP2 718.08
+  XRP: entry~1.3248, SL 1.3414 (+1.25%), TP1 1.293, TP2 1.255
+
+### Risk
+- Size $1 (1% of account), leverage 30x
+- Max loss if SL hit: $0.38 (0.4%)
+- Position: 1 trade only (not both) for first test
+
+## 2026-10-28 00:05 - Balance endpoint not found; manual fallback approved
+
+### Balance search exhausted
+- 15+ paths tried (all 404)
+- 3 query params tried (all ignored, 200 with same metadata)
+- 403→404 transition suggests signature/params issue, not missing endpoint
+- Conclusion: endpoint exists but not publicly documented
+
+### Workaround
+- XT_FUTURES_BALANCE_USDT env var (manual)
+- Update value daily or after each closed position
+- Sufficient for Phases 1-3 (dry-run, paper, small live)
+- Revisit for Phase 4 (large live)
+
+### Confirmed working (today's wins)
+- ✅ HMAC-SHA256 signature formula
+- ✅ /future/user/v1/account/info (200)
+- ✅ /future/user/v1/position/list (200)
+- ✅ User's BTC SHORT visible (121 contracts)
+- ✅ skip_symbols protects user's position
+
+### Tomorrow's plan
+1. Build XTFuturesExchange wrapper with manual balance
+2. Implement dry_run order placement
+3. Connect to detect_pullback.py strategy
+4. First paper trade test
