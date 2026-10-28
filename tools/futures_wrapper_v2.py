@@ -22,30 +22,40 @@ class XTFuturesExchange:
         self._last_request_time = 0
         self._min_interval = 0.25  # حداقل ۲۵۰ms بین درخواست‌ها
 
+        # Telegram notifier (optional, uses existing notifications module)
+        self.notifier = None
+        try:
+            if os.environ.get("TELEGRAM_ENABLED") == "1" or os.environ.get("PHOENIX_TELEGRAM_ENABLED") == "1":
+                from notifications.telegram_sender import TelegramSender
+                self.notifier = TelegramSender()
+                print("[Wrapper] Telegram notifier ready")
+        except Exception as e:
+            print(f"[Wrapper] Telegram disabled: {e}")
+
     def _sign(self, method, path, query="", body=""):
         ts = str(int(time.time() * 1000))
         fixed = f"validate-appkey={self.api_key}&validate-timestamp={ts}"
         unenc = f"{fixed}#{path}#{query}" if query else (f"{fixed}#{path}#{body}" if body else f"{fixed}#{path}")
         return ts, hmac.new(self.api_secret.encode(), unenc.encode(), hashlib.sha256).hexdigest()
 
-    def _request(self, method, path, query="", body=""):
+    def _request(self, method, path, query="", body="", content_type="application/json"):
         elapsed = time.time() - self._last_request_time
         if elapsed < self._min_interval:
             time.sleep(self._min_interval - elapsed)
         self._last_request_time = time.time()
-        
+
         ts, sig = self._sign(method, path, query, body)
         url = self.BASE_URL + path + ("?" + query if query else "")
-        
+
         last_error = None
-        for attempt in range(2):  # try twice
+        for attempt in range(2):
             req = urllib.request.Request(url, method=method)
             req.add_header("validate-appkey", self.api_key)
             req.add_header("validate-timestamp", ts)
             req.add_header("validate-signature", sig)
             req.add_header("validate-algorithms", "HmacSHA256")
             req.add_header("validate-recvwindow", "10000")
-            req.add_header("Content-Type", "application/json")
+            req.add_header("Content-Type", content_type)   # ← از پارامتر
             if body:
                 req.data = body.encode()
             try:
@@ -53,7 +63,7 @@ class XTFuturesExchange:
                     return True, json.loads(r.read().decode())
             except urllib.error.HTTPError as e:
                 last_error = json.loads(e.read().decode())
-                if e.code < 500:  # 4xx = don't retry
+                if e.code < 500:
                     return False, last_error
                 time.sleep(1)
             except Exception as e:
@@ -149,6 +159,42 @@ class XTFuturesExchange:
             "contract_size": csize,
         }
 
+    def set_leverage(self, symbol, position_side, leverage):
+        """Set leverage for a symbol + position side before placing orders."""
+        sym = symbol.lower()
+        body = f"symbol={sym}&positionSide={position_side}&leverage={leverage}"
+        ok, data = self._request(
+            "POST",
+            "/future/user/v1/position/adjust-leverage",
+            body=body,
+            content_type="application/x-www-form-urlencoded",
+        )
+        success = ok and (isinstance(data, dict) and data.get("returnCode") == 0)
+        return success, data
+
+    def get_leverage(self, symbol, position_side=None):
+        """Read current leverage for a symbol."""
+        ok, data = self._request(
+            "GET",
+            "/future/trade/v1/position/leverage/list",
+            query=f"symbol={symbol.lower()}",
+        )
+        if not ok:
+            return None
+        for item in data.get("result", []) or []:
+            if position_side is None or item.get("positionSide") == position_side:
+                return item.get("leverage")
+        return None
+
+    def _notify(self, message):
+        """Send Telegram notification (silent if disabled)."""
+        if self.notifier is None:
+            return
+        try:
+            self.notifier.send_message(message)
+        except Exception as e:
+            print(f"[Telegram] send failed: {e}")
+
     def place_order(self, symbol, side, position_side, contracts, leverage=10,
                 sl_price=None, tp_price=None, order_type="MARKET", price=None):
         sym_lower = symbol.lower()
@@ -177,6 +223,11 @@ class XTFuturesExchange:
             order["triggerProfitPrice"] = tp_price
             order["triggerProfitType"] = "MARK_PRICE"
 
+        # Set leverage before order
+        lev_ok, lev_resp = self.set_leverage(symbol, position_side, leverage)
+        if not lev_ok:
+            return False, {"error": "leverage_set_failed", "response": lev_resp}
+
         # حالت DRY_RUN
         if self.dry_run:
             return True, {"dry_run": True, "would_send": order, "note": "DRY_RUN=1"}
@@ -184,6 +235,13 @@ class XTFuturesExchange:
         # ارسال درخواست
         body = json.dumps(order)
         ok, data = self._request("POST", "/future/trade/v1/order/create", body=body)
+        if ok and isinstance(data, dict) and data.get("returnCode") == 0:
+            self._notify(
+                f"🟢 {position_side} OPEN\n"
+                f"Symbol: {sym_lower.upper()}\n"
+                f"Size: {contracts} contracts @ {leverage}x\n"
+                f"Order ID: {data.get('result')}"
+            )
         return ok, data
 
     def health_check(self):

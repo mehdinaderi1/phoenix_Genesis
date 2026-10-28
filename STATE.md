@@ -964,3 +964,42 @@ BNB: 739.38 → 736.42 → 740.37 → 750.09 → 749.31
 - [ ] Test SL/TP embedded in order
 - [ ] Connect to detect_pullback.py strategy
 - [ ] First automated strategy trade
+## 2026-10-28 14:00 - DAY COMPLETE: Full futures infrastructure
+
+### Achievements today
+1. First real futures trade executed (FET SHORT 30 @ 1x, cost $0.01)
+2. Discovered leverage bug (opened at 1x not 10x)
+3. Found leverage endpoint: POST /future/user/v1/position/adjust-leverage
+4. Fixed leverage: real trade at 10x confirmed (margin $0.55, ratio 1.00x)
+5. Cost of all tests today: -$0.0661 (small profit)
+6. Telegram confirmed working (message_id 321)
+
+### 9/9 capabilities verified
+- Auth: HMAC-SHA256 ✅
+- Balance: /future/user/v1/compat/balance/list ✅
+- Positions: /future/user/v1/position/list ✅
+- Contract info: /future/market/v1/public/symbol/detail ✅
+- Ticker: /future/market/v1/public/q/ticker (field "c") ✅
+- Set leverage: /future/user/v1/position/adjust-leverage ✅
+- Place order: /future/trade/v1/order/create ✅
+- Close order: same endpoint ✅
+- Telegram: send_message works ✅
+
+### Fixes in wrapper v2.1
+- orderType (not type)
+- No leverage in body
+- _get_price uses "c" field
+- retry on 5xx
+- throttle 250ms
+- content_type parameter
+- _notify() for Telegram
+
+### Telegram
+- Env: TELEGRAM_ENABLED=1, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+- Method: sender.send_message(text) → returns dict
+- Earlier getaddrinfo errors were transient (not blocking)
+
+### Ready for
+- Connect detect_pullback.py → wrapper
+- First automated strategy trade
+- Real PnL tracking with Telegram alerts
