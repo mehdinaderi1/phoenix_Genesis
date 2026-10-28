@@ -928,3 +928,39 @@ BNB: 739.38 → 736.42 → 740.37 → 750.09 → 749.31
 2. Implement dry_run order placement
 3. Connect to detect_pullback.py strategy
 4. First paper trade test
+## 2026-10-28 12:45 - FIRST REAL TRADE SUCCESS
+
+### Milestone
+- First real order placed and closed via XTFuturesExchange
+- SHORT 30 contracts FET, 10x leverage
+- Order ID: 685729639546909632
+- Close ID: 685729703677855616
+- Entry: 0.1817, exit: ~0.1815
+- Cost: ~$0.01
+
+### Confirmed
+- HMAC-SHA256 signature works
+- POST /future/trade/v1/order/create works
+- Hedge Mode (orderType, positionSide) correct
+- MARKET order fills immediately
+- Close order works
+- BTC/ETH positions untouched (skip_symbols works)
+- contractSize auto-fetch works
+- Real balance reading works
+
+### Key fixes that made this possible
+1. `orderType` instead of `type` (XT requirement)
+2. Removed `leverage` from order body
+3. Added `"c"` field to _get_price (XT ticker short names)
+4. Added retry to _request (transient failures)
+5. Added throttle (250ms min interval)
+
+### Position status
+- BTC: SHORT 121 (manual, protected)
+- ETH: SHORT 16 (manual, protected)
+- FET: closed (test only)
+
+### Next
+- [ ] Test SL/TP embedded in order
+- [ ] Connect to detect_pullback.py strategy
+- [ ] First automated strategy trade

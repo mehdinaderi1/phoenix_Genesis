@@ -1,0 +1,462 @@
+{
+  "generated_at": "2026-10-27T22:33:26.628804",
+  "period": 30,
+  "timeframe": "4H",
+  "tradeable": [
+    {
+      "symbol": "POLUSDT",
+      "setup": "SHORT",
+      "price": 0.0927,
+      "channel": {
+        "upper": 0.09249,
+        "lower": 0.08717,
+        "mid": 0.08983,
+        "width_pct": 5.92
+      },
+      "pos_pct": 103.9
+    },
+    {
+      "symbol": "ZECUSDT",
+      "setup": "SHORT",
+      "price": 1299.01,
+      "channel": {
+        "upper": 1298.48,
+        "lower": 1120.33,
+        "mid": 1209.405,
+        "width_pct": 14.73
+      },
+      "pos_pct": 100.3
+    },
+    {
+      "symbol": "XRPUSDT",
+      "setup": "SHORT",
+      "price": 1.3248,
+      "channel": {
+        "upper": 1.3307,
+        "lower": 1.2552,
+        "mid": 1.29295,
+        "width_pct": 5.84
+      },
+      "pos_pct": 92.2
+    },
+    {
+      "symbol": "BNBUSDT",
+      "setup": "SHORT",
+      "price": 749.63,
+      "channel": {
+        "upper": 753.58,
+        "lower": 718.08,
+        "mid": 735.83,
+        "width_pct": 4.82
+      },
+      "pos_pct": 88.9
+    }
+  ],
+  "all": [
+    {
+      "symbol": "POLUSDT",
+      "price": 0.0927,
+      "channel": {
+        "upper": 0.09249,
+        "lower": 0.08717,
+        "mid": 0.08983,
+        "width_pct": 5.92
+      },
+      "position": "top_edge",
+      "pos_pct": 103.9,
+      "tradeable": true,
+      "setup": "SHORT",
+      "reason": null
+    },
+    {
+      "symbol": "ZECUSDT",
+      "price": 1299.01,
+      "channel": {
+        "upper": 1298.48,
+        "lower": 1120.33,
+        "mid": 1209.405,
+        "width_pct": 14.73
+      },
+      "position": "top_edge",
+      "pos_pct": 100.3,
+      "tradeable": true,
+      "setup": "SHORT",
+      "reason": null
+    },
+    {
+      "symbol": "XRPUSDT",
+      "price": 1.3248,
+      "channel": {
+        "upper": 1.3307,
+        "lower": 1.2552,
+        "mid": 1.29295,
+        "width_pct": 5.84
+      },
+      "position": "top_edge",
+      "pos_pct": 92.2,
+      "tradeable": true,
+      "setup": "SHORT",
+      "reason": null
+    },
+    {
+      "symbol": "BNBUSDT",
+      "price": 749.63,
+      "channel": {
+        "upper": 753.58,
+        "lower": 718.08,
+        "mid": 735.83,
+        "width_pct": 4.82
+      },
+      "position": "top_edge",
+      "pos_pct": 88.9,
+      "tradeable": true,
+      "setup": "SHORT",
+      "reason": null
+    },
+    {
+      "symbol": "DOTUSDT",
+      "price": 1.004,
+      "channel": {
+        "upper": 1.202,
+        "lower": 0.979,
+        "mid": 1.0905,
+        "width_pct": 20.45
+      },
+      "position": "lower_zone",
+      "pos_pct": 11.2,
+      "tradeable": false,
+      "setup": null,
+      "reason": "near bottom but not at edge"
+    },
+    {
+      "symbol": "VETUSDT",
+      "price": 0.00645,
+      "channel": {
+        "upper": 0.00742,
+        "lower": 0.0063,
+        "mid": 0.00686,
+        "width_pct": 16.33
+      },
+      "position": "lower_zone",
+      "pos_pct": 13.4,
+      "tradeable": false,
+      "setup": null,
+      "reason": "near bottom but not at edge"
+    },
+    {
+      "symbol": "APTUSDT",
+      "price": 0.689,
+      "channel": {
+        "upper": 0.781,
+        "lower": 0.674,
+        "mid": 0.7275,
+        "width_pct": 14.71
+      },
+      "position": "lower_zone",
+      "pos_pct": 14.0,
+      "tradeable": false,
+      "setup": null,
+      "reason": "near bottom but not at edge"
+    },
+    {
+      "symbol": "HBARUSDT",
+      "price": 0.07602,
+      "channel": {
+        "upper": 0.08176,
+        "lower": 0.07496,
+        "mid": 0.07836,
+        "width_pct": 8.68
+      },
+      "position": "lower_zone",
+      "pos_pct": 15.6,
+      "tradeable": false,
+      "setup": null,
+      "reason": "near bottom but not at edge"
+    },
+    {
+      "symbol": "ICPUSDT",
+      "price": 2.596,
+      "channel": {
+        "upper": 2.79,
+        "lower": 2.555,
+        "mid": 2.6725,
+        "width_pct": 8.79
+      },
+      "position": "lower_zone",
+      "pos_pct": 17.4,
+      "tradeable": false,
+      "setup": null,
+      "reason": "near bottom but not at edge"
+    },
+    {
+      "symbol": "JUPUSDT",
+      "price": 0.2794,
+      "channel": {
+        "upper": 0.3162,
+        "lower": 0.2703,
+        "mid": 0.29325,
+        "width_pct": 15.65
+      },
+      "position": "lower_zone",
+      "pos_pct": 19.8,
+      "tradeable": false,
+      "setup": null,
+      "reason": "near bottom but not at edge"
+    },
+    {
+      "symbol": "WIFUSDT",
+      "price": 0.1807,
+      "channel": {
+        "upper": 0.2028,
+        "lower": 0.1752,
+        "mid": 0.189,
+        "width_pct": 14.6
+      },
+      "position": "lower_zone",
+      "pos_pct": 19.9,
+      "tradeable": false,
+      "setup": null,
+      "reason": "near bottom but not at edge"
+    },
+    {
+      "symbol": "SEIUSDT",
+      "price": 0.0528,
+      "channel": {
+        "upper": 0.05918,
+        "lower": 0.05116,
+        "mid": 0.05517,
+        "width_pct": 14.54
+      },
+      "position": "lower_zone",
+      "pos_pct": 20.4,
+      "tradeable": false,
+      "setup": null,
+      "reason": "near bottom but not at edge"
+    },
+    {
+      "symbol": "ARBUSDT",
+      "price": 0.1681,
+      "channel": {
+        "upper": 0.1858,
+        "lower": 0.1632,
+        "mid": 0.1745,
+        "width_pct": 12.95
+      },
+      "position": "lower_zone",
+      "pos_pct": 21.7,
+      "tradeable": false,
+      "setup": null,
+      "reason": "near bottom but not at edge"
+    },
+    {
+      "symbol": "LINKUSDT",
+      "price": 11.485,
+      "channel": {
+        "upper": 12.28,
+        "lower": 11.229,
+        "mid": 11.7545,
+        "width_pct": 8.94
+      },
+      "position": "lower_zone",
+      "pos_pct": 24.4,
+      "tradeable": false,
+      "setup": null,
+      "reason": "near bottom but not at edge"
+    },
+    {
+      "symbol": "SUIUSDT",
+      "price": 0.9259,
+      "channel": {
+        "upper": 1.0036,
+        "lower": 0.9004,
+        "mid": 0.952,
+        "width_pct": 10.84
+      },
+      "position": "lower_zone",
+      "pos_pct": 24.7,
+      "tradeable": false,
+      "setup": null,
+      "reason": "near bottom but not at edge"
+    },
+    {
+      "symbol": "OPUSDT",
+      "price": 0.1118,
+      "channel": {
+        "upper": 0.1211,
+        "lower": 0.1087,
+        "mid": 0.1149,
+        "width_pct": 10.79
+      },
+      "position": "lower_zone",
+      "pos_pct": 25.0,
+      "tradeable": false,
+      "setup": null,
+      "reason": "near bottom but not at edge"
+    },
+    {
+      "symbol": "INJUSDT",
+      "price": 8.098,
+      "channel": {
+        "upper": 8.323,
+        "lower": 7.433,
+        "mid": 7.878,
+        "width_pct": 11.3
+      },
+      "position": "upper_zone",
+      "pos_pct": 74.7,
+      "tradeable": false,
+      "setup": null,
+      "reason": "near top but not at edge"
+    },
+    {
+      "symbol": "ADAUSDT",
+      "price": 0.2055,
+      "channel": {
+        "upper": 0.2188,
+        "lower": 0.2005,
+        "mid": 0.20965,
+        "width_pct": 8.73
+      },
+      "position": "lower_zone",
+      "pos_pct": 27.3,
+      "tradeable": false,
+      "setup": null,
+      "reason": "near bottom but not at edge"
+    },
+    {
+      "symbol": "PEPEUSDT",
+      "price": 4.48e-06,
+      "channel": {
+        "upper": 5.09e-06,
+        "lower": 4.21e-06,
+        "mid": 4.65e-06,
+        "width_pct": 18.92
+      },
+      "position": "mid",
+      "pos_pct": 30.7,
+      "tradeable": false,
+      "setup": null,
+      "reason": "mid-channel"
+    },
+    {
+      "symbol": "AVAXUSDT",
+      "price": 8.882,
+      "channel": {
+        "upper": 9.35,
+        "lower": 8.664,
+        "mid": 9.007,
+        "width_pct": 7.62
+      },
+      "position": "mid",
+      "pos_pct": 31.8,
+      "tradeable": false,
+      "setup": null,
+      "reason": "mid-channel"
+    },
+    {
+      "symbol": "SOLUSDT",
+      "price": 101.06,
+      "channel": {
+        "upper": 105.24,
+        "lower": 98.7,
+        "mid": 101.97,
+        "width_pct": 6.41
+      },
+      "position": "mid",
+      "pos_pct": 36.1,
+      "tradeable": false,
+      "setup": null,
+      "reason": "mid-channel"
+    },
+    {
+      "symbol": "DOGEUSDT",
+      "price": 0.07838,
+      "channel": {
+        "upper": 0.08069,
+        "lower": 0.07481,
+        "mid": 0.07775,
+        "width_pct": 7.56
+      },
+      "position": "mid",
+      "pos_pct": 60.7,
+      "tradeable": false,
+      "setup": null,
+      "reason": "mid-channel"
+    },
+    {
+      "symbol": "FETUSDT",
+      "price": 0.1815,
+      "channel": {
+        "upper": 0.1896,
+        "lower": 0.1696,
+        "mid": 0.1796,
+        "width_pct": 11.14
+      },
+      "position": "mid",
+      "pos_pct": 59.5,
+      "tradeable": false,
+      "setup": null,
+      "reason": "mid-channel"
+    },
+    {
+      "symbol": "TIAUSDT",
+      "price": 0.54,
+      "channel": {
+        "upper": 0.571,
+        "lower": 0.517,
+        "mid": 0.544,
+        "width_pct": 9.93
+      },
+      "position": "mid",
+      "pos_pct": 42.6,
+      "tradeable": false,
+      "setup": null,
+      "reason": "mid-channel"
+    },
+    {
+      "symbol": "ETHUSDT",
+      "price": 2346.85,
+      "channel": {
+        "upper": 2421.58,
+        "lower": 2284.41,
+        "mid": 2352.995,
+        "width_pct": 5.83
+      },
+      "position": "mid",
+      "pos_pct": 45.5,
+      "tradeable": false,
+      "setup": null,
+      "reason": "mid-channel"
+    },
+    {
+      "symbol": "NEARUSDT",
+      "price": 4.648,
+      "channel": {
+        "upper": 5.011,
+        "lower": 4.262,
+        "mid": 4.6365,
+        "width_pct": 16.15
+      },
+      "position": "mid",
+      "pos_pct": 51.5,
+      "tradeable": false,
+      "setup": null,
+      "reason": "mid-channel"
+    },
+    {
+      "symbol": "BTCUSDT",
+      "price": 80666.01,
+      "channel": {
+        "upper": 82060.88,
+        "lower": 79237.42,
+        "mid": 80649.15,
+        "width_pct": 3.5
+      },
+      "position": "mid",
+      "pos_pct": 50.6,
+      "tradeable": false,
+      "setup": null,
+      "reason": "mid-channel"
+    }
+  ]
+}
