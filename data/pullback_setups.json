@@ -1,536 +1,536 @@
 {
-  "generated_at": "2026-10-27T22:49:11.611805",
-  "btc_direction": "DOWN",
+  "generated_at": "2026-10-29T10:22:22.311193",
+  "btc_direction": "FLAT",
   "valid_setups": [],
   "all": [
     {
       "symbol": "ETHUSDT",
-      "price": 2342.57,
-      "pos_pct": 42.4,
+      "price": 2312.79,
+      "pos_pct": 26.4,
       "channel": {
-        "upper": 2421.58,
+        "upper": 2392.02,
         "lower": 2284.41,
-        "mid": 2352.995,
-        "width_pct": 5.83
+        "mid": 2338.215,
+        "width_pct": 4.6
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 73.7,
-        "upper_wick_pct": 18.9,
-        "lower_wick_pct": 7.4
+        "bullish": false,
+        "body_pct": 74.9,
+        "upper_wick_pct": 2.2,
+        "lower_wick_pct": 22.9
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=42%)",
+      "setup_reason": "BTC FLAT, no setup (pos=26%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "SOLUSDT",
-      "price": 101.06,
-      "pos_pct": 36.1,
+      "price": 100.02,
+      "pos_pct": 25.7,
       "channel": {
-        "upper": 105.24,
+        "upper": 103.84,
         "lower": 98.7,
-        "mid": 101.97,
-        "width_pct": 6.41
+        "mid": 101.27,
+        "width_pct": 5.08
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 61.7,
-        "upper_wick_pct": 23.4,
-        "lower_wick_pct": 14.9
+        "bullish": false,
+        "body_pct": 84.5,
+        "upper_wick_pct": 2.4,
+        "lower_wick_pct": 13.1
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=36%)",
+      "setup_reason": "BTC FLAT, no setup (pos=26%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "BNBUSDT",
-      "price": 748.63,
-      "pos_pct": 86.1,
+      "price": 751.96,
+      "pos_pct": 77.9,
       "channel": {
-        "upper": 753.58,
+        "upper": 761.55,
         "lower": 718.08,
-        "mid": 735.83,
-        "width_pct": 4.82
+        "mid": 739.815,
+        "width_pct": 5.88
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 69.0,
-        "upper_wick_pct": 24.6,
-        "lower_wick_pct": 6.3
+        "bullish": false,
+        "body_pct": 79.0,
+        "upper_wick_pct": 6.4,
+        "lower_wick_pct": 14.6
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt at top, waiting for pullback confirmation",
+      "setup_reason": "BTC FLAT, no setup (pos=78%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "XRPUSDT",
-      "price": 1.3238,
-      "pos_pct": 90.9,
+      "price": 1.2929,
+      "pos_pct": 42.4,
       "channel": {
-        "upper": 1.3307,
+        "upper": 1.3441,
         "lower": 1.2552,
-        "mid": 1.29295,
-        "width_pct": 5.84
+        "mid": 1.29965,
+        "width_pct": 6.84
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 65.5,
-        "upper_wick_pct": 29.1,
-        "lower_wick_pct": 5.5
+        "bullish": false,
+        "body_pct": 93.2,
+        "upper_wick_pct": 2.4,
+        "lower_wick_pct": 4.5
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt at top, waiting for pullback confirmation",
+      "setup_reason": "BTC FLAT, no setup (pos=42%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "ZECUSDT",
-      "price": 1295.8,
-      "pos_pct": 98.5,
+      "price": 1242.07,
+      "pos_pct": 58.1,
       "channel": {
-        "upper": 1298.48,
+        "upper": 1329.89,
         "lower": 1120.33,
-        "mid": 1209.405,
-        "width_pct": 14.73
+        "mid": 1225.11,
+        "width_pct": 17.11
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 82.1,
-        "upper_wick_pct": 9.2,
-        "lower_wick_pct": 8.7
+        "bullish": false,
+        "body_pct": 85.7,
+        "upper_wick_pct": 6.0,
+        "lower_wick_pct": 8.3
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt at top, waiting for pullback confirmation",
+      "setup_reason": "BTC FLAT, no setup (pos=58%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "DOGEUSDT",
-      "price": 0.07835,
-      "pos_pct": 60.2,
+      "price": 0.07806,
+      "pos_pct": 53.7,
       "channel": {
-        "upper": 0.08069,
+        "upper": 0.08086,
         "lower": 0.07481,
-        "mid": 0.07775,
-        "width_pct": 7.56
+        "mid": 0.077835,
+        "width_pct": 7.77
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 73.2,
-        "upper_wick_pct": 16.5,
-        "lower_wick_pct": 10.2
+        "bullish": false,
+        "body_pct": 79.3,
+        "upper_wick_pct": 4.5,
+        "lower_wick_pct": 16.3
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=60%)",
+      "setup_reason": "BTC FLAT, no setup (pos=54%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "ADAUSDT",
-      "price": 0.2055,
-      "pos_pct": 27.3,
+      "price": 0.198,
+      "pos_pct": 14.0,
       "channel": {
-        "upper": 0.2188,
-        "lower": 0.2005,
-        "mid": 0.20965,
-        "width_pct": 8.73
+        "upper": 0.2121,
+        "lower": 0.1957,
+        "mid": 0.2039,
+        "width_pct": 8.04
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 69.7,
-        "upper_wick_pct": 15.2,
-        "lower_wick_pct": 15.2
+        "bullish": false,
+        "body_pct": 78.0,
+        "upper_wick_pct": 4.6,
+        "lower_wick_pct": 17.4
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=27%)",
+      "setup_reason": "BTC FLAT, no setup (pos=14%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "AVAXUSDT",
-      "price": 8.887,
-      "pos_pct": 32.5,
+      "price": 8.693,
+      "pos_pct": 22.3,
       "channel": {
-        "upper": 9.35,
-        "lower": 8.664,
-        "mid": 9.007,
-        "width_pct": 7.62
+        "upper": 9.159,
+        "lower": 8.559,
+        "mid": 8.859,
+        "width_pct": 6.77
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 70.1,
-        "upper_wick_pct": 18.4,
-        "lower_wick_pct": 11.6
+        "bullish": false,
+        "body_pct": 89.1,
+        "upper_wick_pct": 2.4,
+        "lower_wick_pct": 8.5
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=33%)",
+      "setup_reason": "BTC FLAT, no setup (pos=22%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "LINKUSDT",
-      "price": 11.475,
-      "pos_pct": 23.4,
+      "price": 11.421,
+      "pos_pct": 25.4,
       "channel": {
-        "upper": 12.28,
+        "upper": 11.984,
         "lower": 11.229,
-        "mid": 11.7545,
-        "width_pct": 8.94
+        "mid": 11.6065,
+        "width_pct": 6.5
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 60.9,
-        "upper_wick_pct": 19.5,
-        "lower_wick_pct": 19.5
+        "bullish": false,
+        "body_pct": 76.5,
+        "upper_wick_pct": 3.3,
+        "lower_wick_pct": 20.2
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=23%)",
+      "setup_reason": "BTC FLAT, no setup (pos=25%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "DOTUSDT",
-      "reason": "channel too wide (20.45%)",
-      "error": null,
-      "setup": null
+      "price": 0.975,
+      "pos_pct": 9.2,
+      "channel": {
+        "upper": 1.093,
+        "lower": 0.963,
+        "mid": 1.028,
+        "width_pct": 12.65
+      },
+      "candle": {
+        "bullish": false,
+        "body_pct": 78.8,
+        "upper_wick_pct": 5.8,
+        "lower_wick_pct": 15.4
+      },
+      "setup": null,
+      "setup_reason": "BTC FLAT, no setup (pos=9%)",
+      "levels": null,
+      "error": null
     },
     {
       "symbol": "POLUSDT",
-      "price": 0.09276,
-      "pos_pct": 105.1,
+      "price": 0.09051,
+      "pos_pct": 54.9,
       "channel": {
-        "upper": 0.09249,
+        "upper": 0.09325,
         "lower": 0.08717,
-        "mid": 0.08983,
-        "width_pct": 5.92
+        "mid": 0.09021,
+        "width_pct": 6.74
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 82.7,
-        "upper_wick_pct": 7.3,
-        "lower_wick_pct": 10.0
+        "bullish": false,
+        "body_pct": 71.2,
+        "upper_wick_pct": 13.3,
+        "lower_wick_pct": 15.4
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt at top, waiting for pullback confirmation",
+      "setup_reason": "BTC FLAT, no setup (pos=55%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "NEARUSDT",
-      "price": 4.634,
-      "pos_pct": 49.7,
+      "price": 4.335,
+      "pos_pct": 13.4,
       "channel": {
-        "upper": 5.011,
+        "upper": 4.808,
         "lower": 4.262,
-        "mid": 4.6365,
-        "width_pct": 16.15
+        "mid": 4.535,
+        "width_pct": 12.04
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 58.0,
-        "upper_wick_pct": 32.2,
-        "lower_wick_pct": 9.8
+        "bullish": false,
+        "body_pct": 94.8,
+        "upper_wick_pct": 0.0,
+        "lower_wick_pct": 5.2
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=50%)",
+      "setup_reason": "BTC FLAT, no setup (pos=13%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "APTUSDT",
-      "price": 0.689,
-      "pos_pct": 14.0,
+      "price": 0.659,
+      "pos_pct": 3.7,
       "channel": {
-        "upper": 0.781,
-        "lower": 0.674,
-        "mid": 0.7275,
-        "width_pct": 14.71
+        "upper": 0.737,
+        "lower": 0.656,
+        "mid": 0.6965,
+        "width_pct": 11.63
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 38.9,
-        "upper_wick_pct": 22.2,
-        "lower_wick_pct": 38.9
+        "bullish": false,
+        "body_pct": 84.8,
+        "upper_wick_pct": 2.2,
+        "lower_wick_pct": 13.0
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=14%)",
+      "setup_reason": "BTC FLAT, no setup (pos=4%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "SEIUSDT",
-      "price": 0.05263,
-      "pos_pct": 18.3,
+      "price": 0.05158,
+      "pos_pct": 10.9,
       "channel": {
-        "upper": 0.05918,
-        "lower": 0.05116,
-        "mid": 0.05517,
-        "width_pct": 14.54
+        "upper": 0.0563,
+        "lower": 0.051,
+        "mid": 0.05365,
+        "width_pct": 9.88
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 77.1,
-        "upper_wick_pct": 16.0,
-        "lower_wick_pct": 6.9
+        "bullish": false,
+        "body_pct": 67.7,
+        "upper_wick_pct": 16.2,
+        "lower_wick_pct": 16.2
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=18%)",
+      "setup_reason": "BTC FLAT, no setup (pos=11%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "JUPUSDT",
-      "price": 0.28,
-      "pos_pct": 21.1,
+      "price": 0.2677,
+      "pos_pct": 3.1,
       "channel": {
-        "upper": 0.3162,
-        "lower": 0.2703,
-        "mid": 0.29325,
-        "width_pct": 15.65
+        "upper": 0.3021,
+        "lower": 0.2666,
+        "mid": 0.28435,
+        "width_pct": 12.48
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 76.0,
-        "upper_wick_pct": 14.7,
-        "lower_wick_pct": 9.3
+        "bullish": false,
+        "body_pct": 89.8,
+        "upper_wick_pct": 1.9,
+        "lower_wick_pct": 8.3
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=21%)",
+      "setup_reason": "BTC FLAT, no setup (pos=3%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "WIFUSDT",
-      "price": 0.1806,
-      "pos_pct": 19.6,
+      "price": 0.1784,
+      "pos_pct": 20.8,
       "channel": {
-        "upper": 0.2028,
+        "upper": 0.1906,
         "lower": 0.1752,
-        "mid": 0.189,
-        "width_pct": 14.6
+        "mid": 0.1829,
+        "width_pct": 8.42
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 51.3,
-        "upper_wick_pct": 12.8,
-        "lower_wick_pct": 35.9
+        "bullish": false,
+        "body_pct": 69.0,
+        "upper_wick_pct": 6.0,
+        "lower_wick_pct": 25.0
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=20%)",
+      "setup_reason": "BTC FLAT, no setup (pos=21%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "PEPEUSDT",
-      "price": 4.47e-06,
-      "pos_pct": 29.5,
-      "channel": {
-        "upper": 5.09e-06,
-        "lower": 4.21e-06,
-        "mid": 4.65e-06,
-        "width_pct": 18.92
-      },
-      "candle": {
-        "bullish": true,
-        "body_pct": 76.5,
-        "upper_wick_pct": 11.8,
-        "lower_wick_pct": 11.8
-      },
-      "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=30%)",
-      "levels": null,
-      "error": null
+      "reason": "channel too wide (21.04%)",
+      "error": null,
+      "setup": null
     },
     {
       "symbol": "FETUSDT",
-      "price": 0.1816,
-      "pos_pct": 60.0,
+      "price": 0.1775,
+      "pos_pct": 42.2,
       "channel": {
-        "upper": 0.1896,
+        "upper": 0.1883,
         "lower": 0.1696,
-        "mid": 0.1796,
-        "width_pct": 11.14
+        "mid": 0.17895,
+        "width_pct": 10.45
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 89.5,
-        "upper_wick_pct": 6.6,
-        "lower_wick_pct": 3.9
+        "bullish": false,
+        "body_pct": 80.6,
+        "upper_wick_pct": 3.2,
+        "lower_wick_pct": 16.1
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=60%)",
+      "setup_reason": "BTC FLAT, no setup (pos=42%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "ICPUSDT",
-      "price": 2.595,
-      "pos_pct": 17.0,
+      "price": 2.54,
+      "pos_pct": 4.3,
       "channel": {
-        "upper": 2.79,
-        "lower": 2.555,
-        "mid": 2.6725,
-        "width_pct": 8.79
+        "upper": 2.738,
+        "lower": 2.531,
+        "mid": 2.6345,
+        "width_pct": 7.86
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 27.3,
-        "upper_wick_pct": 43.6,
-        "lower_wick_pct": 29.1
+        "bullish": false,
+        "body_pct": 81.3,
+        "upper_wick_pct": 3.3,
+        "lower_wick_pct": 15.4
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=17%)",
+      "setup_reason": "BTC FLAT, no setup (pos=4%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "HBARUSDT",
-      "price": 0.07611,
-      "pos_pct": 16.9,
+      "price": 0.07368,
+      "pos_pct": 13.4,
       "channel": {
-        "upper": 0.08176,
-        "lower": 0.07496,
-        "mid": 0.07836,
-        "width_pct": 8.68
+        "upper": 0.07865,
+        "lower": 0.07291,
+        "mid": 0.07578,
+        "width_pct": 7.57
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 34.6,
-        "upper_wick_pct": 37.6,
-        "lower_wick_pct": 27.8
+        "bullish": false,
+        "body_pct": 68.0,
+        "upper_wick_pct": 19.7,
+        "lower_wick_pct": 12.4
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=17%)",
+      "setup_reason": "BTC FLAT, no setup (pos=13%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "VETUSDT",
-      "price": 0.00645,
-      "pos_pct": 13.4,
+      "price": 0.00608,
+      "pos_pct": -2.3,
       "channel": {
         "upper": 0.00742,
-        "lower": 0.0063,
-        "mid": 0.00686,
-        "width_pct": 16.33
+        "lower": 0.00611,
+        "mid": 0.006765,
+        "width_pct": 19.36
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 58.3,
-        "upper_wick_pct": 25.0,
-        "lower_wick_pct": 16.7
+        "bullish": false,
+        "body_pct": 93.7,
+        "upper_wick_pct": 0.0,
+        "lower_wick_pct": 6.3
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=13%)",
+      "setup_reason": "BTC FLAT, no setup (pos=-2%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "ARBUSDT",
-      "price": 0.1683,
-      "pos_pct": 22.6,
+      "price": 0.1645,
+      "pos_pct": 8.6,
       "channel": {
-        "upper": 0.1858,
+        "upper": 0.1784,
         "lower": 0.1632,
-        "mid": 0.1745,
-        "width_pct": 12.95
+        "mid": 0.1708,
+        "width_pct": 8.9
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 52.9,
-        "upper_wick_pct": 35.3,
-        "lower_wick_pct": 11.8
+        "bullish": false,
+        "body_pct": 73.1,
+        "upper_wick_pct": 7.5,
+        "lower_wick_pct": 19.4
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=23%)",
+      "setup_reason": "BTC FLAT, no setup (pos=9%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "OPUSDT",
-      "price": 0.1117,
-      "pos_pct": 24.2,
+      "price": 0.108,
+      "pos_pct": 7.0,
       "channel": {
-        "upper": 0.1211,
-        "lower": 0.1087,
-        "mid": 0.1149,
-        "width_pct": 10.79
+        "upper": 0.116,
+        "lower": 0.1074,
+        "mid": 0.1117,
+        "width_pct": 7.7
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 56.5,
-        "upper_wick_pct": 30.4,
-        "lower_wick_pct": 13.0
+        "bullish": false,
+        "body_pct": 73.0,
+        "upper_wick_pct": 7.9,
+        "lower_wick_pct": 19.0
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=24%)",
+      "setup_reason": "BTC FLAT, no setup (pos=7%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "INJUSDT",
-      "price": 8.125,
-      "pos_pct": 77.8,
+      "price": 7.655,
+      "pos_pct": 25.8,
       "channel": {
-        "upper": 8.323,
+        "upper": 8.293,
         "lower": 7.433,
-        "mid": 7.878,
-        "width_pct": 11.3
+        "mid": 7.863,
+        "width_pct": 10.94
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 95.8,
-        "upper_wick_pct": 3.2,
-        "lower_wick_pct": 1.0
+        "bullish": false,
+        "body_pct": 83.8,
+        "upper_wick_pct": 3.5,
+        "lower_wick_pct": 12.7
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt at top, waiting for pullback confirmation",
+      "setup_reason": "BTC FLAT, no setup (pos=26%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "SUIUSDT",
-      "price": 0.9261,
-      "pos_pct": 24.9,
+      "price": 0.9088,
+      "pos_pct": 14.4,
       "channel": {
-        "upper": 1.0036,
-        "lower": 0.9004,
-        "mid": 0.952,
-        "width_pct": 10.84
+        "upper": 0.9666,
+        "lower": 0.8991,
+        "mid": 0.93285,
+        "width_pct": 7.24
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 71.8,
-        "upper_wick_pct": 20.5,
-        "lower_wick_pct": 7.7
+        "bullish": false,
+        "body_pct": 80.1,
+        "upper_wick_pct": 7.1,
+        "lower_wick_pct": 12.8
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=25%)",
+      "setup_reason": "BTC FLAT, no setup (pos=14%)",
       "levels": null,
       "error": null
     },
     {
       "symbol": "TIAUSDT",
-      "price": 0.542,
-      "pos_pct": 46.3,
+      "price": 0.517,
+      "pos_pct": 0.0,
       "channel": {
-        "upper": 0.571,
+        "upper": 0.573,
         "lower": 0.517,
-        "mid": 0.544,
-        "width_pct": 9.93
+        "mid": 0.545,
+        "width_pct": 10.28
       },
       "candle": {
-        "bullish": true,
-        "body_pct": 61.9,
-        "upper_wick_pct": 19.0,
-        "lower_wick_pct": 19.0
+        "bullish": false,
+        "body_pct": 65.8,
+        "upper_wick_pct": 15.8,
+        "lower_wick_pct": 18.4
       },
       "setup": null,
-      "setup_reason": "BTC DOWN, alt not at top (pos=46%)",
+      "setup_reason": "BTC FLAT, no setup (pos=0%)",
       "levels": null,
       "error": null
     }

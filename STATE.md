@@ -1003,3 +1003,76 @@ BNB: 739.38 → 736.42 → 740.37 → 750.09 → 749.31
 - Connect detect_pullback.py → wrapper
 - First automated strategy trade
 - Real PnL tracking with Telegram alerts
+## 2026-10-28 22:00 - Infrastructure complete, strategy validating
+
+### The system
+- XT Futures API: 9/9 capabilities verified
+- Strategy: BTC filter + Channel + Pullback
+- Runner: DRY mode working, tracking positions correctly
+- Telegram: delivery working (intermittent timeouts acceptable)
+
+### First DRY trade
+- hbar_usdt LONG 52 @ 0.07495
+- SL 0.07436 (-0.8%), TP 0.07712 (+2.9%)
+- Current: 0.07469, SL_dist 0.44%
+- Lesson: hbar too low-volatility for this strategy
+
+### Verified fixes today
+- Symbol conversion (FETUSDT -> fet_usdt)
+- DRY sync_state disabled (was removing virtual positions)
+- Position display (VIRTUAL tag for DRY)
+- Cache for get_user_positions
+- Throttle + retry + IPv4 force for Telegram
+
+### Next (not tonight)
+- Let hbar resolve (SL or timeout)
+- Run detect_pullback.py for better candidates
+- Consider: higher volatility pairs (FET, PEPE, WIF)
+- Do NOT go LIVE until 10+ winning DRY trades observed
+
+## 2026-10-29 11:30 - All 3 enhancements deployed
+
+### Deployed
+1. Volume confirmation (10-candle 4H window, 1.2x threshold)
+2. BTC re-check before averaging (skip if BTC against position)
+3. Partial TP (close 50% at 50% of TP distance, once)
+
+### Verified via synthetic tests
+- Volume: APTUSDT 2.40x, TIAUSDT 3.89x pass; VETUSDT 1.20x rejected
+- BTC check: OVERRIDE=DOWN correctly skips, UP/FLAT correctly proceed
+- Partial TP: triggers once, skips when averages active
+
+### Current state
+- Waiting for 12:00 UTC 4H candle
+- 15+ alts at channel bottom without pullback
+- No setups for ~1.5 hours (market dip without bounce)
+
+### Next
+- 12:00 UTC: check if pullback confirms
+- If setup: watch averaging + partial TP in action
+- If not: wait for 16:00 UTC
+
+## 2026-10-29 12:30 - First trade active, MAX=2, waiting
+
+### BNB SHORT (DRY)
+- Entry: 751.09, 5 contracts @ 10x
+- Price: 750.84, PnL +0.03% ($+0.012)
+- TP: 739.815 (1.47% away)
+- HardSL: 788.645 (5.03% away)
+- Avg: 0/2
+
+### State
+- runner=1 (BNB), manual=2 (BTC/ETH)
+- MAX_POSITIONS=2, 1 slot available
+- No second setup in market (all alts at bottom without pullback)
+
+### Market
+- BTC FLAT
+- 15+ alts at channel bottom, but pullback not confirmed
+  (wick_dn < 30% and/or volume < 1.2x)
+- APT closest: pos=13.3%, wick_dn=26.9%, vol=1.13x
+
+### Next
+- 16:00 UTC: new 4H candle
+- If pullback confirms for any alt: second position opens
+- If BNB moves to TP/Avg/HardSL: first position closes or averages

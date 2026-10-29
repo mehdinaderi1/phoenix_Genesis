@@ -72,18 +72,21 @@ class XTFuturesExchange:
         return False, last_error
 
     def get_balance(self):
-        ok, data = self._request("GET", "/future/user/v1/compat/balance/list")
-        if not ok:
-            return None
-        for asset in data.get("result", []):
-            if asset.get("coin", "").lower() == "usdt":
-                return {
-                    "available": float(asset.get("amount", 0)),
-                    "equity": float(asset.get("walletBalance", 0)),
-                    "margin_used": float(asset.get("crossedMargin", 0)) + float(asset.get("isolatedMargin", 0)),
-                    "profit": float(asset.get("profit", 0)),
-                    "not_profit": float(asset.get("notProfit", 0)),
-                }
+        """Return balance with retry on transient failures."""
+        for attempt in range(3):
+            ok, data = self._request("GET", "/future/user/v1/compat/balance/list")
+            if ok and isinstance(data, dict):
+                for asset in data.get("result", []):
+                    if asset.get("coin", "").lower() == "usdt":
+                        return {
+                            "available": float(asset.get("amount", 0)),
+                            "equity": float(asset.get("walletBalance", 0)),
+                            "margin_used": float(asset.get("crossedMargin", 0)) + float(asset.get("isolatedMargin", 0)),
+                            "profit": float(asset.get("profit", 0)),
+                            "not_profit": float(asset.get("notProfit", 0)),
+                        }
+            if attempt < 2:
+                time.sleep(1)
         return None
 
     def get_contract_size(self, symbol):
