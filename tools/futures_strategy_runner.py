@@ -441,8 +441,12 @@ class Runner:
         side = info["side"]
 
         # ─── BTC re-check: don't add to a losing position if BTC confirms against us
-        btc_candles = self.spot.get_historical_candles("BTCUSDT", TIMEFRAME, limit=100)
-        btc_now = btc_direction(btc_candles)
+        try:
+            btc_candles = self.spot.get_historical_candles("BTCUSDT", TIMEFRAME, limit=100)
+            btc_now = btc_direction(btc_candles)
+        except Exception as e:
+            print(f"  [AVG] BTC check failed: {e}, skipping")
+            return
         if self.dry_run and os.environ.get("XT_RUNNER_DRY_BTC_OVERRIDE"):
             btc_now = os.environ.get("XT_RUNNER_DRY_BTC_OVERRIDE").upper()
             print(f"  [AVG] BTC check: {btc_now} (OVERRIDE)")
@@ -747,8 +751,17 @@ class Runner:
         
         self._monitor()
         
-        btc_candles = self.spot.get_historical_candles("BTCUSDT", TIMEFRAME, limit=100)
-        btc_dir = btc_direction(btc_candles)
+        try:
+            btc_candles = self.spot.get_historical_candles("BTCUSDT", TIMEFRAME, limit=100)
+            btc_dir = btc_direction(btc_candles)
+            self.state["last_btc_dir"] = btc_dir
+        except Exception as e:
+            print(f"[BTC] fetch failed: {e}")
+            btc_dir = self.state.get("last_btc_dir", "UNKNOWN")
+            if btc_dir == "UNKNOWN":
+                print("[BTC] no cached direction, skipping cycle")
+                self._save_state()
+                return True
         print(f"[BTC] {btc_dir}")
         
         self._sync_state()   # پاکسازی state از پوزیشن‌های بسته‌شده خارجی
