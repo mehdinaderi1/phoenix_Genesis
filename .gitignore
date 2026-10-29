@@ -115,3 +115,5 @@ data/live_positions.json
 data/strategy_lab_results.json
 data/*.json.bak*
 env.local.ps1
+data/futures_runner_state_*.json
+data/futures_runner_state_dry.json.bak
