@@ -1076,3 +1076,34 @@ BNB: 739.38 → 736.42 → 740.37 → 750.09 → 749.31
 - 16:00 UTC: new 4H candle
 - If pullback confirms for any alt: second position opens
 - If BNB moves to TP/Avg/HardSL: first position closes or averages
+
+## 2026-10-29 22:35 - First successful trade + 5 fixes + watcher
+
+### First successful DRY trade
+- BNB USDT SHORT 5 @ 10x
+- Entry: 751.09, Partial TP at 744.4 (+$0.13), TIMEOUT at 744.4 (+$0.20)
+- Total PnL: +$0.33 (with partial not logged, later fixed)
+
+### 5 fixes applied
+1. TIMEOUT_HOURS env (default 4, not 1)
+2. partial_pnl_usdt in state
+3. partial_pnl_usdt: 0.0 initial
+4. Timeout uses TIMEOUT_HOURS * 3600
+5. Total PnL = partial + remaining
+
+### Runner bugs fixed
+- _detect skips open positions (no duplicate detection)
+- cycle() return True (was missing → stopped after 1 cycle)
+- Signal spam eliminated
+
+### Current state (22:30 UTC)
+- BTC: FLAT (80,866)
+- Runner: 0 positions, 2 slots available
+- Market: 15+ alts at channel bottom, but NO pullback confirmed
+  (wick_dn < 20% across candidates, despite good volume for NEAR/HBAR)
+- Watcher: running, logs every 5 min to data/runner_watch.log
+
+### Next
+- 00:00 UTC: new 4H candle
+- If pullback confirms: second position opens
+- Goal: 10-20 DRY trades before LIVE

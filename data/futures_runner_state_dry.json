@@ -1,21 +1,8 @@
 {
-  "started_at": "2026-10-29T11:35:53.956610",
+  "started_at": "2026-10-29T22:11:20.443345",
   "date": "2026-10-29",
-  "daily_start_equity": 507.8164102,
-  "active_positions": {
-    "bnb_usdt": {
-      "side": "SHORT",
-      "size": 5,
-      "initial_size": 5,
-      "initial_entry": 751.09,
-      "entry": 751.09,
-      "tp": 739.815,
-      "avg_count": 0,
-      "avg_entries": [],
-      "partial_taken": false,
-      "opened_at": "2026-10-29T11:36:21.507533"
-    }
-  },
+  "daily_start_equity": 508.09612032,
+  "active_positions": {},
   "closed_positions": [],
-  "last_cycle": "2026-10-29T12:18:40.843518"
+  "last_cycle": "2026-10-29T22:35:49.089429"
 }

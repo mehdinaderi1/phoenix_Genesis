@@ -82,7 +82,7 @@ SL_BUFFER_PCT = float(os.environ.get("XT_RUNNER_SL_BUFFER", "0.8"))
 
 CYCLE_INTERVAL_SEC = int(os.environ.get("XT_RUNNER_INTERVAL", "120"))
 MAX_CYCLES = int(os.environ.get("XT_RUNNER_MAX_CYCLES", "0"))
-
+TIMEOUT_HOURS = float(os.environ.get("XT_RUNNER_TIMEOUT_HOURS", "4"))
 STOP_FILE = "STOP_TRADING"
 
 # ═══════════════════════════════════════════════════════════
@@ -397,7 +397,7 @@ class Runner:
             # ─── Safety timeout (for DRY) ───
             if self.dry_run:
                 opened = datetime.fromisoformat(info["opened_at"])
-                if (datetime.now() - opened).total_seconds() > 60 * CYCLE_INTERVAL_SEC:
+                if (datetime.now() - opened).total_seconds() > TIMEOUT_HOURS * 3600:
                     closed.append((sym, "TIMEOUT", price))
 
         # ─── Process closed positions ───
@@ -408,21 +408,32 @@ class Runner:
             side = info["side"]
             csize = self.wrapper.get_contract_size(sym) or 1
 
+            # PnL for remaining position
             if side == "LONG":
-                pnl = (price - entry) * size * csize
+                remaining_pnl = (price - entry) * size * csize
             else:
-                pnl = (entry - price) * size * csize
+                remaining_pnl = (entry - price) * size * csize
+
+            # Total = partial + remaining
+            partial_pnl = info.get("partial_pnl_usdt", 0.0)
+            total_pnl = partial_pnl + remaining_pnl
 
             self.state.setdefault("closed_positions", []).append({
                 "symbol": sym, "side": side, "entry": entry,
-                "exit_price": price, "reason": reason, "pnl_usdt": pnl,
+                "exit_price": price, "reason": reason,
+                "pnl_usdt": total_pnl,
+                "partial_pnl_usdt": partial_pnl,
+                "remaining_pnl_usdt": remaining_pnl,
                 "closed_at": datetime.now().isoformat(),
             })
             mode = "DRY" if self.dry_run else "LIVE"
-            print(f"  [{mode}] CLOSED {sym} {side} reason={reason} PnL={pnl:+.4f}$")
+            print(f"  [{mode}] CLOSED {sym} {side} reason={reason} "
+                  f"PnL={total_pnl:+.4f}$ "
+                  f"(partial={partial_pnl:+.4f} + remaining={remaining_pnl:+.4f})")
             self._notify(
                 f"🔴 {mode} CLOSED {sym.upper()} {side}\n"
-                f"Reason: {reason} | PnL: {pnl:+.4f}$"
+                f"Reason: {reason} | PnL: {total_pnl:+.4f}$\n"
+                f"Partial: {partial_pnl:+.4f}$ | Remaining: {remaining_pnl:+.4f}$"
             )
 
     def _add_average(self, sym, info, level_idx, price):
@@ -591,11 +602,21 @@ class Runner:
 
         info["size"] = size - close_size
         info["partial_taken"] = True
+
+        # ─── Track partial PnL ───
+        csize = self.wrapper.get_contract_size(sym) or 1
+        if side == "LONG":
+            partial_pnl = (price - entry) * close_size * csize
+        else:
+            partial_pnl = (entry - price) * close_size * csize
+        info["partial_pnl_usdt"] = info.get("partial_pnl_usdt", 0.0) + partial_pnl
+
         self._save_state()
 
         self._notify(
             f"💰 {mode} PARTIAL TP {sym.upper()} {side}\n"
             f"Closed: {close_size}/{size} @ {price:.6g}\n"
+            f"PnL: {partial_pnl:+.4f}$\n"
             f"Remaining: {info['size']} contracts\n"
             f"Half-TP: {half_tp:.6g} ({PARTIAL_TP_AT_PCT}%)"
         )
@@ -691,7 +712,8 @@ class Runner:
             "tp": setup["tp"],
             "avg_count": 0,
             "avg_entries": [],
-            "partial_taken": False,        # ← جدید
+            "partial_taken": False,
+            "partial_pnl_usdt": 0.0,        # ← جدید
             "opened_at": datetime.now().isoformat(),
         }
         self._save_state()
@@ -781,7 +803,9 @@ class Runner:
                 # ═══ EXECUTION MODE: slots available ═══
                 for s in setups[:MAX_POSITIONS - runner_count]:
                     if self._execute(s):
-                        break   
+                        break
+        self._save_state()
+        return True   
                 
     def _print_positions_report(self):
         """Show protected, runner, and manual positions clearly."""
