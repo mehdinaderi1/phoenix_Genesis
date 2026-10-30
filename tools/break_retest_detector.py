@@ -26,7 +26,7 @@ from tools.futures_strategy_runner import (
 # CONFIG
 # ═══════════════════════════════════════════════════════════
 TIMEFRAME_TRIGGER = "1H"      # break+retest detection on 1H closed candles
-BREAK_WINDOW      = 12        # look back N closed 1H candles for the break (12h)
+BREAK_WINDOW      = 24        # look back N closed 1H candles for the break (24h)
 MIN_BREAK_AGE     = 2         # break must be ≥N closed 1H candles old (2h)
 MIN_BREAK_DEPTH   = 0.005     # break close must be ≥0.5% beyond level
 RETEST_ZONE_BD    = (0.98, 1.03)  # floor  × [low, high]

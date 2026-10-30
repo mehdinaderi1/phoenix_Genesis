@@ -250,12 +250,29 @@ class Runner:
             self.state["closed_positions"] = []
 
     def _notify(self, msg):
-        try:
-            notifier = getattr(self.wrapper, "notifier", None)
-            if notifier:
+        """Send Telegram message with retry + backoff. Env-configurable."""
+        notifier = getattr(self.wrapper, "notifier", None)
+        if not notifier:
+            return
+
+        max_retries = int(os.environ.get("TELEGRAM_MAX_RETRIES", "2"))
+        base_delay  = float(os.environ.get("TELEGRAM_RETRY_DELAY", "1.5"))
+
+        for attempt in range(max_retries + 1):
+            try:
                 notifier.send_message(msg)
-        except Exception as e:
-            print(f"[Telegram] {e}")
+                if attempt > 0:
+                    print(f"[Telegram] delivered on attempt {attempt + 1}")
+                return
+            except Exception as e:
+                if attempt < max_retries:
+                    delay = base_delay * (attempt + 1)
+                    print(f"[Telegram] attempt {attempt + 1}/{max_retries + 1} failed: "
+                          f"{type(e).__name__}: {str(e)[:80]} — retry in {delay:.1f}s")
+                    time.sleep(delay)
+                else:
+                    print(f"[Telegram] all {max_retries + 1} attempts failed: "
+                          f"{type(e).__name__}: {str(e)[:80]}")
 
     def _check_stop(self):
         if os.path.exists(STOP_FILE):
