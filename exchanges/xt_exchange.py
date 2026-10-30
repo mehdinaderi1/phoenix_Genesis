@@ -120,23 +120,28 @@ class XTExchange(BaseExchange):
         self,
         symbol,
         timeframe="1m",
-        limit=30
+        limit=30,
+        startTime=None,
+        endTime=None
     ):
         interval = self._normalize_interval(timeframe)
-
+        
         if limit <= 0:
             return []
 
         xt_symbol = symbol.lower().replace("usdt", "_usdt")
 
-        data = self._request(
-            "/v4/public/kline",
-            {
-                "symbol": xt_symbol,
-                "interval": interval,
-                "limit": limit,
-            }
-        )
+        params = {
+            "symbol": xt_symbol,
+            "interval": interval,
+            "limit": limit,
+        }
+        if startTime is not None:
+            params["startTime"] = int(startTime)
+        if endTime is not None:
+            params["endTime"] = int(endTime)
+
+        data = self._request("/v4/public/kline", params)
 
         result = data.get("result") or []
 
