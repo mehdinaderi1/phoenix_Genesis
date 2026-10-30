@@ -60,11 +60,20 @@ PARTIAL_TP_FRACTION = float(os.environ.get("XT_RUNNER_PARTIAL_TP_FRAC", "0.5"))
 # ═══════════════════════════════════════════════════════════
 
 SYMBOLS = [
-    "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT",
-    "ZECUSDT", "DOGEUSDT", "ADAUSDT", "AVAXUSDT", "LINKUSDT",
-    "DOTUSDT", "NEARUSDT", "APTUSDT", "SEIUSDT", "JUPUSDT",
-    "WIFUSDT", "PEPEUSDT", "FETUSDT", "ICPUSDT", "HBARUSDT",
-    "VETUSDT", "ARBUSDT", "OPUSDT", "INJUSDT", "SUIUSDT", "TIAUSDT",
+    # L1
+    "ETHUSDT", "SOLUSDT",
+    # L2
+    "ARBUSDT", "OPUSDT",
+    # Meme
+    "DOGEUSDT", "PEPEUSDT",
+    # DeFi
+    "AAVEUSDT", "INJUSDT",
+    # AI
+    "FETUSDT", "WLDUSDT",
+    # Privacy
+    "ZECUSDT", "XMRUSDT",
+    # Payments
+    "XRPUSDT", "DASHUSDT",
 ]
 
 TIMEFRAME = "4H"

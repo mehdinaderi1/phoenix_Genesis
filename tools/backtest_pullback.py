@@ -28,6 +28,7 @@ from tools.futures_strategy_runner import (
 
 DATA_DIR = "data/historical"
 MAX_HOLD_BARS = 400  # up to ~66 days on 4H
+COMMISSION_PCT = float(os.environ.get("PB_COMMISSION_PCT", "0.05"))  # 0.05% per side = 0.1% round-trip (futures XT)
 TRAILING_ENABLED = False
 TRAILING_START_PCT = 1.0
 TRAILING_DISTANCE_PCT = 0.5
@@ -204,7 +205,12 @@ def backtest_symbol(sym, c4h, btc4h, with_avg=False):
         else:
             pnl_price = (exit_price - cur_entry)
 
-        r_mult = (pnl_price * cur_size) / hard_sl_risk
+        # Commission: fee on entry notional + fee on exit notional
+        # In price units: (entry + exit) * fee_rate * cur_size / cur_size
+        commission_price = (cur_entry + exit_price) * (COMMISSION_PCT / 100)
+        pnl_price_net = pnl_price - commission_price
+
+        r_mult = (pnl_price_net * cur_size) / hard_sl_risk
 
         results.append({
             "symbol": sym, "side": side,
@@ -267,7 +273,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--tf", default="4H", choices=["4H"])  # strategy is 4H-only
     ap.add_argument("--with-avg", action="store_true", help="enable averaging")
+    ap.add_argument("--symbols", type=str, default="",
+                    help="comma-separated symbols (e.g. ETHUSDT,SOLUSDT)")
     args = ap.parse_args()
+    if args.symbols:
+        active_symbols = [s.strip().upper() for s in args.symbols.split(",")]
+    else:
+        active_symbols = SYMBOLS
 
     print(f"[PB-BT] pullback strategy backtest")
     print(f"[PB-BT] channel={TIMEFRAME} period={CHANNEL_PERIOD}  "
@@ -275,7 +287,8 @@ def main():
           f"LONG<= {LONG_MAX_POS}  SHORT>= {SHORT_MIN_POS}  "
           f"SL_buf={SL_BUFFER_PCT}%  hardSL={HARD_SL_PCT}%  "
           f"avg={'ON' if args.with_avg else 'OFF'}\n")
-
+    print(f"[PB-BT] commission={COMMISSION_PCT}% per side (round-trip={COMMISSION_PCT*2}%)")
+    
     # BTC 4H
     btc_path = os.path.join(DATA_DIR, "BTCUSDT_4H.csv")
     if not os.path.exists(btc_path):
@@ -286,7 +299,7 @@ def main():
     all_trades = []
     per_symbol = {}
 
-    for sym in SYMBOLS:
+    for sym in active_symbols:
         path = os.path.join(DATA_DIR, f"{sym}_4H.csv")
         if not os.path.exists(path):
             print(f"[BT] {sym:10s} MISSING"); continue
