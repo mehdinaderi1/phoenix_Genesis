@@ -37,10 +37,10 @@ AVG_LEVELS_PCT = [1.5, 3.5]      # فاصله پله‌ها از entry اولی�
 AVG_SIZE_MULT = [1.0, 1.0]       # اندازه هر پله (نسبت به entry اولیه)
 HARD_SL_PCT = 5.0                # حد ضرر سخت
 REMOVE_AVG_AT_BE = True          # برداشتن میانگین در breakeven
-TRAILING_ENABLED = True          # Trailing بعد از +1%
+TRAILING_ENABLED = False
 TRAILING_START_PCT = 1.0
 TRAILING_DISTANCE_PCT = 0.5
-
+ALLOW_SHORT = os.environ.get("XT_RUNNER_ALLOW_SHORT", "0") == "1"
 # ═══════════════════════════════════════════════════════════
 # SIGNAL GENERATOR CONFIG
 # ═══════════════════════════════════════════════════════════
@@ -663,12 +663,12 @@ class Runner:
             side = None
             if btc_dir == "UP" and pos_pct <= LONG_MAX_POS and bullish_pullback(sig):
                 side = "LONG"
-            elif btc_dir == "DOWN" and pos_pct >= SHORT_MIN_POS and bearish_pullback(sig):
+            elif ALLOW_SHORT and btc_dir == "DOWN" and pos_pct >= SHORT_MIN_POS and bearish_pullback(sig):
                 side = "SHORT"
             elif btc_dir == "FLAT":
                 if pos_pct <= LONG_MAX_POS and bullish_pullback(sig):
                     side = "LONG"
-                elif pos_pct >= SHORT_MIN_POS and bearish_pullback(sig):
+                elif ALLOW_SHORT and pos_pct >= SHORT_MIN_POS and bearish_pullback(sig):
                     side = "SHORT"
             
             if side:
@@ -884,6 +884,7 @@ class Runner:
         print(f"# Futures Strategy Runner")
         print(f"# Mode: {mode}")
         print(f"# Leverage: {LEVERAGE}x | Risk: {RISK_PCT}% | Max pos: {MAX_POSITIONS}")
+        print(f"# SHORT entries: {'ON' if ALLOW_SHORT else 'OFF (LONG-only mode)'}")
         print(f"# Daily loss limit: {MAX_DAILY_LOSS_PCT}%")
         print(f"# Interval: {CYCLE_INTERVAL_SEC}s | Max cycles: {MAX_CYCLES or 'infinite'}")
         print(f"# STOP file: {STOP_FILE} (touch to stop)")
