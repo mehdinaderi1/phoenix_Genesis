@@ -1,0 +1,47 @@
+{
+  "started_at": "2026-10-30T14:21:04.449306",
+  "positions": {
+    "ARBUSDT": {
+      "levels_filled": 1,
+      "avg_entry": 0.16425,
+      "size": 0.2,
+      "tp1_taken": false,
+      "ref_high": 0.1825,
+      "opened_at": "2026-10-30T14:21:24.038272"
+    },
+    "OPUSDT": {
+      "levels_filled": 2,
+      "avg_entry": 0.1050875,
+      "size": 0.4,
+      "tp1_taken": false,
+      "ref_high": 0.1201,
+      "opened_at": "2026-10-30T14:21:24.638978"
+    },
+    "PEPEUSDT": {
+      "levels_filled": 1,
+      "avg_entry": 5.112e-06,
+      "size": 0.2,
+      "tp1_taken": false,
+      "ref_high": 5.68e-06,
+      "opened_at": "2026-10-30T14:21:26.167521"
+    },
+    "AAVEUSDT": {
+      "levels_filled": 2,
+      "avg_entry": 131.24125,
+      "size": 0.4,
+      "tp1_taken": false,
+      "ref_high": 149.99,
+      "opened_at": "2026-10-30T14:21:27.314566"
+    },
+    "INJUSDT": {
+      "levels_filled": 1,
+      "avg_entry": 7.463699999999999,
+      "size": 0.2,
+      "tp1_taken": false,
+      "ref_high": 8.293,
+      "opened_at": "2026-10-30T14:21:28.831385"
+    }
+  },
+  "closed": [],
+  "last_cycle": "2026-10-30T14:21:29.875502"
+}
