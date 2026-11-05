@@ -85,6 +85,11 @@ SHORT_MIN_POS = 75.0
 
 LEVERAGE = int(os.environ.get("XT_RUNNER_LEVERAGE", "10"))
 RISK_PCT = float(os.environ.get("XT_RUNNER_RISK", "1.0"))
+# ضریب ریسک هر نماد (پیش‌فرض 1.0 = کامل)
+# OP بیش از 50% سود را می‌سازد → ریسک را نصف می‌کنیم تا تمرکز کاهش یابد
+SYMBOL_RISK_MULT = {
+    "opusdt": 0.5,
+}
 MAX_POSITIONS = int(os.environ.get("XT_RUNNER_MAX_POS", "1"))
 MAX_DAILY_LOSS_PCT = float(os.environ.get("XT_RUNNER_MAX_DAILY_LOSS", "3.0"))
 SL_BUFFER_PCT = float(os.environ.get("XT_RUNNER_SL_BUFFER", "0.8"))
@@ -709,7 +714,11 @@ class Runner:
             print(f"[Exec] {sym} already in state")
             return False
 
-        sizing = self.wrapper.calculate_contracts(sym, risk_pct=RISK_PCT, leverage=LEVERAGE)
+        risk_mult = SYMBOL_RISK_MULT.get(sym.lower().replace("_", ""), 1.0)
+        sym_risk = RISK_PCT * risk_mult
+        sizing = self.wrapper.calculate_contracts(sym, risk_pct=sym_risk, leverage=LEVERAGE)
+        if risk_mult != 1.0:
+            print(f"[Exec] {sym} risk adjusted: {RISK_PCT}% × {risk_mult} = {sym_risk}%")
         if "error" in sizing:
             print(f"[Exec] sizing error: {sizing['error']}")
             return False

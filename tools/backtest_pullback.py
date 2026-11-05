@@ -29,6 +29,9 @@ from tools.futures_strategy_runner import (
 DATA_DIR = "data/historical"
 MAX_HOLD_BARS = 400  # up to ~66 days on 4H
 COMMISSION_PCT = float(os.environ.get("PB_COMMISSION_PCT", "0.05"))  # 0.05% per side = 0.1% round-trip (futures XT)
+SYMBOL_RISK_MULT = {
+    "OPUSDT": 0.5,
+}
 TRAILING_ENABLED = False
 TRAILING_START_PCT = 1.0
 TRAILING_DISTANCE_PCT = 0.5
@@ -211,6 +214,9 @@ def backtest_symbol(sym, c4h, btc4h, with_avg=False):
         pnl_price_net = pnl_price - commission_price
 
         r_mult = (pnl_price_net * cur_size) / hard_sl_risk
+        # اعمال ضریب ریسک نماد
+        risk_mult = SYMBOL_RISK_MULT.get(sym, 1.0)
+        r_mult *= risk_mult
 
         results.append({
             "symbol": sym, "side": side,
