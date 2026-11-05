@@ -233,6 +233,8 @@ class Runner:
         self.cycle_count = 0
         self._positions_cache = None
         self._positions_cache_cycle = None
+        self._last_signaled_syms = set()
+        self._last_signal_alert_cycle = 0
 
     def _load_state(self):
         if os.path.exists(self.state_file):
@@ -340,10 +342,8 @@ class Runner:
             if float(p.get("positionSize", 0)) > 0:
                 all_live[sym] = p
         
-        self._positions_cache = None
-        self._positions_cache_cycle = None
-        self._last_signaled_syms = set()        # ← جدید
-        self._last_signal_alert_cycle = 0       # ← جدید
+        self._positions_cache = all_live
+        self._positions_cache_cycle = self.cycle_count
         return all_live
 
     def _sync_state(self):
@@ -666,15 +666,26 @@ class Runner:
 
     def _detect(self, btc_dir):
         setups = []
+
+        # ─── Safety filter: if BTC dropped >2% in last 3h, skip all LONG ───
+        try:
+            btc_1h = self.spot.get_historical_candles("BTCUSDT", "1H", limit=4)
+            if btc_1h and len(btc_1h) >= 4:
+                pct_3h = (_close(btc_1h[-1]) - _close(btc_1h[-4])) / _close(btc_1h[-4]) * 100
+                if pct_3h < -2.0:
+                    print(f"[BTC-Safety] 3h change {pct_3h:+.2f}% < -2% — skipping all LONG")
+                    return []
+        except Exception as e:
+            print(f"[BTC-Safety] check failed: {e}")
+
         # پوزیشن‌های زنده (شامل دستی) — برای محافظت
         live = self._live_positions() or {}
         for sym in SYMBOLS:
             sym_l = to_futures_symbol(sym)
             if sym_l in self.wrapper.skip_symbols: continue
             if sym_l in self.state["active_positions"]: continue
-            if sym_l in live:  # ← NEW: پوزیشن دستی هم بلاک می‌کند
+            if sym_l in live:
                 continue
-            if sym_l in self.state["active_positions"]: continue  # ← NEW: skip already open
             try:
                 candles = self.spot.get_historical_candles(sym, TIMEFRAME, limit=CHANNEL_PERIOD + 20)
             except Exception as e:
@@ -685,7 +696,7 @@ class Runner:
             if ch["width_pct"] < MIN_WIDTH_PCT or ch["width_pct"] > MAX_WIDTH_PCT: continue
             price = _close(candles[-1])
             pos_pct = (price - ch["lower"]) / (ch["upper"] - ch["lower"]) * 100
-            sig = candle_sig_with_volume(candles, window=10)  # ← به‌جای candle_sig
+            sig = candle_sig_with_volume(candles, window=10)
             
             side = None
             if btc_dir == "UP" and pos_pct <= LONG_MAX_POS and bullish_pullback(sig):
@@ -711,7 +722,6 @@ class Runner:
                     "volume_ratio": sig.get("volume_ratio", 0),
                 })
         
-        # Sort by edge extremity
         setups.sort(key=lambda s: min(s["pos_pct"], 100 - s["pos_pct"]))
         return setups
 
