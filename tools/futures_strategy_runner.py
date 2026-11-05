@@ -252,6 +252,14 @@ class Runner:
     def _save_state(self):
         self.state["last_cycle"] = datetime.now().isoformat()
         os.makedirs("data", exist_ok=True)
+        # Backup before overwrite (one rolling backup)
+        if os.path.exists(self.state_file):
+            import shutil
+            backup = self.state_file.replace(".json", "_backup.json")
+            try:
+                shutil.copy2(self.state_file, backup)
+            except Exception:
+                pass
         with open(self.state_file, "w") as f:
             json.dump(self.state, f, indent=2, default=str)
 
