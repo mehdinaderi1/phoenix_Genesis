@@ -79,7 +79,7 @@ SYMBOLS = [
 TIMEFRAME = "4H"
 CHANNEL_PERIOD = 30
 MIN_WIDTH_PCT = 3.0
-MAX_WIDTH_PCT = 20.0
+MAX_WIDTH_PCT = 25.0
 LONG_MAX_POS = 25.0
 SHORT_MIN_POS = 75.0
 
@@ -90,6 +90,7 @@ RISK_PCT = float(os.environ.get("XT_RUNNER_RISK", "1.0"))
 SYMBOL_RISK_MULT = {
     "opusdt": 0.5,
 }
+SHORT_RISK_MULT = 0.5   # SHORT با نصف ریسک
 MAX_POSITIONS = int(os.environ.get("XT_RUNNER_MAX_POS", "1"))
 MAX_DAILY_LOSS_PCT = float(os.environ.get("XT_RUNNER_MAX_DAILY_LOSS", "3.0"))
 SL_BUFFER_PCT = float(os.environ.get("XT_RUNNER_SL_BUFFER", "0.8"))
@@ -667,14 +668,15 @@ class Runner:
     def _detect(self, btc_dir):
         setups = []
 
-        # ─── Safety filter: if BTC dropped >2% in last 3h, skip all LONG ───
+        # ─── Safety filter: if BTC dropped >2% in last 3h, block LONG only ───
+        btc_fast_fall = False
         try:
             btc_1h = self.spot.get_historical_candles("BTCUSDT", "1H", limit=4)
             if btc_1h and len(btc_1h) >= 4:
                 pct_3h = (_close(btc_1h[-1]) - _close(btc_1h[-4])) / _close(btc_1h[-4]) * 100
                 if pct_3h < -2.0:
-                    print(f"[BTC-Safety] 3h change {pct_3h:+.2f}% < -2% — skipping all LONG")
-                    return []
+                    btc_fast_fall = True
+                    print(f"[BTC-Safety] 3h change {pct_3h:+.2f}% < -2% — blocking LONG only")
         except Exception as e:
             print(f"[BTC-Safety] check failed: {e}")
 
@@ -699,12 +701,12 @@ class Runner:
             sig = candle_sig_with_volume(candles, window=10)
             
             side = None
-            if btc_dir == "UP" and pos_pct <= LONG_MAX_POS and bullish_pullback(sig):
+            if not btc_fast_fall and btc_dir == "UP" and pos_pct <= LONG_MAX_POS and bullish_pullback(sig):
                 side = "LONG"
             elif ALLOW_SHORT and btc_dir == "DOWN" and pos_pct >= SHORT_MIN_POS and bearish_pullback(sig):
                 side = "SHORT"
             elif btc_dir == "FLAT":
-                if pos_pct <= LONG_MAX_POS and bullish_pullback(sig):
+                if not btc_fast_fall and pos_pct <= LONG_MAX_POS and bullish_pullback(sig):
                     side = "LONG"
                 elif ALLOW_SHORT and pos_pct >= SHORT_MIN_POS and bearish_pullback(sig):
                     side = "SHORT"
@@ -734,6 +736,9 @@ class Runner:
 
         risk_mult = SYMBOL_RISK_MULT.get(sym.lower().replace("_", ""), 1.0)
         sym_risk = RISK_PCT * risk_mult
+        if side == "SHORT":
+            sym_risk *= SHORT_RISK_MULT
+            print(f"[Exec] SHORT risk reduced: {sym_risk}%")
         sizing = self.wrapper.calculate_contracts(sym, risk_pct=sym_risk, leverage=LEVERAGE)
         if risk_mult != 1.0:
             print(f"[Exec] {sym} risk adjusted: {RISK_PCT}% × {risk_mult} = {sym_risk}%")
