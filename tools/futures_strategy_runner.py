@@ -61,9 +61,9 @@ PARTIAL_TP_FRACTION = float(os.environ.get("XT_RUNNER_PARTIAL_TP_FRAC", "0.5"))
 
 SYMBOLS = [
     # L1
-    "ETHUSDT", "SOLUSDT",
+    "ETHUSDT",
     # L2
-    "ARBUSDT", "OPUSDT",
+    "OPUSDT",
     # Meme
     "DOGEUSDT", "PEPEUSDT",
     # DeFi
@@ -71,7 +71,7 @@ SYMBOLS = [
     # AI
     "FETUSDT", "WLDUSDT",
     # Privacy
-    "ZECUSDT", "XMRUSDT",
+    "ZECUSDT",
     # Payments
     "XRPUSDT", "DASHUSDT",
 ]
@@ -653,9 +653,14 @@ class Runner:
 
     def _detect(self, btc_dir):
         setups = []
+        # پوزیشن‌های زنده (شامل دستی) — برای محافظت
+        live = self._live_positions() or {}
         for sym in SYMBOLS:
             sym_l = to_futures_symbol(sym)
             if sym_l in self.wrapper.skip_symbols: continue
+            if sym_l in self.state["active_positions"]: continue
+            if sym_l in live:  # ← NEW: پوزیشن دستی هم بلاک می‌کند
+                continue
             if sym_l in self.state["active_positions"]: continue  # ← NEW: skip already open
             try:
                 candles = self.spot.get_historical_candles(sym, TIMEFRAME, limit=CHANNEL_PERIOD + 20)
