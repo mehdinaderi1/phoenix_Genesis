@@ -40,7 +40,7 @@ REMOVE_AVG_AT_BE = True          # برداشتن میانگین در breakeven
 TRAILING_ENABLED = False
 TRAILING_START_PCT = 1.0
 TRAILING_DISTANCE_PCT = 0.5
-ALLOW_SHORT = os.environ.get("XT_RUNNER_ALLOW_SHORT", "0") == "1"
+ALLOW_SHORT = os.environ.get("XT_RUNNER_ALLOW_SHORT", "0") == "0"
 # ═══════════════════════════════════════════════════════════
 # SIGNAL GENERATOR CONFIG
 # ═══════════════════════════════════════════════════════════
@@ -79,7 +79,7 @@ SYMBOLS = [
 TIMEFRAME = "4H"
 CHANNEL_PERIOD = 30
 MIN_WIDTH_PCT = 3.0
-MAX_WIDTH_PCT = 25.0
+MAX_WIDTH_PCT = 20.0
 LONG_MAX_POS = 25.0
 SHORT_MIN_POS = 75.0
 
@@ -90,7 +90,6 @@ RISK_PCT = float(os.environ.get("XT_RUNNER_RISK", "1.0"))
 SYMBOL_RISK_MULT = {
     "opusdt": 0.5,
 }
-SHORT_RISK_MULT = 0.5   # SHORT با نصف ریسک
 MAX_POSITIONS = int(os.environ.get("XT_RUNNER_MAX_POS", "1"))
 MAX_DAILY_LOSS_PCT = float(os.environ.get("XT_RUNNER_MAX_DAILY_LOSS", "3.0"))
 SL_BUFFER_PCT = float(os.environ.get("XT_RUNNER_SL_BUFFER", "0.8"))
