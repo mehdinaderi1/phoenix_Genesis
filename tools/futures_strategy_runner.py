@@ -40,7 +40,10 @@ REMOVE_AVG_AT_BE = True          # برداشتن میانگین در breakeven
 TRAILING_ENABLED = False
 TRAILING_START_PCT = 1.0
 TRAILING_DISTANCE_PCT = 0.5
-ALLOW_SHORT = os.environ.get("XT_RUNNER_ALLOW_SHORT", "0") == "0"
+ALLOW_SHORT = os.environ.get("XT_RUNNER_ALLOW_SHORT", "0") == "1"
+# فیلتر نسبت آلت‌کوین به BTC (اختیاری)
+USE_RATIO_FILTER = os.environ.get("XT_RUNNER_RATIO_FILTER", "0") == "1"
+RATIO_WINDOW = 10  # تعداد کندل‌های ۴ ساعته برای بررسی روند نسبت
 # ═══════════════════════════════════════════════════════════
 # SIGNAL GENERATOR CONFIG
 # ═══════════════════════════════════════════════════════════
@@ -345,6 +348,34 @@ class Runner:
         self._positions_cache = all_live
         self._positions_cache_cycle = self.cycle_count
         return all_live
+
+    def _get_ratio_trend(self, sym):
+        """بررسی می‌کند آیا نسبت آلت‌کوین به BTC در حال افزایش است یا نه."""
+        try:
+            # گرفتن قیمت آلت‌کوین و BTC
+            alt_candles = self.spot.get_historical_candles(sym, TIMEFRAME, limit=RATIO_WINDOW + 5)
+            btc_candles = self.spot.get_historical_candles("BTCUSDT", TIMEFRAME, limit=RATIO_WINDOW + 5)
+            if not alt_candles or not btc_candles:
+                return False
+            
+            # محاسبه نسبت‌ها
+            ratios = []
+            for i in range(min(len(alt_candles), len(btc_candles))):
+                alt_close = _close(alt_candles[i])
+                btc_close = _close(btc_candles[i])
+                if btc_close > 0:
+                    ratios.append(alt_close / btc_close)
+            
+            if len(ratios) < RATIO_WINDOW:
+                return False
+            
+            # مقایسه نسبت فعلی با نسبت RATIO_WINDOW کندل قبل
+            recent_ratio = ratios[-1]
+            past_ratio = ratios[-RATIO_WINDOW]
+            return recent_ratio > past_ratio
+        except Exception as e:
+            print(f"[Ratio] check failed for {sym}: {e}")
+            return False
 
     def _sync_state(self):
         """Remove state entries whose positions no longer exist (LIVE only)."""
@@ -701,12 +732,14 @@ class Runner:
             
             side = None
             if not btc_fast_fall and btc_dir == "UP" and pos_pct <= LONG_MAX_POS and bullish_pullback(sig):
-                side = "LONG"
+                if not USE_RATIO_FILTER or self._get_ratio_trend(sym):
+                    side = "LONG"
             elif ALLOW_SHORT and btc_dir == "DOWN" and pos_pct >= SHORT_MIN_POS and bearish_pullback(sig):
                 side = "SHORT"
             elif btc_dir == "FLAT":
                 if not btc_fast_fall and pos_pct <= LONG_MAX_POS and bullish_pullback(sig):
-                    side = "LONG"
+                    if not USE_RATIO_FILTER or self._get_ratio_trend(sym):
+                        side = "LONG"
                 elif ALLOW_SHORT and pos_pct >= SHORT_MIN_POS and bearish_pullback(sig):
                     side = "SHORT"
             
@@ -735,9 +768,9 @@ class Runner:
 
         risk_mult = SYMBOL_RISK_MULT.get(sym.lower().replace("_", ""), 1.0)
         sym_risk = RISK_PCT * risk_mult
-        if side == "SHORT":
-            sym_risk *= SHORT_RISK_MULT
-            print(f"[Exec] SHORT risk reduced: {sym_risk}%")
+        # if side == "SHORT":
+        #     sym_risk *= SHORT_RISK_MULT
+        #     print(f"[Exec] SHORT risk reduced: {sym_risk}%")
         sizing = self.wrapper.calculate_contracts(sym, risk_pct=sym_risk, leverage=LEVERAGE)
         if risk_mult != 1.0:
             print(f"[Exec] {sym} risk adjusted: {RISK_PCT}% × {risk_mult} = {sym_risk}%")

@@ -1,47 +1,56 @@
 {
-  "started_at": "2026-10-30T14:21:04.449306",
+  "started_at": "2026-11-06T10:28:30.001553",
   "positions": {
-    "ARBUSDT": {
-      "levels_filled": 1,
-      "avg_entry": 0.16425,
-      "size": 0.2,
-      "tp1_taken": false,
-      "ref_high": 0.1825,
-      "opened_at": "2026-10-30T14:21:24.038272"
-    },
     "OPUSDT": {
       "levels_filled": 2,
-      "avg_entry": 0.1050875,
-      "size": 0.4,
-      "tp1_taken": false,
-      "ref_high": 0.1201,
-      "opened_at": "2026-10-30T14:21:24.638978"
+      "total_usdt": 6.0,
+      "avg_entry": 0.105,
+      "ref_high": 0.1226,
+      "opened_at": "2026-11-06T10:28:43.764728"
     },
     "PEPEUSDT": {
       "levels_filled": 1,
-      "avg_entry": 5.112e-06,
-      "size": 0.2,
-      "tp1_taken": false,
-      "ref_high": 5.68e-06,
-      "opened_at": "2026-10-30T14:21:26.167521"
+      "total_usdt": 2.0,
+      "avg_entry": 4.94e-06,
+      "ref_high": 5.49e-06,
+      "opened_at": "2026-11-06T10:28:44.360931"
     },
-    "AAVEUSDT": {
-      "levels_filled": 2,
-      "avg_entry": 131.24125,
-      "size": 0.4,
-      "tp1_taken": false,
-      "ref_high": 149.99,
-      "opened_at": "2026-10-30T14:21:27.314566"
-    },
-    "INJUSDT": {
+    "FETUSDT": {
       "levels_filled": 1,
-      "avg_entry": 7.463699999999999,
-      "size": 0.2,
-      "tp1_taken": false,
-      "ref_high": 8.293,
-      "opened_at": "2026-10-30T14:21:28.831385"
+      "total_usdt": 2.0,
+      "avg_entry": 0.1478,
+      "ref_high": 0.1687,
+      "opened_at": "2026-11-06T10:28:45.132825"
+    },
+    "WLDUSDT": {
+      "levels_filled": 2,
+      "total_usdt": 6.0,
+      "avg_entry": 0.3449,
+      "ref_high": 0.4216,
+      "opened_at": "2026-11-06T10:28:45.881979"
+    },
+    "XRPUSDT": {
+      "levels_filled": 1,
+      "total_usdt": 2.0,
+      "avg_entry": 1.1921,
+      "ref_high": 1.3405,
+      "opened_at": "2026-11-06T10:28:46.554563"
+    },
+    "DASHUSDT": {
+      "levels_filled": 1,
+      "total_usdt": 2.0,
+      "avg_entry": 44.62,
+      "ref_high": 50.36,
+      "opened_at": "2026-11-06T10:35:05.660355"
+    },
+    "ZECUSDT": {
+      "levels_filled": 1,
+      "total_usdt": 2.0,
+      "avg_entry": 1243.24,
+      "ref_high": 1382.13,
+      "opened_at": "2026-11-08T00:25:15.902061"
     }
   },
   "closed": [],
-  "last_cycle": "2026-11-05T18:28:54.288147"
+  "last_cycle": "2026-11-08T13:26:50.160040"
 }

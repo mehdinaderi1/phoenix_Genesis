@@ -1,0 +1,49 @@
+{
+  "started_at": "2026-11-06T10:28:30.001553",
+  "positions": {
+    "OPUSDT": {
+      "levels_filled": 2,
+      "total_usdt": 6.0,
+      "avg_entry": 0.105,
+      "ref_high": 0.1226,
+      "opened_at": "2026-11-06T10:28:43.764728"
+    },
+    "PEPEUSDT": {
+      "levels_filled": 1,
+      "total_usdt": 2.0,
+      "avg_entry": 4.94e-06,
+      "ref_high": 5.49e-06,
+      "opened_at": "2026-11-06T10:28:44.360931"
+    },
+    "FETUSDT": {
+      "levels_filled": 1,
+      "total_usdt": 2.0,
+      "avg_entry": 0.1478,
+      "ref_high": 0.1687,
+      "opened_at": "2026-11-06T10:28:45.132825"
+    },
+    "WLDUSDT": {
+      "levels_filled": 2,
+      "total_usdt": 6.0,
+      "avg_entry": 0.3449,
+      "ref_high": 0.4216,
+      "opened_at": "2026-11-06T10:28:45.881979"
+    },
+    "XRPUSDT": {
+      "levels_filled": 1,
+      "total_usdt": 2.0,
+      "avg_entry": 1.1921,
+      "ref_high": 1.3405,
+      "opened_at": "2026-11-06T10:28:46.554563"
+    },
+    "DASHUSDT": {
+      "levels_filled": 1,
+      "total_usdt": 2.0,
+      "avg_entry": 44.62,
+      "ref_high": 50.36,
+      "opened_at": "2026-11-06T10:35:05.660355"
+    }
+  },
+  "closed": [],
+  "last_cycle": "2026-11-07T13:29:34.000224"
+}
